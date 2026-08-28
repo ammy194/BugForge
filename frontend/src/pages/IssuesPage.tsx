@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -27,6 +28,7 @@ import {
 } from 'lucide-react';
 
 export const IssuesPage: React.FC = () => {
+  const navigate = useNavigate();
   const { activeProject } = useProject();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(false);
@@ -193,7 +195,7 @@ export const IssuesPage: React.FC = () => {
                   <div
                     key={issue.id}
                     className="group flex flex-col p-4 hover:bg-secondary/20 transition-all cursor-pointer gap-3"
-                    onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
+                    onClick={() => navigate(`/issues/${issue.key}`)}
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1">
@@ -202,9 +204,13 @@ export const IssuesPage: React.FC = () => {
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono text-xs font-bold text-primary group-hover:underline">
+                            <Link
+                              to={`/issues/${issue.key}`}
+                              className="font-mono text-xs font-bold text-primary group-hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {issue.key}
-                            </span>
+                            </Link>
                             <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
                               {issue.title}
                             </span>

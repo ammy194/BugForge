@@ -13,6 +13,7 @@ import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { IssuesPage } from './pages/IssuesPage';
+import { IssueDetailPage } from './pages/IssueDetailPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { ReleasesPage } from './pages/ReleasesPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
@@ -53,6 +54,7 @@ export const App: React.FC = () => {
               >
                 <Route index element={<DashboardPage />} />
                 <Route path="issues" element={<IssuesPage />} />
+                <Route path="issues/:id" element={<IssueDetailPage />} />
                 <Route path="projects" element={<ProjectsPage />} />
                 <Route path="releases" element={<ReleasesPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
