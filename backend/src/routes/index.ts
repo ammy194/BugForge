@@ -10,6 +10,7 @@ import { aiRoutes } from './aiRoutes';
 import { githubRoutes } from './githubRoutes';
 import { ciRoutes } from './ciRoutes';
 import { webhookRoutes } from './webhookRoutes';
+import { analyticsRoutes } from './analyticsRoutes';
 
 export const apiRouter = Router();
 
@@ -25,6 +26,7 @@ apiRouter.use('/ai', aiRoutes);
 apiRouter.use('/github', githubRoutes);
 apiRouter.use('/ci', ciRoutes);
 apiRouter.use('/webhooks', webhookRoutes);
+apiRouter.use('/analytics', analyticsRoutes);
 
 // Root API v1 welcome info
 apiRouter.get('/', (_req, res) => {
@@ -45,6 +47,7 @@ apiRouter.get('/', (_req, res) => {
       github: '/api/v1/github',
       ci: '/api/v1/ci',
       webhooks: '/api/v1/webhooks',
+      analytics: '/api/v1/analytics',
     },
   });
 });
