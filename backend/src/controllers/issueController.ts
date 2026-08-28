@@ -149,6 +149,19 @@ export class IssueController {
   }
 
   /**
+   * POST /api/v1/issues/suggest-assignee
+   */
+  static async suggestAssignee(req: Request, res: Response) {
+    const { SmartAssignmentService } = await import('../services/smartAssignmentService');
+    const result = await SmartAssignmentService.suggestAssignee(req.body);
+    return ApiResponse.success({
+      res,
+      data: result,
+      message: 'Smart assignee suggestion computed',
+    });
+  }
+
+  /**
    * POST /api/v1/issues/:id/mark-duplicate
    */
   static async markDuplicate(req: Request, res: Response) {

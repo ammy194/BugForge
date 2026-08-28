@@ -6,6 +6,7 @@ import { Badge } from '../ui/badge';
 import { AITriageInspector, AITriageData } from './AITriageInspector';
 import { BugQualityMeter, BugQualityScoreData } from './BugQualityMeter';
 import { DuplicateResolutionCard, DuplicateCandidate } from './DuplicateResolutionCard';
+import { SmartAssignmentCard, SmartAssignmentData } from './SmartAssignmentCard';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../lib/api';
@@ -85,6 +86,9 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   // AI Triage Inspector State
   const [triageData, setTriageData] = useState<AITriageData | null>(null);
   const [analyzingTriage, setAnalyzingTriage] = useState(false);
+
+  // Smart Assignment State
+  const [assignmentData, setAssignmentData] = useState<SmartAssignmentData | null>(null);
 
   // Dropdown data
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -219,6 +223,31 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
 
     return () => clearTimeout(timer);
   }, [title, description, projectId, ignoredDuplicates]);
+
+  // Debounced Smart Assignment Recommendation
+  useEffect(() => {
+    if (!projectId || title.trim().length < 4) {
+      setAssignmentData(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.post<SmartAssignmentData>('/issues/suggest-assignee', {
+          project_id: projectId,
+          component_id: componentId || undefined,
+          title,
+          description,
+          priority,
+        });
+        setAssignmentData(res);
+      } catch {
+        //
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [title, description, componentId, priority, projectId]);
 
   if (!isOpen) return null;
 
@@ -366,6 +395,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     setDuplicates([]);
     setIgnoredDuplicates(false);
     setTriageData(null);
+    setAssignmentData(null);
     setCreatedIssue(null);
     setError(null);
   };
@@ -387,7 +417,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 </Badge>
               </CardTitle>
               <CardDescription className="text-xs">
-                Structured reproduction workflow with live Quality Score & Grok AI triage assistant.
+                Structured reproduction workflow with live Quality Score & Smart Assignee recommendations.
               </CardDescription>
             </div>
           </div>
@@ -576,6 +606,15 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 />
               </div>
 
+              {/* Smart Assignee Recommendation Card */}
+              {assignmentData && (
+                <SmartAssignmentCard
+                  assignmentData={assignmentData}
+                  currentAssigneeId={assigneeId}
+                  onConfirmAssignee={(uid) => setAssigneeId(uid)}
+                />
+              )}
+
               {/* Row 3: Priority, Severity, Component, Assignee */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div className="space-y-1">
@@ -760,7 +799,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           <div className="flex items-center justify-between px-6 py-4 border-t border-border/60 bg-secondary/20 shrink-0">
             <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
               <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>Grok AI Triage & Radar Active</span>
+              <span>Smart Routing & AI Radar Active</span>
             </div>
 
             <div className="flex items-center gap-2">
