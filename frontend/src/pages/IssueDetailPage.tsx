@@ -30,6 +30,10 @@ import {
   AlertCircle,
   Play,
   RotateCcw,
+  Wand2,
+  Code2,
+  Check,
+  Flame,
 } from 'lucide-react';
 
 interface TimelineEvent {
@@ -56,6 +60,16 @@ interface GitLink {
   created_at: string;
 }
 
+interface RootCauseResult {
+  root_cause: string;
+  suspected_file: string;
+  suspected_line?: number;
+  explanation: string;
+  suggested_fix_diff: string;
+  prevention_tips: string[];
+  ai_provider: string;
+}
+
 export const IssueDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -72,6 +86,11 @@ export const IssueDetailPage: React.FC = () => {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [isWatching, setIsWatching] = useState(true);
   const [watchersCount, setWatchersCount] = useState(4);
+
+  // AI Root Cause State
+  const [rootCause, setRootCause] = useState<RootCauseResult | null>(null);
+  const [analyzingRootCause, setAnalyzingRootCause] = useState(false);
+  const [copiedPatch, setCopiedPatch] = useState(false);
 
   const fetchIssueData = async () => {
     if (!id) return;
@@ -102,6 +121,30 @@ export const IssueDetailPage: React.FC = () => {
     fetchIssueData();
   }, [id]);
 
+  const handleDiagnoseRootCause = async () => {
+    if (!issue) return;
+    setAnalyzingRootCause(true);
+    try {
+      const res = await api.post<RootCauseResult>('/ai/root-cause', {
+        title: issue.title,
+        description: issue.description,
+        stack_trace: issue.repro_steps || undefined,
+      });
+      setRootCause(res);
+    } catch {
+      //
+    } finally {
+      setAnalyzingRootCause(false);
+    }
+  };
+
+  const handleCopyPatch = () => {
+    if (!rootCause) return;
+    navigator.clipboard.writeText(rootCause.suggested_fix_diff);
+    setCopiedPatch(true);
+    setTimeout(() => setCopiedPatch(false), 2000);
+  };
+
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim() || !id) return;
@@ -110,7 +153,6 @@ export const IssueDetailPage: React.FC = () => {
     try {
       await api.post(`/issues/${id}/comments`, { content: commentText });
       setCommentText('');
-      // Refresh timeline
       const updatedTimeline = await api.get<TimelineEvent[]>(`/issues/${id}/timeline`);
       setTimeline(updatedTimeline);
     } catch {
@@ -247,8 +289,18 @@ export const IssueDetailPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Description Card */}
           <Card className="border-border/80 bg-card/80">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-semibold">Overview & Description</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDiagnoseRootCause}
+                disabled={analyzingRootCause}
+                className="gap-1.5 text-xs h-7 border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
+              >
+                <Sparkles className="h-3 w-3 text-purple-400" />
+                <span>{analyzingRootCause ? 'Diagnosing with Grok AI...' : 'AI Root Cause Diagnosis'}</span>
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4 text-xs text-foreground leading-relaxed">
               <p className="whitespace-pre-wrap">{issue.description}</p>
@@ -293,6 +345,57 @@ export const IssueDetailPage: React.FC = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* AI Root Cause & Code Patch Diagnosis Card */}
+          {rootCause && (
+            <Card className="border-purple-500/40 bg-purple-950/20 animate-in fade-in">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-4 w-4 text-purple-400" />
+                  <CardTitle className="text-xs font-bold text-purple-300">
+                    Grok AI Root Cause Analysis & Git Diff Patch
+                  </CardTitle>
+                </div>
+                <Badge variant="purple" className="text-[10px] font-mono">
+                  {rootCause.ai_provider}
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-3 text-xs">
+                <div>
+                  <span className="font-semibold text-foreground block mb-1">Culprit Source:</span>
+                  <span className="font-mono text-xs text-primary bg-black/40 px-2 py-1 rounded">
+                    {rootCause.suspected_file}:{rootCause.suspected_line}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="font-semibold text-foreground block mb-1">Diagnosis:</span>
+                  <p className="text-muted-foreground leading-relaxed">{rootCause.explanation}</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-semibold text-foreground flex items-center gap-1">
+                      <Code2 className="h-3.5 w-3.5 text-primary" />
+                      <span>Suggested Code Patch (Unified Diff):</span>
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCopyPatch}
+                      className="text-[11px] h-6 px-2 gap-1 border-purple-500/30"
+                    >
+                      {copiedPatch ? <Check className="h-3 w-3 text-emerald-400" /> : <Code2 className="h-3 w-3" />}
+                      <span>{copiedPatch ? 'Copied Diff!' : 'Copy Patch'}</span>
+                    </Button>
+                  </div>
+                  <pre className="p-3 rounded-lg bg-black/50 border border-border/60 font-mono text-[11px] overflow-x-auto text-emerald-400/90 whitespace-pre">
+                    {rootCause.suggested_fix_diff}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Unified Activity Timeline */}
           <div className="space-y-4">

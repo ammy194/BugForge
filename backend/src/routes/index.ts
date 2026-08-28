@@ -6,6 +6,7 @@ import { projectRoutes } from './projectRoutes';
 import { issueRoutes } from './issueRoutes';
 import { notificationRoutes } from './notificationRoutes';
 import { viewRoutes } from './viewRoutes';
+import { aiRoutes } from './aiRoutes';
 
 export const apiRouter = Router();
 
@@ -17,6 +18,7 @@ apiRouter.use('/projects', projectRoutes);
 apiRouter.use('/issues', issueRoutes);
 apiRouter.use('/notifications', notificationRoutes);
 apiRouter.use('/views', viewRoutes);
+apiRouter.use('/ai', aiRoutes);
 
 // Root API v1 welcome info
 apiRouter.get('/', (_req, res) => {

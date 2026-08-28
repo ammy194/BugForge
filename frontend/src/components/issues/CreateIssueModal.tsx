@@ -29,12 +29,25 @@ import {
   Zap,
   HelpCircle,
   FileText,
+  Flame,
+  Wand2,
+  Copy,
 } from 'lucide-react';
 
 interface CreateIssueModalProps {
   isOpen: boolean;
   onClose: () => void;
   onIssueCreated?: (issue: Issue) => void;
+}
+
+interface DuplicateMatch {
+  issue_id: string;
+  key: string;
+  title: string;
+  status: string;
+  priority: string;
+  similarity_score: number;
+  reason: string;
 }
 
 export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
@@ -69,6 +82,12 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   const [dueDate, setDueDate] = useState('');
   const [tagsInput, setTagsInput] = useState('');
 
+  // AI & Duplicate Radar State
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
+  const [aiSynthesizing, setAiSynthesizing] = useState(false);
+  const [showAiLogModal, setShowAiLogModal] = useState(false);
+  const [rawLogText, setRawLogText] = useState('');
+
   // Dropdown data
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [components, setComponents] = useState<Component[]>([]);
@@ -79,14 +98,12 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [createdIssue, setCreatedIssue] = useState<Issue | null>(null);
 
-  // Sync selected project with active project
   useEffect(() => {
     if (activeProject) {
       setProjectId(activeProject.id);
     }
   }, [activeProject]);
 
-  // Load project dropdowns when selected project changes
   useEffect(() => {
     if (!projectId) return;
     const loadProjectData = async () => {
@@ -108,7 +125,51 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     loadProjectData();
   }, [projectId]);
 
+  // Debounced Duplicate Detection Radar
+  useEffect(() => {
+    if (!projectId || title.trim().length < 4) {
+      setDuplicates([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.post<{ duplicates: DuplicateMatch[]; isDuplicateRisk: boolean }>(
+          '/ai/duplicates',
+          { project_id: projectId, title, description }
+        );
+        setDuplicates(res.duplicates);
+      } catch {
+        //
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [title, description, projectId]);
+
   if (!isOpen) return null;
+
+  const handleAiSynthesizeLog = async () => {
+    if (!rawLogText.trim()) return;
+    setAiSynthesizing(true);
+    try {
+      const extracted = await api.post<any>('/ai/extract', { raw_text: rawLogText });
+      setTitle(extracted.title || title);
+      setDescription(extracted.description || description);
+      setReproSteps(extracted.repro_steps || reproSteps);
+      setExpectedBehavior(extracted.expected_behavior || expectedBehavior);
+      setActualBehavior(extracted.actual_behavior || actualBehavior);
+      setEnvironment(extracted.environment || environment);
+      if (extracted.suggested_priority) setPriority(extracted.suggested_priority);
+      if (extracted.suggested_severity) setSeverity(extracted.suggested_severity);
+      setShowAiLogModal(false);
+      setRawLogText('');
+    } catch {
+      //
+    } finally {
+      setAiSynthesizing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,7 +209,6 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
       setCreatedIssue(created);
       if (onIssueCreated) onIssueCreated(created);
 
-      // Auto close after brief celebration
       setTimeout(() => {
         handleReset();
         onClose();
@@ -168,6 +228,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     setActualBehavior('');
     setEnvironment('');
     setTagsInput('');
+    setDuplicates([]);
     setCreatedIssue(null);
     setError(null);
   };
@@ -189,20 +250,109 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 </Badge>
               </CardTitle>
               <CardDescription className="text-xs">
-                Provide structured reproduction steps and environment details for engineering triage.
+                Provide structured reproduction steps or use AI Log Synthesizer for automated triage.
               </CardDescription>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAiLogModal(!showAiLogModal)}
+              className="gap-1 text-xs h-7 border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
+            >
+              <Sparkles className="h-3 w-3 text-purple-400" />
+              <span>AI Log Synthesizer</span>
+            </Button>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </CardHeader>
 
         {/* Modal Body */}
         <CardContent className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* AI Log Synthesizer Expansion Drawer */}
+          {showAiLogModal && (
+            <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-950/20 space-y-3 animate-in slide-in-from-top-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
+                  <Wand2 className="h-4 w-4" />
+                  <span>Paste Raw Stack Trace or Customer Ticket</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-mono">Grok AI Triage Parser</span>
+              </div>
+              <textarea
+                placeholder="Paste unformatted stack trace, error logs, or customer ticket text here..."
+                value={rawLogText}
+                onChange={(e) => setRawLogText(e.target.value)}
+                rows={3}
+                className="w-full rounded-md border border-purple-500/30 bg-black/40 p-2.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-purple-400"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAiLogModal(false)}
+                  className="text-xs h-7"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="glow"
+                  size="sm"
+                  onClick={handleAiSynthesizeLog}
+                  disabled={aiSynthesizing || !rawLogText.trim()}
+                  className="gap-1.5 text-xs h-7 font-semibold"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>{aiSynthesizing ? 'Synthesizing with Grok AI...' : 'Auto-Fill Fields'}</span>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* AI Duplicate Detection Radar Banner */}
+          {duplicates.length > 0 && (
+            <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 space-y-2 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+                  <Flame className="h-4 w-4" />
+                  <span>Duplicate Radar Warning ({duplicates[0].similarity_score}% Match)</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-mono">Potential duplicates detected</span>
+              </div>
+              <div className="space-y-1.5">
+                {duplicates.map((d) => (
+                  <div
+                    key={d.issue_id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-amber-500/20 text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-primary">{d.key}</span>
+                      <span className="text-foreground line-clamp-1">{d.title}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="outline" className="text-[10px] font-mono">
+                        {d.similarity_score}% SIMILAR
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px] font-mono">
+                        {d.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Success Banner */}
           {createdIssue ? (
             <div className="py-12 text-center space-y-4 animate-in zoom-in-95">
@@ -468,7 +618,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           <div className="flex items-center justify-between px-6 py-4 border-t border-border/60 bg-secondary/20 shrink-0">
             <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
               <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>Grok AI Duplicate Radar ready</span>
+              <span>Grok AI Duplicate Radar Active</span>
             </div>
 
             <div className="flex items-center gap-2">
