@@ -25,6 +25,10 @@ import {
   Clock,
   Layers,
   ChevronDown,
+  Wand2,
+  X,
+  Radio,
+  Check,
 } from 'lucide-react';
 
 interface SavedView {
@@ -50,6 +54,12 @@ export const IssuesPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [savedViews, setSavedViews] = useState<SavedView[]>([]);
   const [activeSavedViewId, setActiveSavedViewId] = useState<string>('all');
+
+  // Natural Language Search State
+  const [showNlSearch, setShowNlSearch] = useState(false);
+  const [nlQuery, setNlQuery] = useState('');
+  const [nlParsing, setNlParsing] = useState(false);
+  const [nlExplanation, setNlExplanation] = useState<string | null>(null);
 
   const fetchSavedViews = async () => {
     try {
@@ -92,6 +102,25 @@ export const IssuesPage: React.FC = () => {
     fetchIssues();
   };
 
+  const handleNlSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nlQuery.trim()) return;
+    setNlParsing(true);
+    try {
+      const res = await api.post<any>('/ai/nl-query', { query: nlQuery });
+      const f = res.structured_filters || res.filters || {};
+
+      if (f.priority) setSelectedPriority(Array.isArray(f.priority) ? f.priority[0] : f.priority);
+      if (f.status) setSelectedStatus(Array.isArray(f.status) ? f.status[0] : f.status);
+      if (f.search) setSearch(f.search);
+      setNlExplanation(res.explanation || `Filtered by: "${nlQuery}"`);
+    } catch {
+      //
+    } finally {
+      setNlParsing(false);
+    }
+  };
+
   const handleApplySavedView = (view: SavedView) => {
     setActiveSavedViewId(view.id);
     if (view.query_filters.status) setSelectedStatus(view.query_filters.status);
@@ -110,6 +139,7 @@ export const IssuesPage: React.FC = () => {
     setSelectedPriority('');
     setSelectedAssignee('');
     setSearch('');
+    setNlExplanation(null);
   };
 
   const getStatusBadge = (status: IssueStatus) => {
@@ -151,10 +181,10 @@ export const IssuesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-200">
       <PageHeader
         title="Issues & Discovery Hub"
-        description={`Explore defects via Backlog Table, Agile Kanban Board, and Saved Custom Views.`}
+        description="Filter defects via Backlog Table, Agile Kanban Board, and Saved Custom Views."
         badge={
           <Badge variant="purple" className="font-mono text-[11px]">
             {activeProject?.key || '---'}
@@ -185,16 +215,78 @@ export const IssuesPage: React.FC = () => {
           </div>
 
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowNlSearch(!showNlSearch)}
+            className={`gap-1.5 text-xs h-9 border-purple-500/40 text-purple-300 ${
+              showNlSearch ? 'bg-purple-950/40' : 'hover:bg-purple-950/20'
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+            <span>AI Natural Search</span>
+          </Button>
+
+          <Button
             variant="glow"
             size="sm"
             onClick={() => setShowModal(true)}
-            className="gap-1.5 text-xs font-semibold"
+            className="gap-1.5 text-xs h-9 font-semibold"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Report Bug</span>
           </Button>
         </div>
       </PageHeader>
+
+      {/* AI Natural Language Query Expansion Drawer */}
+      {showNlSearch && (
+        <Card className="border-purple-500/40 bg-purple-950/20 p-4 space-y-3 animate-in slide-in-from-top-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
+              <Wand2 className="h-4 w-4" />
+              <span>Search with Natural Language (Grok AI)</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">
+              e.g. "Show all open critical checkout bugs assigned to Bob"
+            </span>
+          </div>
+
+          <form onSubmit={handleNlSearch} className="flex gap-2">
+            <Input
+              placeholder="e.g. Show all open critical checkout bugs assigned to Bob..."
+              value={nlQuery}
+              onChange={(e) => setNlQuery(e.target.value)}
+              className="text-xs h-9 font-medium border-purple-500/30 bg-black/40"
+            />
+            <Button
+              type="submit"
+              variant="glow"
+              size="sm"
+              disabled={nlParsing || !nlQuery.trim()}
+              className="gap-1 text-xs h-9 font-semibold shrink-0 bg-purple-600 hover:bg-purple-500"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>{nlParsing ? 'Parsing...' : 'Filter'}</span>
+            </Button>
+          </form>
+        </Card>
+      )}
+
+      {/* AI Filter Applied Notice */}
+      {nlExplanation && (
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-purple-950/30 border border-purple-500/30 text-xs text-purple-300">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+            <span><strong>Active AI Filter:</strong> {nlExplanation}</span>
+          </div>
+          <button
+            onClick={handleClearFilters}
+            className="text-[11px] font-semibold text-purple-400 hover:text-purple-200 underline"
+          >
+            Clear AI Filters
+          </button>
+        </div>
+      )}
 
       {/* Saved Views & Quick Filters Ribbon */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
@@ -207,11 +299,45 @@ export const IssuesPage: React.FC = () => {
           onClick={handleClearFilters}
           className={`px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all shrink-0 ${
             activeSavedViewId === 'all'
-              ? 'border-primary bg-primary/15 text-primary'
+              ? 'border-primary bg-primary/15 text-primary font-bold'
               : 'border-border/60 bg-secondary/30 text-muted-foreground hover:bg-secondary/60'
           }`}
         >
           All Issues
+        </button>
+
+        {/* Quick Filter: P0 Criticals */}
+        <button
+          onClick={() => {
+            setSelectedPriority('P0_CRITICAL');
+            setSelectedStatus('');
+            setActiveSavedViewId('p0-critical');
+          }}
+          className={`px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 ${
+            activeSavedViewId === 'p0-critical'
+              ? 'border-red-500 bg-red-500/20 text-red-300 font-bold'
+              : 'border-border/60 bg-secondary/30 text-muted-foreground hover:bg-secondary/60'
+          }`}
+        >
+          <Flame className="h-3 w-3 text-red-400" />
+          <span>P0 Criticals</span>
+        </button>
+
+        {/* Quick Filter: Needs QA Verification */}
+        <button
+          onClick={() => {
+            setSelectedStatus('RESOLVED');
+            setSelectedPriority('');
+            setActiveSavedViewId('needs-qa');
+          }}
+          className={`px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 ${
+            activeSavedViewId === 'needs-qa'
+              ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold'
+              : 'border-border/60 bg-secondary/30 text-muted-foreground hover:bg-secondary/60'
+          }`}
+        >
+          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+          <span>Needs QA Verification</span>
         </button>
 
         {savedViews.map((v) => (
@@ -220,11 +346,10 @@ export const IssuesPage: React.FC = () => {
             onClick={() => handleApplySavedView(v)}
             className={`px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 ${
               activeSavedViewId === v.id
-                ? 'border-purple-500 bg-purple-500/15 text-purple-300'
+                ? 'border-purple-500 bg-purple-500/15 text-purple-300 font-bold'
                 : 'border-border/60 bg-secondary/30 text-muted-foreground hover:bg-secondary/60'
             }`}
           >
-            {v.name.includes('Critical') && <Flame className="h-3 w-3 text-red-400" />}
             <span>{v.name}</span>
           </button>
         ))}
@@ -237,7 +362,7 @@ export const IssuesPage: React.FC = () => {
             }}
             className={`px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all shrink-0 ${
               activeSavedViewId === 'assigned-me'
-                ? 'border-primary bg-primary/15 text-primary'
+                ? 'border-primary bg-primary/15 text-primary font-bold'
                 : 'border-border/60 bg-secondary/30 text-muted-foreground hover:bg-secondary/60'
             }`}
           >
@@ -302,75 +427,83 @@ export const IssuesPage: React.FC = () => {
         <Card className="border-border/80 bg-card/80">
           <CardContent className="p-0">
             {loading ? (
-              <div className="py-12 text-center text-xs text-muted-foreground animate-pulse">
+              <div className="py-12 text-center text-xs text-muted-foreground animate-pulse font-mono">
                 Querying defect records from backend...
               </div>
             ) : issues.length === 0 ? (
               <div className="py-16 text-center space-y-3">
                 <Bug className="h-10 w-10 text-muted-foreground/50 mx-auto" />
-                <h3 className="text-sm font-semibold text-foreground">No defects match your view filter</h3>
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  Try clearing your search query or selecting "All Issues" view above.
-                </p>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">No matching issues found</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Try adjusting your filters or search query to find relevant issues.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleClearFilters} className="text-xs">
+                  Reset Filters
+                </Button>
               </div>
             ) : (
-              <div className="divide-y divide-border/60">
-                {issues.map((issue) => (
-                  <div
-                    key={issue.id}
-                    className="group flex flex-col md:flex-row md:items-center justify-between p-4 hover:bg-secondary/30 transition-all cursor-pointer gap-3"
-                    onClick={() => navigate(`/issues/${issue.key}`)}
-                  >
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className="mt-0.5">
-                        <Bug className={`h-4 w-4 ${issue.priority === 'P0_CRITICAL' ? 'text-red-400' : 'text-amber-400'}`} />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Link
-                            to={`/issues/${issue.key}`}
-                            className="font-mono text-xs font-bold text-primary group-hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {issue.key}
-                          </Link>
-                          <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                            {issue.title}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/60 bg-secondary/20 text-muted-foreground font-semibold">
+                      <th className="py-3 px-4">Key</th>
+                      <th className="py-3 px-4">Summary</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Priority</th>
+                      <th className="py-3 px-4">Severity</th>
+                      <th className="py-3 px-4">Assignee</th>
+                      <th className="py-3 px-4">Component</th>
+                      <th className="py-3 px-4 text-right">Updated</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40 font-normal">
+                    {issues.map((issue) => (
+                      <tr
+                        key={issue.id}
+                        onClick={() => navigate(`/issues/${issue.key}`)}
+                        className="hover:bg-secondary/40 cursor-pointer transition-colors"
+                      >
+                        <td className="py-3 px-4 font-mono font-bold text-primary whitespace-nowrap">
+                          {issue.key}
+                        </td>
+                        <td className="py-3 px-4 font-medium text-foreground max-w-md truncate">
+                          {issue.title}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">{getStatusBadge(issue.status)}</td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {getPriorityBadge(issue.priority)}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="font-mono text-muted-foreground text-[11px]">
+                            {issue.severity}
                           </span>
-                          {issue.resolution && (
-                            <Badge variant="purple" className="text-[9px] font-mono px-1 py-0">
-                              {issue.resolution}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono flex-wrap">
-                          <span>
-                            Assignee: <strong className="text-foreground">{issue.assignee?.full_name || 'Unassigned'}</strong>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="text-foreground text-[11px]">
+                            {issue.assignee?.full_name || 'Unassigned'}
                           </span>
-                          {issue.component && (
-                            <>
-                              <span>•</span>
-                              <span className="text-indigo-300 font-sans">{issue.component.name}</span>
-                            </>
-                          )}
-                          <span>•</span>
-                          <span>Severity: {issue.severity}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
-                      {getPriorityBadge(issue.priority)}
-                      {getStatusBadge(issue.status)}
-                    </div>
-                  </div>
-                ))}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="text-muted-foreground text-[11px]">
+                            {issue.component?.name || '---'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-muted-foreground text-[11px] whitespace-nowrap">
+                          {new Date(issue.updated_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>
         </Card>
       )}
 
+      {/* Create Issue Modal */}
       <CreateIssueModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
