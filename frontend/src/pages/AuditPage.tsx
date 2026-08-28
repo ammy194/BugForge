@@ -61,9 +61,9 @@ export const AuditPage: React.FC = () => {
       if (searchQuery.trim()) params.append('search', searchQuery.trim());
 
       const res = await api.get<AuditLogItem[]>(`/audit?${params.toString()}`);
-      setLogs(res);
+      setLogs(Array.isArray(res) ? res : []);
     } catch {
-      //
+      setLogs([]);
     } finally {
       setLoading(false);
     }
@@ -72,6 +72,8 @@ export const AuditPage: React.FC = () => {
   useEffect(() => {
     fetchLogs();
   }, [selectedAction]);
+
+  const safeLogs = Array.isArray(logs) ? logs : [];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

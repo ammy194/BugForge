@@ -59,9 +59,9 @@ export const CIFailuresPage: React.FC = () => {
       const list = await api.get<CIFailure[]>(
         `/ci/failures${activeProject ? `?project_id=${activeProject.id}` : ''}`
       );
-      setFailures(list);
+      setFailures(Array.isArray(list) ? list : []);
     } catch {
-      //
+      setFailures([]);
     } finally {
       setLoading(false);
     }
@@ -70,6 +70,8 @@ export const CIFailuresPage: React.FC = () => {
   useEffect(() => {
     fetchFailures();
   }, [activeProject]);
+
+  const safeFailures = Array.isArray(failures) ? failures : [];
 
   const handleCreateIssueFromFailure = async (failureId: string) => {
     setConvertingId(failureId);
@@ -81,7 +83,7 @@ export const CIFailuresPage: React.FC = () => {
 
       // Update local status
       setFailures((prev) =>
-        prev.map((f) => (f.id === failureId ? res.failure : f))
+        (Array.isArray(prev) ? prev : []).map((f) => (f.id === failureId ? res.failure : f))
       );
 
       // Route to issue detail
@@ -153,7 +155,7 @@ export const CIFailuresPage: React.FC = () => {
           <CardContent className="p-4 space-y-1">
             <span className="text-xs font-semibold text-muted-foreground">Unresolved Failures</span>
             <div className="text-2xl font-bold font-mono text-red-400">
-              {failures.filter((f) => f.status === 'UNRESOLVED').length}
+              {safeFailures.filter((f) => f.status === 'UNRESOLVED').length}
             </div>
             <p className="text-[11px] text-muted-foreground">Awaiting 1-click issue conversion</p>
           </CardContent>
@@ -163,7 +165,7 @@ export const CIFailuresPage: React.FC = () => {
           <CardContent className="p-4 space-y-1">
             <span className="text-xs font-semibold text-muted-foreground">Converted to Issues</span>
             <div className="text-2xl font-bold font-mono text-emerald-400">
-              {failures.filter((f) => f.status === 'CONVERTED_TO_ISSUE').length}
+              {safeFailures.filter((f) => f.status === 'CONVERTED_TO_ISSUE').length}
             </div>
             <p className="text-[11px] text-muted-foreground">In active developer triage / fix workflow</p>
           </CardContent>
