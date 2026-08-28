@@ -1,43 +1,60 @@
 # ⚡ BugForge — Modern Developer Bug & Issue Tracking Platform
 
-> **A modern, developer-first reconstruction of Bugzilla engineered for high-velocity software engineering teams.**
-> Built with Express + TypeScript, Supabase PostgreSQL with defense-in-depth Row Level Security (RLS), React 18, Tailwind CSS, Grok AI intelligent triage, and bidirectional GitHub/CI ecosystem integrations.
+> **A modern developer intelligence platform and developer-first reconstruction of Bugzilla engineered for high-velocity software engineering teams.**  
+> Built with Express + TypeScript, React 18 + Vite, Tailwind CSS, Supabase (PostgreSQL, Auth, Storage, Realtime, Row Level Security), Grok AI (xAI API), and bidirectional GitHub Actions / CI failure ingestion.
 
 ---
 
-## 🚀 Key Highlights & Architectural Innovation
+## 🌐 Production Deployment & Architecture
 
-| Capability | Legacy Bugzilla | BugForge Innovation |
-| :--- | :--- | :--- |
-| **User Experience** | Fragmented HTML tables & dense forms | Modern Linear/GitHub-style UX with fluid dark mode & micro-interactions |
-| **Workflow Engine** | Fixed global transitions | Configurable Finite State Machine (FSM) enforcing role-checked lifecycle rules |
-| **Intelligence** | Manual duplicate searching | Real-time Grok AI Duplicate Detection Radar with resilient local heuristic fallback |
-| **AI Root Cause** | None | Instant stack trace diagnosis and Unified Git Diff code patch synthesizer |
-| **Git Ecosystem** | Legacy manual attachments | Bidirectional commit linking (`Fixes ECOM-1042`), PR auto-transitions, and branch helpers |
-| **CI/CD Quality** | Manual filing | Automated defect ticket ingestion directly from CI test failures with build logs |
-| **Security & RBAC** | Basic application guards | Multi-tier Project RBAC + defense-in-depth Supabase Row-Level Security (RLS) |
-| **Telemetry & MTTR**| Static tabular reports | Executive telemetry dashboard: MTTR, velocity ratio, component hotspots, & RFC-4180 CSV/JSON export |
-
----
-
-## 🏗️ System Architecture
-
-```mermaid
-graph TD
-    Client["React 18 + Vite Frontend\n(Tailwind CSS + Power Shortcuts)"]
-    API["Express 4 + TypeScript REST API\n(Validation, RBAC Middleware, FSM Engine)"]
-    DB[("Supabase PostgreSQL\n(13 Tables + Defense-in-Depth RLS)")]
-    Grok["Grok AI / xAI LLM\n(Duplicate Radar & Root Cause Diff)"]
-    Fallback["Heuristic NLP Fallback\n(Zero-Block Resiliency)"]
-    GH["GitHub & CI/CD Webhooks\n(Commits, PRs, Automated Ingestion)"]
-
-    Client -->|REST + JWT / Persona Tokens| API
-    API -->|Data Layer + RLS Guard| DB
-    API -->|Real-time Triage| Grok
-    Grok -.->|API Outage Fallback| Fallback
-    GH -->|Inbound Webhook Payload| API
-    API -->|Outbound Webhooks (Slack/Discord)| Client
+```text
+                    PUBLIC USERS
+                         │
+                         ▼
+                ┌──────────────────┐
+                │      VERCEL      │
+                │  React Frontend  │
+                └────────┬─────────┘
+                         │ HTTPS API (JSON)
+                         ▼
+                ┌──────────────────┐
+                │      RENDER      │
+                │ Node/Express API │
+                └────────┬─────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+     SUPABASE          GROK          GITHUB
+     Database           AI             API
+     Auth
+     Storage
+     Realtime
+     RLS
 ```
+
+### Production Services & Target URLs
+- **Frontend SPA**: [https://bugforge-app.vercel.app](https://bugforge-app.vercel.app) (Deployed via Vercel with SPA routing)
+- **Backend REST API**: [https://bugforge-backend.onrender.com](https://bugforge-backend.onrender.com) (Deployed via Render with `/health` checks)
+- **Database & Auth**: Supabase PostgreSQL with 7 applied migrations and defense-in-depth RLS.
+- **AI Intelligence**: Grok API (`https://api.x.ai/v1`) executed exclusively on the Render backend with resilient heuristic offline fallback.
+- **GitHub Repository**: [https://github.com/ammy194/BugForge](https://github.com/ammy194/BugForge)
+
+---
+
+## 🚀 Key Features & Developer Intelligence
+
+| Feature | Legacy Bugzilla | BugForge Innovation |
+| :--- | :--- | :--- |
+| **CI Failure Ingestion** | Manual filing | Automated test failure ingestion with 1-click bug creation and git SHA linking |
+| **AI Bug Triage & Grok** | None | Root cause hypotheses, smart component classification, and missing info checklist |
+| **2-Tier Duplicate Radar** | Dense table search | Candidate narrowing + semantic overlap scoring with 4 resolution actions |
+| **Bug Quality Score** | None | 0–100 deterministic quality meter evaluating repro steps, logs, and stack traces |
+| **Smart Assignment** | Manual dropdown | Multi-factor routing heuristic: component ownership, domain expertise, and workload balance |
+| **Release Health Radar** | Manual reports | Mathematical 0–100 readiness scoring formula, blocker alerts, and markdown release notes |
+| **GitHub Activity Panel** | Manual text links | PR status badges (reviews, CI checks, diff stats), branch copy buttons, linked commits |
+| **Realtime Collaboration** | Full page reloads | Live viewer presence pills, broadcast typing indicators, and conflict warning alerts |
+| **Telemetry & Metrics** | Basic statistics | Mean Time to Detect (MTTD), MTTR, Bug Reopen Rate, Defect Escape Rate, and Component Health Index |
+| **Security & Audit Center** | Basic log files | Immutable SOC2 & ISO compliant audit trail (`/audit`) tracking roles, exports, and auth logins |
 
 ---
 
@@ -62,87 +79,89 @@ BugForge features built-in personas with dedicated roles and permissions:
 | **`B`** or **`C`** | Open "Report Defect" Modal |
 | **`G` then `I`** | Navigate to Issues Backlog |
 | **`G` then `P`** | Navigate to Projects & RBAC |
-| **`G` then `A`** | Navigate to Analytics & MTTR Telemetry |
 | **`G` then `R`** | Navigate to Releases & Milestones |
+| **`G` then `C`** | Navigate to CI/CD Test Failures |
+| **`G` then `T`** | Navigate to Analytics & MTTR Telemetry |
+| **`G` then `A`** | Navigate to Security & Audit Center |
 | **`G` then `S`** | Navigate to Settings & Webhooks |
 | **`?`** | Open Keyboard Shortcuts Cheatsheet |
 
 ---
 
-## 🛠️ Quick Start & Local Setup
+## 🛠️ Local Development & Deployment Guide
 
 ### Prerequisites
 - Node.js `v18+` or Docker / Docker Compose
+- Supabase project (or local fallback mode)
 
-### 1. Clone & Install Dependencies
+### 1. Clone & Install
 ```bash
 git clone https://github.com/ammy194/BugForge.git
 cd BugForge
 
-# Install backend dependencies
-cd backend && npm install
-
-# Install frontend dependencies
-cd ../frontend && npm install
+# Install all workspace dependencies
+npm install
 ```
 
 ### 2. Configure Environment Variables
-Copy `.env.example` to `.env` in both folders or at root:
+Copy `.env.example` to `.env`:
 ```bash
-# Backend .env
-PORT=5000
-NODE_ENV=development
-SUPABASE_URL=https://your-supabase-id.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-JWT_SECRET=your-jwt-secret-key-32-chars-minimum
-GROK_API_KEY=your-grok-xai-key (Optional - falls back seamlessly)
+cp .env.example .env
 ```
 
-### 3. Run Development Servers
-```bash
-# Terminal 1: Backend Express REST API (http://localhost:5000)
-cd backend && npm run dev
-
-# Terminal 2: Frontend Vite App (http://localhost:5173)
-cd frontend && npm run dev
+#### Backend Environment Variables (Render / Server-Side)
+```ini
+PORT=10000
+NODE_ENV=production
+CLIENT_URL=https://bugforge-app.vercel.app
+FRONTEND_URL=https://bugforge-app.vercel.app
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_JWT_SECRET=your-supabase-jwt-secret
+GROK_API_KEY=xai-your-grok-api-key
+GROK_API_URL=https://api.x.ai/v1
+GITHUB_TOKEN=ghp_your_github_token
 ```
 
-### 4. Run Automated Test Suites
-```bash
-cd backend && npm test
+#### Frontend Environment Variables (Vercel / Browser)
+```ini
+VITE_API_BASE_URL=https://bugforge-backend.onrender.com/api/v1
+VITE_API_URL=https://bugforge-backend.onrender.com/api/v1
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
-*Executes all 55 integration tests across authentication, RBAC, issue creation, workflow state machine transitions, comments, mentions, full-text search, AI duplicate radar, GitHub webhooks, and analytics exports.*
+
+### 3. Deploying to Render (Backend)
+1. In Render, select **New Web Service** from the GitHub repository `ammy194/BugForge`.
+2. Set **Root Directory**: `backend`
+3. Set **Build Command**: `npm install && npm run build`
+4. Set **Start Command**: `npm start`
+5. Set **Health Check Path**: `/health`
+6. Add the Backend environment variables.
+
+### 4. Deploying to Vercel (Frontend)
+1. In Vercel, import the `ammy194/BugForge` repository.
+2. Set **Framework Preset**: `Vite`
+3. Set **Root Directory**: `frontend` (or use root with `vercel.json`)
+4. Set **Build Command**: `npm run build`
+5. Set **Output Directory**: `dist`
+6. Add the Frontend environment variables (`VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 
 ---
 
-## 🐳 Docker Deployment
+## 🔒 Security Architecture
+- **Server-Side AI API Keys**: Grok API keys and GitHub tokens are kept exclusively in server environment variables on Render and are NEVER sent to the browser.
+- **Defense-in-Depth RLS**: Supabase PostgreSQL tables implement Row Level Security policies matching user project memberships.
+- **Dynamic CORS**: API validates production Vercel domains, preview URLs, and localhost.
+- **SOC2 Audit Trail**: Immutable logging of role modifications, exports, logins, and settings updates at `/audit`.
 
-To spin up the entire production-grade stack with Docker Compose:
+---
 
+## 🧪 Automated Test Suite
+
+Run the full test suite with Vitest:
 ```bash
-docker-compose up --build
+npm test --workspace=backend
 ```
-- **Frontend**: `http://localhost:5173`
-- **Backend REST API**: `http://localhost:5000`
-
----
-
-## 📡 REST API Endpoints Catalog
-
-- **Health**: `GET /api/v1/health`
-- **Auth**: `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `POST /api/v1/auth/sync-profile`
-- **Users**: `GET /api/v1/users`, `GET /api/v1/users/me`
-- **Projects**: `GET / POST / PATCH / DELETE /api/v1/projects`
-- **RBAC Members**: `GET / POST / PATCH / DELETE /api/v1/projects/:id/members`
-- **Issues**: `GET / POST /api/v1/issues`, `GET / PATCH /api/v1/issues/:id`
-- **FSM Workflow**: `GET /api/v1/issues/:id/transitions`, `POST /api/v1/issues/:id/transition`
-- **Collaboration**: `GET / POST / DELETE /api/v1/issues/:id/comments`, `GET /api/v1/issues/:id/timeline`
-- **AI Intelligence**: `POST /api/v1/ai/duplicates`, `POST /api/v1/ai/extract`, `POST /api/v1/ai/root-cause`, `POST /api/v1/ai/nl-query`
-- **Developer Ecosystem**: `POST /api/v1/github/webhook`, `POST /api/v1/ci/webhook`, `GET /api/v1/github/branch/:issueId`
-- **Outbound Webhooks**: `GET / POST / DELETE /api/v1/webhooks`
-- **Analytics & Exports**: `GET /api/v1/analytics/overview`, `GET /api/v1/analytics/export/csv`, `GET /api/v1/analytics/export/json`
-
----
-
-## 📄 License
-MIT © 2026 BugForge Team. Built for the Modern Developer.
+**71 / 71 Tests Passing** across 17 test suites covering authentication, project RBAC, issues FSM, AI duplicate detection, Grok triage, release readiness, git links, and security audits.

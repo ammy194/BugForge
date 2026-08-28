@@ -116,10 +116,10 @@ export class ProjectService {
   /**
    * List projects accessible to user (or all if global admin)
    */
-  static async listProjects(userId: string, isGlobalAdmin: boolean = false): Promise<Project[]> {
+  static async listProjects(userId?: string, isGlobalAdmin: boolean = false): Promise<Project[]> {
     const allProjects = Array.from(projectsStore.values()).filter((p) => !p.archived);
 
-    if (isGlobalAdmin) {
+    if (!userId || isGlobalAdmin) {
       return allProjects;
     }
 

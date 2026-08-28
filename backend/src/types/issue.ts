@@ -38,6 +38,25 @@ export interface IssueHistoryItem {
   actor?: AuthenticatedUser;
 }
 
+export interface CreateIssueDto {
+  project_id: string;
+  title: string;
+  description: string;
+  issue_type?: IssueType;
+  priority?: IssuePriority;
+  severity?: IssueSeverity;
+  assignee_id?: string | null;
+  component_id?: string | null;
+  version_id?: string | null;
+  milestone_id?: string | null;
+  environment?: string | null;
+  repro_steps?: string | null;
+  expected_behavior?: string | null;
+  actual_behavior?: string | null;
+  due_date?: string | null;
+  labels?: string[];
+}
+
 export interface Issue {
   id: string;
   project_id: string;

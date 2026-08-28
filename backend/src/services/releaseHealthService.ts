@@ -84,7 +84,9 @@ export class ReleaseHealthService {
     );
 
     const regressionIssues = openIssues.filter(
-      (i) => (i.labels && i.labels.includes('regression')) || i.title.toLowerCase().includes('regression')
+      (i) =>
+        (i.labels && i.labels.some((l) => (typeof l === 'string' ? l : l.name).toLowerCase().includes('regression'))) ||
+        i.title.toLowerCase().includes('regression')
     );
 
     const unverifiedIssues = versionIssues.filter((i) => i.status === 'RESOLVED');

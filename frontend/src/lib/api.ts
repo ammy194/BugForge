@@ -1,6 +1,7 @@
 import { SystemHealthData } from '../types';
 
-export const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+const rawBase = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api/v1';
+export const API_BASE = rawBase.replace(/\/+$/, '');
 
 export class ApiError extends Error {
   public statusCode: number;
@@ -21,7 +22,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options.headers,
   };
 
-  const url = `${API_BASE}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE}${cleanEndpoint}`;
 
   try {
     const res = await fetch(url, { ...options, headers });
