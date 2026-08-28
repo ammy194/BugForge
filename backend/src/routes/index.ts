@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { healthRoutes } from './healthRoutes';
+import { authRoutes } from './authRoutes';
+import { userRoutes } from './userRoutes';
 
 export const apiRouter = Router();
 
 // Mount sub-routes under /api/v1
 apiRouter.use('/health', healthRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
 
 // Root API v1 welcome info
 apiRouter.get('/', (_req, res) => {
@@ -16,6 +20,7 @@ apiRouter.get('/', (_req, res) => {
     endpoints: {
       health: '/api/v1/health',
       auth: '/api/v1/auth',
+      users: '/api/v1/users',
       projects: '/api/v1/projects',
       issues: '/api/v1/issues',
       ai: '/api/v1/ai',
