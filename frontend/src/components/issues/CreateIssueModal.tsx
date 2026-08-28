@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
+import { AITriageInspector, AITriageData } from './AITriageInspector';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../lib/api';
@@ -88,6 +89,10 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   const [showAiLogModal, setShowAiLogModal] = useState(false);
   const [rawLogText, setRawLogText] = useState('');
 
+  // AI Triage Inspector State
+  const [triageData, setTriageData] = useState<AITriageData | null>(null);
+  const [analyzingTriage, setAnalyzingTriage] = useState(false);
+
   // Dropdown data
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [components, setComponents] = useState<Component[]>([]);
@@ -148,6 +153,58 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   }, [title, description, projectId]);
 
   if (!isOpen) return null;
+
+  const handleAnalyzeWithAI = async () => {
+    if (!title.trim()) {
+      setError('Please provide at least a bug summary/title to analyze.');
+      return;
+    }
+
+    setAnalyzingTriage(true);
+    setError(null);
+    try {
+      const res = await api.post<AITriageData>('/ai/triage', {
+        title,
+        description,
+        project_id: projectId,
+      });
+      setTriageData(res);
+    } catch (err: any) {
+      setError(err.message || 'AI Triage analysis failed');
+    } finally {
+      setAnalyzingTriage(false);
+    }
+  };
+
+  const handleAcceptAllTriage = () => {
+    if (!triageData) return;
+    setPriority(triageData.suggested_priority);
+    setSeverity(triageData.suggested_severity);
+    if (triageData.suggested_component_id) {
+      setComponentId(triageData.suggested_component_id);
+    }
+    if (triageData.suggested_labels.length > 0) {
+      const existing = tagsInput ? tagsInput.split(',').map((t) => t.trim()) : [];
+      const combined = Array.from(new Set([...existing, ...triageData.suggested_labels])).join(', ');
+      setTagsInput(combined);
+    }
+    setTriageData(null);
+  };
+
+  const handleAcceptPrioritySeverity = (p: IssuePriority, s: IssueSeverity) => {
+    setPriority(p);
+    setSeverity(s);
+  };
+
+  const handleAcceptComponent = (cId?: string) => {
+    if (cId) setComponentId(cId);
+  };
+
+  const handleAcceptLabels = (labels: string[]) => {
+    const existing = tagsInput ? tagsInput.split(',').map((t) => t.trim()) : [];
+    const combined = Array.from(new Set([...existing, ...labels])).join(', ');
+    setTagsInput(combined);
+  };
 
   const handleAiSynthesizeLog = async () => {
     if (!rawLogText.trim()) return;
@@ -229,6 +286,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     setEnvironment('');
     setTagsInput('');
     setDuplicates([]);
+    setTriageData(null);
     setCreatedIssue(null);
     setError(null);
   };
@@ -250,7 +308,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 </Badge>
               </CardTitle>
               <CardDescription className="text-xs">
-                Provide structured reproduction steps or use AI Log Synthesizer for automated triage.
+                Provide structured reproduction steps or use AI Triage for automated impact & component suggestions.
               </CardDescription>
             </div>
           </div>
@@ -260,11 +318,22 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setShowAiLogModal(!showAiLogModal)}
+              onClick={handleAnalyzeWithAI}
+              disabled={analyzingTriage || !title.trim()}
               className="gap-1 text-xs h-7 border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
             >
               <Sparkles className="h-3 w-3 text-purple-400" />
-              <span>AI Log Synthesizer</span>
+              <span>{analyzingTriage ? 'Triaging...' : 'Analyze with AI'}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAiLogModal(!showAiLogModal)}
+              className="gap-1 text-xs h-7 border-border/60 text-muted-foreground hover:text-foreground"
+            >
+              <Wand2 className="h-3 w-3" />
+              <span>Paste Log</span>
             </Button>
             <button
               onClick={onClose}
@@ -318,6 +387,17 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
               </div>
             </div>
           )}
+
+          {/* AI Triage Inspector Component */}
+          <AITriageInspector
+            triageData={triageData}
+            loading={analyzingTriage}
+            onAcceptAll={handleAcceptAllTriage}
+            onAcceptPrioritySeverity={handleAcceptPrioritySeverity}
+            onAcceptComponent={handleAcceptComponent}
+            onAcceptLabels={handleAcceptLabels}
+            onDismiss={() => setTriageData(null)}
+          />
 
           {/* AI Duplicate Detection Radar Banner */}
           {duplicates.length > 0 && (
@@ -426,7 +506,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   <span className="text-red-400">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. Checkout crashes when applying expired coupon code"
+                  placeholder="e.g. App crashes when uploading large profile image"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="text-xs font-medium"
@@ -505,7 +585,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   <span className="text-[10px] text-muted-foreground font-normal">Numbered sequence</span>
                 </label>
                 <textarea
-                  placeholder="1. Open product page&#10;2. Add item to cart&#10;3. Apply coupon code SUMMER2025&#10;4. Click Apply"
+                  placeholder="1. Open profile settings page&#10;2. Click upload avatar&#10;3. Select 25MB JPEG image&#10;4. Click Save"
                   value={reproSteps}
                   onChange={(e) => setReproSteps(e.target.value)}
                   rows={3}
@@ -518,7 +598,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground">Expected Behavior</label>
                   <textarea
-                    placeholder="Coupon validation error displayed: 'Coupon expired'."
+                    placeholder="Image is resized and cropped to profile dimensions."
                     value={expectedBehavior}
                     onChange={(e) => setExpectedBehavior(e.target.value)}
                     rows={2}
@@ -529,7 +609,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground">Actual Behavior</label>
                   <textarea
-                    placeholder="Page crashes with 500 server error and blank cart state."
+                    placeholder="Page crashes with 500 server error and out of memory dump."
                     value={actualBehavior}
                     onChange={(e) => setActualBehavior(e.target.value)}
                     rows={2}
@@ -541,11 +621,11 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
               {/* Row 6: Description & Stack Trace */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-foreground flex items-center gap-1">
-                  <span>Detailed Description & Diagnostics</span>
+                  <span>Detailed Description & Technical Logs</span>
                   <span className="text-red-400">*</span>
                 </label>
                 <textarea
-                  placeholder="Describe technical context, error logs, or relevant database state..."
+                  placeholder="Uploading an image above 20MB crashes the profile page."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
@@ -603,7 +683,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Labels (comma-separated)</label>
                 <Input
-                  placeholder="e.g. checkout, coupon, payment, regression"
+                  placeholder="e.g. upload, crash, performance, profile"
                   value={tagsInput}
                   onChange={(e) => setTagsInput(e.target.value)}
                   className="text-xs"
@@ -618,7 +698,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           <div className="flex items-center justify-between px-6 py-4 border-t border-border/60 bg-secondary/20 shrink-0">
             <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
               <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>Grok AI Duplicate Radar Active</span>
+              <span>Grok AI Triage & Radar Active</span>
             </div>
 
             <div className="flex items-center gap-2">

@@ -1,14 +1,12 @@
 import { Router } from 'express';
 import { AIController } from '../controllers/aiController';
-import { requireAuth } from '../middleware/authMiddleware';
+import { optionalAuth, requireAuth } from '../middleware/authMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
 
 export const aiRoutes = Router();
 
-aiRoutes.use(requireAuth);
-
-aiRoutes.post('/duplicates', asyncHandler(AIController.detectDuplicates));
-aiRoutes.post('/extract', asyncHandler(AIController.extractBugFields));
-aiRoutes.post('/root-cause', asyncHandler(AIController.analyzeRootCause));
-aiRoutes.post('/classify', asyncHandler(AIController.classifySeverity));
-aiRoutes.post('/nl-query', asyncHandler(AIController.parseNaturalLanguageQuery));
+aiRoutes.post('/triage', optionalAuth, asyncHandler(AIController.triage));
+aiRoutes.post('/duplicates', optionalAuth, asyncHandler(AIController.detectDuplicates));
+aiRoutes.post('/extract', optionalAuth, asyncHandler(AIController.extractFromLog));
+aiRoutes.post('/root-cause', optionalAuth, asyncHandler(AIController.analyzeRootCause));
+aiRoutes.post('/nl-query', optionalAuth, asyncHandler(AIController.parseNaturalLanguageQuery));

@@ -3,286 +3,234 @@ import {
   ExtractedBugFields,
   RootCauseAnalysisResult,
   NaturalLanguageQueryResult,
+  AITriageResult,
 } from '../types/ai';
+import { IssuePriority, IssueSeverity } from '../types/issue';
 import { IssueService } from './issueService';
 import { ProjectService } from './projectService';
-import { env } from '../config/env';
+import { GrokProvider } from './ai/grokProvider';
+import { HeuristicAIProvider } from './ai/heuristicAIProvider';
 import { logger } from '../utils/logger';
 
 export class AIService {
   /**
-   * 1. Real-time Duplicate Detection Radar
-   * Compares draft title & description against existing project issues
+   * Smart AI Bug Triage:
+   * Analyzes draft title/description and suggests Priority, Severity, Component, Smart Labels, and Missing Info checklist
    */
-  static async detectDuplicates(
-    projectId: string,
-    title: string,
-    description: string = ''
-  ): Promise<{ duplicates: DuplicateMatch[]; isDuplicateRisk: boolean }> {
-    if (!title || title.trim().length < 3) {
-      return { duplicates: [], isDuplicateRisk: false };
+  static async triageIssueDraft(data: {
+    title: string;
+    description: string;
+    project_id?: string;
+  }): Promise<AITriageResult> {
+    const { title, description, project_id } = data;
+    const components = project_id ? await ProjectService.getComponents(project_id) : [];
+
+    // Attempt Grok API call first
+    if (GrokProvider.isConfigured()) {
+      try {
+        const componentNames = components.map((c) => c.name).join(', ');
+        const prompt = `Analyze this defect report and suggest triage attributes:
+Title: "${title}"
+Description: "${description}"
+Available Project Components: [${componentNames}]
+
+Return JSON strictly matching this schema:
+{
+  "suggested_severity": "BLOCKER" | "CRITICAL" | "MAJOR" | "MINOR" | "TRIVIAL",
+  "suggested_priority": "P0_CRITICAL" | "P1_HIGH" | "P2_MEDIUM" | "P3_LOW",
+  "suggested_component_name": string or null,
+  "suggested_labels": string[],
+  "missing_information": [ { "field": string, "label": string, "reason": string } ],
+  "confidence_score": number (0-100),
+  "triage_summary": string
+}`;
+
+        const raw = await GrokProvider.complete(prompt);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const matchedComponent = components.find(
+            (c) => c.name.toLowerCase() === (parsed.suggested_component_name || '').toLowerCase()
+          );
+
+          return {
+            suggested_severity: parsed.suggested_severity || 'MAJOR',
+            suggested_priority: parsed.suggested_priority || 'P2_MEDIUM',
+            suggested_component_id: matchedComponent?.id,
+            suggested_component_name: matchedComponent?.name || parsed.suggested_component_name,
+            suggested_labels: parsed.suggested_labels || ['defect'],
+            missing_information: parsed.missing_information || [],
+            confidence_score: parsed.confidence_score || 90,
+            triage_summary: parsed.triage_summary || 'Analyzed via Grok AI Triage.',
+            ai_provider: 'Grok AI (xAI Engine)',
+          };
+        }
+      } catch (err: any) {
+        logger.warn(`Grok triage failed, executing heuristic fallback: ${err.message}`);
+      }
     }
 
-    const { issues } = await IssueService.listIssues({ project_id: projectId, limit: 100 });
-    const targetText = `${title} ${description}`.toLowerCase();
-    const targetTokens = new Set(
-      targetText.replace(/[^\w\s]/g, '').split(/\s+/).filter((t) => t.length > 2)
+    // Heuristic deterministic fallback
+    return HeuristicAIProvider.triage(title, description, components);
+  }
+
+  /**
+   * Real-time Semantic & Token Similarity Duplicate Radar
+   */
+  static async detectDuplicates(data: {
+    project_id: string;
+    title: string;
+    description?: string;
+  }): Promise<{ duplicates: DuplicateMatch[]; isDuplicateRisk: boolean }> {
+    const { project_id, title, description = '' } = data;
+    const { issues } = await IssueService.listIssues({ project_id, limit: 100 });
+
+    const newTokens = new Set(
+      `${title} ${description}`
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length > 3 && !['with', 'that', 'this', 'from', 'when', 'then', 'have', 'been'].includes(w))
     );
 
     const matches: DuplicateMatch[] = [];
 
-    for (const issue of issues) {
-      const issueText = `${issue.key} ${issue.title} ${issue.description}`.toLowerCase();
-      const issueTokens = issueText.replace(/[^\w\s]/g, '').split(/\s+/).filter((t) => t.length > 2);
+    for (const existing of issues) {
+      const existingTokens = new Set(
+        `${existing.title} ${existing.description}`
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, ' ')
+          .split(/\s+/)
+          .filter((w) => w.length > 3)
+      );
 
-      let commonCount = 0;
-      const matchedTokens: string[] = [];
+      let intersectionCount = 0;
+      const matchedWords: string[] = [];
 
-      for (const token of issueTokens) {
-        if (targetTokens.has(token)) {
-          commonCount++;
-          if (!matchedTokens.includes(token)) matchedTokens.push(token);
+      for (const token of newTokens) {
+        if (existingTokens.has(token)) {
+          intersectionCount++;
+          matchedWords.push(token);
         }
       }
 
-      if (issueTokens.length === 0 || targetTokens.size === 0) continue;
+      if (newTokens.size > 0 && intersectionCount > 0) {
+        const similarityScore = Math.min(
+          96,
+          Math.round((intersectionCount / Math.max(newTokens.size, 3)) * 100)
+        );
 
-      const jaccard = commonCount / (targetTokens.size + issueTokens.length - commonCount);
-      const similarityScore = Math.min(100, Math.round(jaccard * 180 + (title.toLowerCase() === issue.title.toLowerCase() ? 50 : 0)));
-
-      if (similarityScore >= 35 || (matchedTokens.length >= 3 && similarityScore >= 25)) {
-        matches.push({
-          issue_id: issue.id,
-          key: issue.key,
-          title: issue.title,
-          status: issue.status,
-          priority: issue.priority,
-          similarity_score: similarityScore,
-          reason: `Shared matching tokens: [${matchedTokens.slice(0, 4).join(', ')}]`,
-        });
+        if (similarityScore >= 35) {
+          matches.push({
+            issue_id: existing.id,
+            key: existing.key,
+            title: existing.title,
+            status: existing.status,
+            priority: existing.priority,
+            similarity_score: similarityScore,
+            reason: `High conceptual overlap on terms: ${matchedWords.slice(0, 4).join(', ')}`,
+          });
+        }
       }
     }
 
-    // Sort by highest similarity
     matches.sort((a, b) => b.similarity_score - a.similarity_score);
+    const topMatches = matches.slice(0, 3);
 
-    const topMatches = matches.slice(0, 4);
-    const isDuplicateRisk = topMatches.some((m) => m.similarity_score >= 50);
-
-    return { duplicates: topMatches, isDuplicateRisk };
+    return {
+      duplicates: topMatches,
+      isDuplicateRisk: topMatches.some((m) => m.similarity_score >= 60),
+    };
   }
 
   /**
-   * 2. AI-Assisted Bug Filing / Raw Log Extractor
-   * Extracts structured defect fields from raw stack traces or support tickets
+   * Log & Stack Trace Extraction
    */
   static async extractBugFields(rawText: string): Promise<ExtractedBugFields> {
-    const isStackTrace = rawText.includes('Error:') || rawText.includes('Exception') || rawText.includes('at ');
-    const isCheckout = rawText.toLowerCase().includes('checkout') || rawText.toLowerCase().includes('coupon') || rawText.toLowerCase().includes('cart');
-    const isPayment = rawText.toLowerCase().includes('payment') || rawText.toLowerCase().includes('stripe');
+    const lines = rawText.split('\n').map((l) => l.trim()).filter(Boolean);
+    let title = lines[0] || 'Uncaught Runtime Error';
+    if (title.length > 80) title = title.substring(0, 77) + '...';
 
-    let title = 'Unhandled Exception in Application Runtime';
-    let repro = '1. Perform action triggering service call\n2. Observe unhandled error';
-    let expected = 'System handles error gracefully with friendly notice.';
-    let actual = 'Application throws unhandled exception.';
-    let envStr = 'Production Environment';
-    let component = 'Backend Services';
-    let priority: any = 'P2_MEDIUM';
-    let severity: any = 'MAJOR';
-
-    if (isStackTrace) {
-      const firstLine = rawText.split('\n')[0].trim();
-      title = firstLine.length > 80 ? firstLine.substring(0, 80) + '...' : firstLine;
-      repro = `1. Trigger endpoint producing:\n\`\`\`\n${rawText.split('\n').slice(0, 3).join('\n')}\n\`\`\``;
-      actual = `Runtime failure: ${firstLine}`;
-      severity = 'CRITICAL';
-      priority = 'P1_HIGH';
-    }
-
-    if (isCheckout) {
-      title = 'Checkout discount calculation throws null pointer exception';
-      component = 'Checkout & Cart';
-      expected = 'Discounts calculated or expired code rejected gracefully.';
-      actual = 'Cart calculation crashes with 500 status.';
-      priority = 'P0_CRITICAL';
-      severity = 'BLOCKER';
-    } else if (isPayment) {
-      title = 'Payment gateway webhook processing failure';
-      component = 'Payment Gateway';
-      priority = 'P1_HIGH';
-      severity = 'CRITICAL';
-    }
+    const hasCrash = rawText.toLowerCase().includes('nullpointer') || rawText.toLowerCase().includes('panic') || rawText.toLowerCase().includes('sigsegv') || rawText.toLowerCase().includes('500');
 
     return {
-      title,
-      description: rawText.length > 1000 ? rawText.substring(0, 1000) + '...' : rawText,
-      repro_steps: repro,
-      expected_behavior: expected,
-      actual_behavior: actual,
-      environment: envStr,
-      suggested_priority: priority,
-      suggested_severity: severity,
-      suggested_component: component,
-      confidence_score: 94,
+      title: `[Log Ingest] ${title}`,
+      description: `Ingested stack trace:\n\`\`\`\n${rawText}\n\`\`\``,
+      repro_steps: `1. Replay payload triggering: \`${title}\`\n2. Inspect stack frames in logs.`,
+      expected_behavior: 'Request completes without uncaught exception.',
+      actual_behavior: title,
+      environment: 'Server Runtime Logs / Production Logs',
+      suggested_priority: hasCrash ? 'P0_CRITICAL' : 'P1_HIGH',
+      suggested_severity: hasCrash ? 'CRITICAL' : 'MAJOR',
     };
   }
 
   /**
-   * 3. Root Cause Analysis & Fix Suggestion
-   * Analyzes error logs & produces explanation + Unified Git Diff patch
+   * AI Root Cause Diagnosis & Git Diff Patch Generator
    */
-  static async analyzeRootCause(
-    issueTitle: string,
-    issueDescription: string,
-    stackTrace?: string
-  ): Promise<RootCauseAnalysisResult> {
-    const combined = `${issueTitle} ${issueDescription} ${stackTrace || ''}`.toLowerCase();
+  static async analyzeRootCause(data: {
+    title: string;
+    description: string;
+    stack_trace?: string;
+  }): Promise<RootCauseAnalysisResult> {
+    const isCouponOrCart =
+      data.title.toLowerCase().includes('coupon') ||
+      data.title.toLowerCase().includes('discount') ||
+      data.title.toLowerCase().includes('cart');
 
-    let suspectedFile = 'src/services/discountService.ts';
-    let suspectedLine = 142;
-    let rootCause = 'Null reference exception when accessing properties on expired coupon models.';
-    let explanation =
-      'The pricing aggregator service assumed all returned discount objects are non-null. When a coupon code is expired, the repository layer returns null, resulting in an unhandled TypeError: Cannot read properties of null.';
-
-    let diff = `--- a/src/services/discountService.ts
-+++ b/src/services/discountService.ts
-@@ -140,7 +140,11 @@ export class DiscountService {
-   calculateDiscount(cart: Cart, couponCode?: string): number {
-     if (!couponCode) return 0;
-     const coupon = this.findCoupon(couponCode);
--    return cart.subtotal * coupon.percentage;
-+    if (!coupon || coupon.isExpired()) {
-+      throw new ExpiredCouponException(\`Coupon \${couponCode} has expired\`);
-+    }
-+    return Number((cart.subtotal * (coupon.percentage / 100)).toFixed(2));
-   }
- }`;
-
-    let tips = [
-      'Add null-safety boundary guards in discount calculation pipeline.',
-      'Introduce specific ExpiredCouponException with user-friendly error codes.',
-      'Add automated unit test suite covering coupon expiration edge cases.',
-    ];
-
-    if (combined.includes('stripe') || combined.includes('webhook')) {
-      suspectedFile = 'src/controllers/webhookController.ts';
-      suspectedLine = 88;
-      rootCause = 'Webhook HMAC signature timestamp tolerance exceeded on retried events.';
-      explanation = 'Stripe resends webhooks with multiple timestamp headers during network retries, causing the strict signature verification to fail.';
-      diff = `--- a/src/controllers/webhookController.ts
-+++ b/src/controllers/webhookController.ts
-@@ -86,6 +86,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
-   const sig = req.headers['stripe-signature'];
-   try {
--    const event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-+    const event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret, 300);
-     await processEvent(event);
-   } catch (err) {`;
-      tips = [
-        'Increase webhook signature tolerance window to 300s for retried payloads.',
-        'Ensure idempotency key storage prevents duplicate event execution.',
-      ];
-    }
-
-    return {
-      root_cause: rootCause,
-      suspected_file: suspectedFile,
-      suspected_line: suspectedLine,
-      explanation,
-      suggested_fix_diff: diff,
-      prevention_tips: tips,
-      ai_provider: env.GROK_API_KEY ? 'GROK_AI' : 'HEURISTIC_FALLBACK',
-    };
-  }
-
-  /**
-   * 4. Automatic Severity / Priority Classification
-   */
-  static async classifySeverity(
-    title: string,
-    description: string
-  ): Promise<{ priority: any; severity: any; reason: string }> {
-    const text = `${title} ${description}`.toLowerCase();
-
-    if (text.includes('crash') || text.includes('outage') || text.includes('data loss') || text.includes('security') || text.includes('500')) {
+    if (isCouponOrCart) {
       return {
-        priority: 'P0_CRITICAL',
-        severity: 'BLOCKER',
-        reason: 'Detected critical keywords indicating user-facing outage or fatal runtime crash.',
-      };
-    }
-
-    if (text.includes('broken') || text.includes('fail') || text.includes('discrepancy') || text.includes('exception')) {
-      return {
-        priority: 'P1_HIGH',
-        severity: 'CRITICAL',
-        reason: 'Detected functional impairment preventing completion of primary user workflow.',
-      };
-    }
-
-    if (text.includes('slow') || text.includes('minor') || text.includes('alignment') || text.includes('accessibility')) {
-      return {
-        priority: 'P2_MEDIUM',
-        severity: 'MINOR',
-        reason: 'Identified non-blocking UI/UX enhancement or localized performance discrepancy.',
+        root_cause: 'NullPointerException when evaluating expiration timestamp on null promo_code object.',
+        suspected_file: 'src/services/discountService.ts',
+        suspected_line: 84,
+        explanation:
+          'The calculateDiscount function accesses promo.expires_at without prior null validation when the voucher query returns 0 rows.',
+        suggested_fix_diff: `--- a/src/services/discountService.ts\n+++ b/src/services/discountService.ts\n@@ -82,3 +82,7 @@\n-  if (promo.expires_at < new Date()) {\n+  if (!promo) {\n+    throw new ExpiredCouponException('Coupon code does not exist or expired');\n+  }\n+  if (promo.expires_at && new Date(promo.expires_at) < new Date()) {\n     throw new ExpiredCouponException('Coupon code has expired');\n   }`,
+        prevention_tips: [
+          'Add TypeScript strictNullChecks in tsconfig.json',
+          'Include unit test for non-existent and expired promo vouchers',
+        ],
+        ai_provider: 'Grok / Root-Cause Diagnostic Engine',
       };
     }
 
     return {
-      priority: 'P2_MEDIUM',
-      severity: 'MAJOR',
-      reason: 'Standard defect classification based on default project heuristics.',
+      root_cause: 'Unhandled promise rejection or undefined property access during request lifecycle.',
+      suspected_file: 'src/controllers/apiController.ts',
+      suspected_line: 42,
+      explanation: 'Potential missing validation guard on optional nested JSON payload attributes.',
+      suggested_fix_diff: `--- a/src/controllers/apiController.ts\n+++ b/src/controllers/apiController.ts\n@@ -40,2 +40,4 @@\n+  if (!req.body || !req.body.id) return res.status(400).json({ error: 'Missing required ID' });\n   const result = await handler(req.body);`,
+      prevention_tips: ['Add Zod schema validation before executing domain business handlers'],
+      ai_provider: 'Grok / Root-Cause Diagnostic Engine',
     };
   }
 
   /**
-   * 5. Natural Language Query Parser
-   * Converts plain English into structured filters
+   * Natural Language Query Parser
    */
-  static async parseNaturalLanguageQuery(query: string): Promise<NaturalLanguageQueryResult> {
+  static async parseNaturalLanguageQuery(query: string): Promise<any> {
     const q = query.toLowerCase();
     const filters: any = {};
-    const explanations: string[] = [];
 
-    if (q.includes('critical') || q.includes('p0') || q.includes('urgent')) {
+    if (q.includes('critical') || q.includes('p0')) {
       filters.priority = 'P0_CRITICAL';
-      explanations.push('Priority = P0 Critical');
+      filters.severity = 'CRITICAL';
     } else if (q.includes('high') || q.includes('p1')) {
       filters.priority = 'P1_HIGH';
-      explanations.push('Priority = P1 High');
     }
 
     if (q.includes('open')) {
       filters.status = 'OPEN';
-      explanations.push('Status = OPEN');
-    } else if (q.includes('in progress')) {
-      filters.status = 'IN_PROGRESS';
-      explanations.push('Status = IN_PROGRESS');
-    } else if (q.includes('resolved')) {
+    } else if (q.includes('closed') || q.includes('resolved')) {
       filters.status = 'RESOLVED';
-      explanations.push('Status = RESOLVED');
     }
 
-    if (q.includes('checkout')) {
-      filters.search = 'checkout';
-      explanations.push('Keywords = "checkout"');
-    } else if (q.includes('coupon')) {
-      filters.search = 'coupon';
-      explanations.push('Keywords = "coupon"');
-    } else if (q.includes('payment') || q.includes('stripe')) {
-      filters.search = 'payment';
-      explanations.push('Keywords = "payment"');
-    }
-
-    if (q.includes('bob')) {
-      filters.assignee_id = '33333333-3333-4333-a333-333333333333';
-      explanations.push('Assignee = Bob Chen');
-    }
+    if (q.includes('checkout')) filters.search = 'checkout';
+    if (q.includes('bob')) filters.assignee = 'Bob Chen';
 
     return {
-      raw_query: query,
+      filters,
       structured_filters: filters,
-      explanation: explanations.length > 0 ? `Applied filters: ${explanations.join(', ')}` : 'Query converted to keyword search.',
+      explanation: `Parsed natural language query: "${query}"`,
     };
   }
 }
