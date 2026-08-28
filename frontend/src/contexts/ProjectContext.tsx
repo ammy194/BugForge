@@ -37,17 +37,18 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       const list = await api.get<Project[]>('/projects');
-      setProjects(list);
+      const projectsList = Array.isArray(list) ? list : [];
+      setProjects(projectsList);
 
       // Restore active project or default to first project
       const savedKey = localStorage.getItem('bugforge_active_project_key');
-      const found = list.find((p) => p.key === savedKey) || list[0] || null;
+      const found = projectsList.find((p) => p.key === savedKey) || projectsList[0] || null;
       setActiveProject(found);
       if (found) {
         localStorage.setItem('bugforge_active_project_key', found.key);
       }
     } catch {
-      // Fallback
+      setProjects([]);
     } finally {
       setLoading(false);
     }

@@ -64,9 +64,9 @@ export const IssuesPage: React.FC = () => {
   const fetchSavedViews = async () => {
     try {
       const views = await api.get<SavedView[]>('/views');
-      setSavedViews(views);
+      setSavedViews(Array.isArray(views) ? views : []);
     } catch {
-      //
+      setSavedViews([]);
     }
   };
 
@@ -81,9 +81,9 @@ export const IssuesPage: React.FC = () => {
       if (selectedAssignee) params.append('assignee_id', selectedAssignee);
 
       const res = await api.get<Issue[]>(`/issues?${params.toString()}`);
-      setIssues(res);
+      setIssues(Array.isArray(res) ? res : []);
     } catch {
-      //
+      setIssues([]);
     } finally {
       setLoading(false);
     }

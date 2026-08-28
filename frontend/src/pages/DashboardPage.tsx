@@ -51,9 +51,9 @@ export const DashboardPage: React.FC = () => {
       ]);
 
       setHealth(hData);
-      setAllIssues(issuesList);
+      setAllIssues(Array.isArray(issuesList) ? issuesList : []);
     } catch {
-      //
+      setAllIssues([]);
     } finally {
       setLoading(false);
     }
@@ -63,29 +63,31 @@ export const DashboardPage: React.FC = () => {
     fetchDashboardData();
   }, [activeProject, user]);
 
+  const safeIssues = Array.isArray(allIssues) ? allIssues : [];
+
   // Action Center Filtered Queues
-  const needsTriageIssues = allIssues.filter(
+  const needsTriageIssues = safeIssues.filter(
     (i) => i.status === 'OPEN' || !i.assignee_id || i.status === 'TRIAGED'
   );
 
-  const blockersAssigned = allIssues.filter(
+  const blockersAssigned = safeIssues.filter(
     (i) =>
       (i.priority === 'P0_CRITICAL' || i.severity === 'BLOCKER') &&
       i.assignee_id === user?.id &&
       !['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)
   );
 
-  const readyForQAIssues = allIssues.filter((i) => i.status === 'RESOLVED');
+  const readyForQAIssues = safeIssues.filter((i) => i.status === 'RESOLVED');
 
-  const staleIssues = allIssues.filter((i) => {
+  const staleIssues = safeIssues.filter((i) => {
     const isUnresolved = !['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status);
     const updatedDaysAgo = (Date.now() - new Date(i.updated_at).getTime()) / (1000 * 3600 * 24);
     return isUnresolved && updatedDaysAgo >= 7;
   });
 
-  const openCount = allIssues.filter((i) => !['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)).length;
-  const criticalCount = allIssues.filter((i) => i.priority === 'P0_CRITICAL').length;
-  const resolvedCount = allIssues.filter((i) => ['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)).length;
+  const openCount = safeIssues.filter((i) => !['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)).length;
+  const criticalCount = safeIssues.filter((i) => i.priority === 'P0_CRITICAL').length;
+  const resolvedCount = safeIssues.filter((i) => ['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)).length;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
