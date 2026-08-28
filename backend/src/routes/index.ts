@@ -3,6 +3,8 @@ import { healthRoutes } from './healthRoutes';
 import { authRoutes } from './authRoutes';
 import { userRoutes } from './userRoutes';
 import { projectRoutes } from './projectRoutes';
+import { issueRoutes } from './issueRoutes';
+import { notificationRoutes } from './notificationRoutes';
 
 export const apiRouter = Router();
 
@@ -11,6 +13,8 @@ apiRouter.use('/health', healthRoutes);
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/users', userRoutes);
 apiRouter.use('/projects', projectRoutes);
+apiRouter.use('/issues', issueRoutes);
+apiRouter.use('/notifications', notificationRoutes);
 
 // Root API v1 welcome info
 apiRouter.get('/', (_req, res) => {
@@ -25,10 +29,10 @@ apiRouter.get('/', (_req, res) => {
       users: '/api/v1/users',
       projects: '/api/v1/projects',
       issues: '/api/v1/issues',
+      notifications: '/api/v1/notifications',
       ai: '/api/v1/ai',
       github: '/api/v1/github',
       ci: '/api/v1/ci',
-      notifications: '/api/v1/notifications',
     },
   });
 });
