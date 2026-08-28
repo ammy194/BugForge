@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { healthRoutes } from './healthRoutes';
 import { authRoutes } from './authRoutes';
 import { userRoutes } from './userRoutes';
+import { projectRoutes } from './projectRoutes';
 
 export const apiRouter = Router();
 
@@ -9,6 +10,7 @@ export const apiRouter = Router();
 apiRouter.use('/health', healthRoutes);
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/users', userRoutes);
+apiRouter.use('/projects', projectRoutes);
 
 // Root API v1 welcome info
 apiRouter.get('/', (_req, res) => {

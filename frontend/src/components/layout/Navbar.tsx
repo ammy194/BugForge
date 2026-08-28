@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Plus, Bell, Command, Github, ChevronDown, LogOut, User, Sparkles, Check } from 'lucide-react';
+import { Search, Plus, Bell, Command, Github, ChevronDown, LogOut, Sparkles, Check, FolderGit2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Avatar } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { useAuth, DEMO_PERSONAS } from '../../contexts/AuthContext';
+import { useProject } from '../../contexts/ProjectContext';
 
 interface NavbarProps {
   onReportBugClick?: () => void;
@@ -12,7 +13,9 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
   const { user, logout, loginAsDemoPersona } = useAuth();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { projects, activeProject, selectProject, userProjectRole } = useProject();
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
 
   const getRoleBadgeVariant = (role?: string) => {
     switch (role) {
@@ -31,17 +34,64 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border/80 bg-background/80 px-6 backdrop-blur-xl">
-      {/* Left: Project Selector & Search */}
+      {/* Left: Project Selector Dropdown & Quick Search */}
       <div className="flex items-center gap-4 flex-1 max-w-xl">
-        <div className="hidden sm:flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/40 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors cursor-pointer">
-          <span className="flex h-2 w-2 rounded-full bg-indigo-500"></span>
-          <span className="font-semibold text-foreground">E-Commerce Platform</span>
-          <span className="text-[10px] text-muted-foreground font-mono bg-background/60 px-1.5 py-0.5 rounded border border-border/40">
-            ECOM
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground ml-1" />
+        {/* Project Selector Dropdown */}
+        <div className="relative">
+          <div
+            onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
+            className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/40 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors cursor-pointer select-none"
+          >
+            <span className="flex h-2 w-2 rounded-full bg-indigo-500"></span>
+            <span className="font-semibold text-foreground max-w-[140px] truncate">
+              {activeProject ? activeProject.name : 'Select Project'}
+            </span>
+            <span className="text-[10px] text-muted-foreground font-mono bg-background/60 px-1.5 py-0.5 rounded border border-border/40">
+              {activeProject ? activeProject.key : '---'}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground ml-1" />
+          </div>
+
+          {projectDropdownOpen && (
+            <div
+              className="absolute left-0 mt-2 w-64 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100"
+              onMouseLeave={() => setProjectDropdownOpen(false)}
+            >
+              <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Projects Workspace
+              </div>
+              <div className="space-y-1">
+                {projects.map((p) => {
+                  const isSelected = activeProject?.id === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        selectProject(p);
+                        setProjectDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition-colors ${
+                        isSelected
+                          ? 'bg-primary/15 text-primary font-semibold'
+                          : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="font-mono text-[10px] bg-secondary px-1.5 py-0.5 rounded border border-border/40 text-foreground">
+                          {p.key}
+                        </span>
+                        <span className="truncate">{p.name}</span>
+                      </div>
+                      {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Global Quick Search */}
         <div className="relative flex-1 max-w-md">
           <Input
             placeholder="Search issues, commits, labels... (Press / to focus)"
@@ -90,7 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
         {/* User Profile & Dropdown */}
         <div className="relative">
           <div
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
             className="flex items-center gap-2.5 pl-1 cursor-pointer group"
           >
             <Avatar
@@ -104,8 +154,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
                 <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
                   {user?.full_name || 'Guest User'}
                 </span>
-                <Badge variant={getRoleBadgeVariant(user?.global_role) as any} className="px-1 py-0 text-[9px] font-semibold">
-                  {user?.global_role || 'DEV'}
+                <Badge variant={getRoleBadgeVariant(userProjectRole) as any} className="px-1 py-0 text-[9px] font-semibold">
+                  {userProjectRole}
                 </Badge>
               </div>
               <span className="text-[10px] text-muted-foreground font-mono">{user?.email || 'user@bugforge.dev'}</span>
@@ -113,18 +163,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground ml-0.5" />
           </div>
 
-          {/* Profile Dropdown Menu */}
-          {dropdownOpen && (
+          {profileDropdownOpen && (
             <div
               className="absolute right-0 mt-2 w-64 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100"
-              onMouseLeave={() => setDropdownOpen(false)}
+              onMouseLeave={() => setProfileDropdownOpen(false)}
             >
               <div className="px-3 py-2 border-b border-border/60">
                 <p className="text-xs font-semibold text-foreground">{user?.full_name}</p>
                 <p className="text-[11px] text-muted-foreground font-mono">{user?.email}</p>
+                <div className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <span>Active Role:</span>
+                  <Badge variant={getRoleBadgeVariant(userProjectRole) as any} className="px-1.5 py-0 text-[9px]">
+                    {userProjectRole}
+                  </Badge>
+                </div>
               </div>
 
-              {/* Fast Switch Persona (for testing & judging) */}
+              {/* Fast Switch Persona */}
               <div className="py-2 px-1 border-b border-border/60">
                 <div className="px-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                   <Sparkles className="h-3 w-3 text-purple-400" />
@@ -138,7 +193,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
                       key={key}
                       onClick={() => {
                         loginAsDemoPersona(key);
-                        setDropdownOpen(false);
+                        setProfileDropdownOpen(false);
                       }}
                       className={`w-full flex items-center justify-between rounded-md px-2 py-1.5 text-xs transition-colors ${
                         isActive
@@ -157,7 +212,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
                 <button
                   onClick={() => {
                     logout();
-                    setDropdownOpen(false);
+                    setProfileDropdownOpen(false);
                   }}
                   className="w-full flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
                 >
