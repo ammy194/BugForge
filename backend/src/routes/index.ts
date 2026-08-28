@@ -7,6 +7,9 @@ import { issueRoutes } from './issueRoutes';
 import { notificationRoutes } from './notificationRoutes';
 import { viewRoutes } from './viewRoutes';
 import { aiRoutes } from './aiRoutes';
+import { githubRoutes } from './githubRoutes';
+import { ciRoutes } from './ciRoutes';
+import { webhookRoutes } from './webhookRoutes';
 
 export const apiRouter = Router();
 
@@ -19,6 +22,9 @@ apiRouter.use('/issues', issueRoutes);
 apiRouter.use('/notifications', notificationRoutes);
 apiRouter.use('/views', viewRoutes);
 apiRouter.use('/ai', aiRoutes);
+apiRouter.use('/github', githubRoutes);
+apiRouter.use('/ci', ciRoutes);
+apiRouter.use('/webhooks', webhookRoutes);
 
 // Root API v1 welcome info
 apiRouter.get('/', (_req, res) => {
@@ -38,6 +44,7 @@ apiRouter.get('/', (_req, res) => {
       ai: '/api/v1/ai',
       github: '/api/v1/github',
       ci: '/api/v1/ci',
+      webhooks: '/api/v1/webhooks',
     },
   });
 });

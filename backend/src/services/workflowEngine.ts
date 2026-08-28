@@ -15,10 +15,12 @@ export const WORKFLOW_TRANSITIONS: WorkflowTransitionRule[] = [
   // From OPEN
   { from: 'OPEN', to: 'TRIAGED', label: 'Triage Issue', allowedRoles: ['ADMIN', 'PROJECT_MANAGER'], allowReporter: false },
   { from: 'OPEN', to: 'IN_PROGRESS', label: 'Start Progress', allowedRoles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'], allowReporter: false },
+  { from: 'OPEN', to: 'RESOLVED', label: 'Resolve (Direct Commit / Hotfix)', allowedRoles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'], allowReporter: false, requiresResolution: true },
   { from: 'OPEN', to: 'CLOSED', label: 'Close as Invalid/Duplicate', allowedRoles: ['ADMIN', 'PROJECT_MANAGER'], allowReporter: true, requiresResolution: true },
 
   // From TRIAGED
   { from: 'TRIAGED', to: 'IN_PROGRESS', label: 'Start Progress', allowedRoles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'], allowReporter: false },
+  { from: 'TRIAGED', to: 'RESOLVED', label: 'Resolve (Direct Commit / Hotfix)', allowedRoles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'], allowReporter: false, requiresResolution: true },
   { from: 'TRIAGED', to: 'CLOSED', label: 'Reject / Close', allowedRoles: ['ADMIN', 'PROJECT_MANAGER'], allowReporter: true, requiresResolution: true },
 
   // From IN_PROGRESS
