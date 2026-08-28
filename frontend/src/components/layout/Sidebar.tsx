@@ -27,6 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
     { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: '12' },
     { name: 'Projects', to: '/projects', icon: FolderGit2 },
     { name: 'Releases', to: '/releases', icon: GitPullRequest },
+    { name: 'CI Failures', to: '/ci-failures', icon: Zap, badge: 'NEW' },
     { name: 'Analytics', to: '/analytics', icon: BarChart3 },
     { name: 'Settings', to: '/settings', icon: Settings },
   ];

@@ -85,6 +85,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     },
     {
+      id: 'nav-ci',
+      title: 'Go to CI/CD Automated Test Failures',
+      shortcut: 'G C',
+      icon: <Sparkles className="h-4 w-4 text-amber-400" />,
+      run: () => {
+        navigate('/ci-failures');
+        onClose();
+      },
+    },
+    {
       id: 'nav-analytics',
       title: 'Go to Analytics & MTTR Telemetry',
       shortcut: 'G A',

@@ -17,6 +17,7 @@ import { IssueDetailPage } from './pages/IssueDetailPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { ReleasesPage } from './pages/ReleasesPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
+import { CIFailuresPage } from './pages/CIFailuresPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -57,10 +58,13 @@ export const App: React.FC = () => {
                 <Route path="issues/:id" element={<IssueDetailPage />} />
                 <Route path="projects" element={<ProjectsPage />} />
                 <Route path="releases" element={<ReleasesPage />} />
+                <Route path="ci-failures" element={<CIFailuresPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
-                <Route path="*" element={<NotFoundPage />} />
               </Route>
+
+              {/* 404 Catch-all */}
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </BrowserRouter>
         </ProjectProvider>

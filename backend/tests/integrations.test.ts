@@ -91,7 +91,7 @@ describe('Developer Ecosystem & Webhook Integrations', () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.key).toMatch(/^ECOM-\d+$/);
-    expect(res.body.data.title).toContain('[CI/CD Failure]');
+    expect(res.body.data.title).toContain('[CI/CD]');
     expect(res.body.data.priority).toBe('P0_CRITICAL');
   });
 

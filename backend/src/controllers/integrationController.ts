@@ -54,7 +54,7 @@ export class IntegrationController {
     });
   }
 
-  // Inbound CI Failure Webhook
+  // Inbound CI Failure Ingestion
   static async handleCIFailure(req: Request, res: Response) {
     const validated = ciFailureWebhookSchema.parse(req.body);
     const newIssue = await CIIntegrationService.handleCIFailure(validated);
@@ -64,6 +64,44 @@ export class IntegrationController {
       statusCode: 201,
       data: newIssue,
       message: `Automated CI failure defect ticket created: ${newIssue.key}`,
+    });
+  }
+
+  // List CI Failures for Project
+  static async listCIFailures(req: Request, res: Response) {
+    const projectId = req.query.project_id as string | undefined;
+    const status = req.query.status as any;
+    const list = await CIIntegrationService.listFailures(projectId, status);
+
+    return ApiResponse.success({
+      res,
+      data: list,
+      message: 'CI failures retrieved',
+    });
+  }
+
+  // Ingest CI Failure Record
+  static async recordCIFailure(req: Request, res: Response) {
+    const record = await CIIntegrationService.ingestFailure(req.body);
+    return ApiResponse.success({
+      res,
+      statusCode: 201,
+      data: record,
+      message: 'CI failure recorded',
+    });
+  }
+
+  // 1-Click "Create Issue from Failure"
+  static async createIssueFromCIFailure(req: Request, res: Response) {
+    const failureId = req.params.id;
+    const actorUserId = req.user?.id;
+    const result = await CIIntegrationService.createIssueFromFailure(failureId, actorUserId as string);
+
+    return ApiResponse.success({
+      res,
+      statusCode: 201,
+      data: result,
+      message: `Defect ticket ${result.issue.key} created from CI test failure`,
     });
   }
 
