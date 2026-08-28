@@ -184,3 +184,28 @@ export interface SystemHealthData {
     };
   };
 }
+
+export type GitLinkType = 'COMMIT' | 'PR' | 'BRANCH' | 'CI_RUN';
+
+export interface GitLink {
+  id: string;
+  issue_id?: string;
+  link_type: GitLinkType;
+  external_id: string;
+  title: string;
+  url: string;
+  author?: string;
+  status?: string;
+  metadata?: any;
+  created_at?: string;
+}
+
+export interface Comment {
+  id: string;
+  issue_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  updated_at?: string;
+  user?: UserProfile;
+}

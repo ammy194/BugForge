@@ -5,9 +5,11 @@ import { Badge } from '../components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Avatar } from '../components/ui/avatar';
 import { WorkflowActions } from '../components/issues/WorkflowActions';
+import { GitHubActivityPanel } from '../components/issues/GitHubActivityPanel';
+import { useRealtimeIssue } from '../hooks/useRealtimeIssue';
 import { useProject } from '../contexts/ProjectContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Issue, IssueStatus, IssuePriority, IssueSeverity, ProjectMember, Component } from '../types';
+import { Issue, IssueStatus, IssuePriority, IssueSeverity, ProjectMember, Component, GitLink } from '../types';
 import { api } from '../lib/api';
 import {
   Bug,
@@ -34,6 +36,9 @@ import {
   Code2,
   Check,
   Flame,
+  Radio,
+  Users,
+  RefreshCw,
 } from 'lucide-react';
 
 interface TimelineEvent {
@@ -46,18 +51,6 @@ interface TimelineEvent {
   actor?: any;
   created_at: string;
   metadata?: any;
-}
-
-interface GitLink {
-  id: string;
-  link_type: 'COMMIT' | 'PR' | 'BRANCH' | 'CI_RUN';
-  external_id: string;
-  title: string;
-  url: string;
-  author?: string;
-  status?: string;
-  metadata?: any;
-  created_at: string;
 }
 
 interface RootCauseResult {
@@ -92,6 +85,25 @@ export const IssueDetailPage: React.FC = () => {
   const [analyzingRootCause, setAnalyzingRootCause] = useState(false);
   const [copiedPatch, setCopiedPatch] = useState(false);
 
+  // Realtime Hook
+  const {
+    activeViewers,
+    typingUsers,
+    conflictWarning,
+    sendTypingNotification,
+    dismissConflict,
+  } = useRealtimeIssue({
+    issueId: issue?.id || id || '',
+    initialIssue: issue,
+    onCommentReceived: (newComment) => {
+      fetchTimeline();
+    },
+    onIssueUpdated: (updatedIssue) => {
+      setIssue(updatedIssue);
+      fetchTimeline();
+    },
+  });
+
   const fetchIssueData = async () => {
     if (!id) return;
     setLoading(true);
@@ -99,17 +111,14 @@ export const IssueDetailPage: React.FC = () => {
       const issueData = await api.get<Issue>(`/issues/${id}`);
       setIssue(issueData);
 
-      const [timelineData, gitLinksData, mList, cList] = await Promise.all([
-        api.get<TimelineEvent[]>(`/issues/${id}/timeline`),
-        api.get<GitLink[]>(`/issues/${id}/git-links`),
-        getProjectMembers(issueData.project_id),
-        getProjectComponents(issueData.project_id),
-      ]);
-
-      setTimeline(timelineData);
-      setGitLinks(gitLinksData);
-      setMembers(mList);
-      setComponents(cList);
+      if (issueData.project_id) {
+        const [m, c] = await Promise.all([
+          getProjectMembers(issueData.project_id),
+          getProjectComponents(issueData.project_id),
+        ]);
+        setMembers(m);
+        setComponents(c);
+      }
     } catch {
       //
     } finally {
@@ -117,18 +126,66 @@ export const IssueDetailPage: React.FC = () => {
     }
   };
 
+  const fetchTimeline = async () => {
+    if (!id) return;
+    try {
+      const events = await api.get<TimelineEvent[]>(`/issues/${id}/timeline`);
+      setTimeline(events);
+    } catch {
+      //
+    }
+  };
+
+  const fetchGitLinks = async () => {
+    if (!id) return;
+    try {
+      const links = await api.get<GitLink[]>(`/issues/${id}/git-links`);
+      setGitLinks(links);
+    } catch {
+      //
+    }
+  };
+
   useEffect(() => {
     fetchIssueData();
+    fetchTimeline();
+    fetchGitLinks();
   }, [id]);
 
-  const handleDiagnoseRootCause = async () => {
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || !issue) return;
+    setSubmittingComment(true);
+    try {
+      await api.post(`/issues/${issue.id}/comments`, { body: commentText });
+      setCommentText('');
+      await fetchTimeline();
+    } catch {
+      //
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleAttributeChange = async (field: string, value: any) => {
+    if (!issue) return;
+    try {
+      const updated = await api.patch<Issue>(`/issues/${issue.id}`, { [field]: value });
+      setIssue(updated);
+      await fetchTimeline();
+    } catch {
+      //
+    }
+  };
+
+  const handleAnalyzeRootCause = async () => {
     if (!issue) return;
     setAnalyzingRootCause(true);
     try {
       const res = await api.post<RootCauseResult>('/ai/root-cause', {
         title: issue.title,
         description: issue.description,
-        stack_trace: issue.repro_steps || undefined,
+        stack_trace: issue.actual_behavior || '',
       });
       setRootCause(res);
     } catch {
@@ -145,30 +202,18 @@ export const IssueDetailPage: React.FC = () => {
     setTimeout(() => setCopiedPatch(false), 2000);
   };
 
-  const handlePostComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim() || !id) return;
-
-    setSubmittingComment(true);
+  const handleToggleWatch = async () => {
+    if (!issue) return;
     try {
-      await api.post(`/issues/${id}/comments`, { content: commentText });
-      setCommentText('');
-      const updatedTimeline = await api.get<TimelineEvent[]>(`/issues/${id}/timeline`);
-      setTimeline(updatedTimeline);
-    } catch {
-      //
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const handleAttributeChange = async (field: string, value: any) => {
-    if (!id) return;
-    try {
-      const updated = await api.patch<Issue>(`/issues/${id}`, { [field]: value });
-      setIssue(updated);
-      const updatedTimeline = await api.get<TimelineEvent[]>(`/issues/${id}/timeline`);
-      setTimeline(updatedTimeline);
+      if (isWatching) {
+        await api.delete(`/issues/${issue.id}/watch`);
+        setIsWatching(false);
+        setWatchersCount((prev) => Math.max(0, prev - 1));
+      } else {
+        await api.post(`/issues/${issue.id}/watch`, {});
+        setIsWatching(true);
+        setWatchersCount((prev) => prev + 1);
+      }
     } catch {
       //
     }
@@ -176,167 +221,226 @@ export const IssueDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-20 text-center text-xs text-muted-foreground animate-pulse">
-        Loading issue details and telemetry...
+      <div className="flex h-64 items-center justify-center text-xs text-muted-foreground font-mono animate-pulse">
+        Loading ticket, diagnostic telemetry, and realtime channel...
       </div>
     );
   }
 
   if (!issue) {
     return (
-      <div className="py-20 text-center space-y-3">
+      <div className="p-12 text-center space-y-4">
         <Bug className="h-10 w-10 text-muted-foreground mx-auto" />
-        <h2 className="text-base font-bold text-foreground">Defect Not Found</h2>
-        <p className="text-xs text-muted-foreground">The requested issue ID does not exist or has been removed.</p>
-        <Button size="sm" variant="outline" onClick={() => navigate('/issues')}>
-          Back to Issues
+        <h2 className="text-base font-bold text-foreground">Defect Ticket Not Found</h2>
+        <Button variant="outline" size="sm" onClick={() => navigate('/issues')}>
+          Return to Issues
         </Button>
       </div>
     );
   }
 
+  const getPriorityBadge = (p: IssuePriority) => {
+    switch (p) {
+      case 'P0_CRITICAL':
+        return <Badge variant="destructive" className="font-mono text-xs">P0 CRITICAL</Badge>;
+      case 'P1_HIGH':
+        return <Badge variant="warning" className="font-mono text-xs">P1 HIGH</Badge>;
+      case 'P2_MEDIUM':
+        return <Badge variant="secondary" className="font-mono text-xs">P2 MEDIUM</Badge>;
+      default:
+        return <Badge variant="outline" className="font-mono text-xs">P3 LOW</Badge>;
+    }
+  };
+
   const getTimelineIcon = (type: string) => {
     switch (type) {
-      case 'CREATED':
-        return <Bug className="h-3.5 w-3.5 text-primary" />;
-      case 'STATUS_CHANGE':
-        return <RotateCcw className="h-3.5 w-3.5 text-purple-400" />;
-      case 'ASSIGNMENT_CHANGE':
-        return <User className="h-3.5 w-3.5 text-indigo-400" />;
+      case 'TRANSITION':
+        return <Play className="h-3.5 w-3.5 text-primary" />;
       case 'COMMENT':
-        return <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />;
-      case 'GIT_LINK':
-        return <GitPullRequest className="h-3.5 w-3.5 text-cyan-400" />;
+        return <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />;
+      case 'GIT_COMMIT':
+        return <GitCommit className="h-3.5 w-3.5 text-emerald-400" />;
+      case 'GIT_PR':
+        return <GitPullRequest className="h-3.5 w-3.5 text-purple-400" />;
+      case 'CI_FAILURE':
+        return <Flame className="h-3.5 w-3.5 text-red-400" />;
       default:
-        return <Clock className="h-3.5 w-3.5 text-amber-400" />;
+        return <Clock className="h-3.5 w-3.5 text-muted-foreground" />;
     }
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Header & Breadcrumbs */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-            <Link to="/issues" className="hover:text-foreground flex items-center gap-1">
-              <ArrowLeft className="h-3 w-3" />
-              <span>Issues</span>
-            </Link>
-            <span>/</span>
-            <span className="text-foreground font-bold">{issue.key}</span>
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Non-intrusive Conflict Banner */}
+      {conflictWarning && (
+        <div className="flex items-center justify-between p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-xs text-amber-300 animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2 font-medium">
+            <Radio className="h-4 w-4 text-amber-400 animate-pulse" />
+            <span>{conflictWarning}</span>
           </div>
-
           <div className="flex items-center gap-2">
             <Button
+              type="button"
+              variant="outline"
               size="sm"
-              variant={isWatching ? 'secondary' : 'outline'}
               onClick={() => {
-                setIsWatching(!isWatching);
-                setWatchersCount((prev) => (isWatching ? prev - 1 : prev + 1));
+                fetchIssueData();
+                fetchTimeline();
+                dismissConflict();
               }}
-              className="gap-1.5 text-xs h-8"
+              className="gap-1 text-[11px] h-6 px-2.5 border-amber-500/30 text-amber-300 hover:bg-amber-500/20"
             >
-              <Eye className="h-3.5 w-3.5" />
-              <span>{isWatching ? 'Watching' : 'Watch'} ({watchersCount})</span>
+              <RefreshCw className="h-3 w-3" />
+              <span>Sync Changes</span>
             </Button>
+            <button
+              onClick={dismissConflict}
+              className="text-amber-400 hover:text-amber-200 font-bold px-1.5"
+            >
+              ×
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Issue Title & Status Badges */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/60">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="purple" className="font-mono text-xs font-bold">
-                {issue.key}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                {issue.issue_type}
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                {issue.severity}
-              </Badge>
-              <Badge variant={issue.priority === 'P0_CRITICAL' ? 'destructive' : 'warning'} className="text-xs">
-                {issue.priority}
-              </Badge>
+      {/* Top Breadcrumbs & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/issues')}
+            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Issues</span>
+          </Button>
+          <span className="text-muted-foreground/40 font-mono">/</span>
+          <span className="font-mono text-xs font-bold text-primary">{issue.key}</span>
+        </div>
+
+        {/* Realtime Presence Viewers & Watchers */}
+        <div className="flex items-center gap-3">
+          {/* Active Viewers Indicator */}
+          {activeViewers.length > 0 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-300 font-mono">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>{activeViewers.length} viewing</span>
             </div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
-              {issue.title}
-            </h1>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleWatch}
+            className={`gap-1.5 text-xs h-8 ${isWatching ? 'text-primary border-primary/40 bg-primary/10' : 'text-muted-foreground'}`}
+          >
+            <Eye className="h-3.5 w-3.5" />
+            <span>{isWatching ? 'Watching' : 'Watch'}</span>
+            <Badge variant="secondary" className="font-mono text-[10px] px-1 py-0 ml-0.5">
+              {watchersCount}
+            </Badge>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAnalyzeRootCause}
+            disabled={analyzingRootCause}
+            className="gap-1.5 text-xs h-8 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 shadow-sm"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+            <span>{analyzingRootCause ? 'Diagnosing...' : 'AI Root Cause'}</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Issue Header Card */}
+      <Card className="border-border/80 bg-card/90 shadow-lg">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="purple" className="font-mono text-xs">
+              {issue.key}
+            </Badge>
+            <Badge variant="secondary" className="text-xs font-semibold">
+              {issue.issue_type}
+            </Badge>
+            {getPriorityBadge(issue.priority)}
+            <Badge variant="outline" className="text-xs">
+              {issue.severity}
+            </Badge>
+            {issue.resolution && (
+              <Badge variant="success" className="font-mono text-xs font-bold">
+                RESOLVED: {issue.resolution}
+              </Badge>
+            )}
           </div>
 
-          {/* Workflow Action Bar */}
-          <div className="shrink-0 flex items-center gap-2 bg-secondary/30 p-2 rounded-lg border border-border/60">
-            <span className="text-[11px] font-semibold text-muted-foreground px-1">Status:</span>
-            <Badge variant="purple" className="font-mono text-xs font-bold">
-              {issue.status}
-              {issue.resolution ? ` (${issue.resolution})` : ''}
-            </Badge>
-            <div className="h-4 w-px bg-border mx-1" />
+          <h1 className="text-xl font-bold tracking-tight text-foreground">{issue.title}</h1>
+
+          {/* Workflow Transitions Engine Bar */}
+          <div className="pt-2 border-t border-border/60">
             <WorkflowActions
               issue={issue}
               onStatusChanged={(updated) => {
                 setIssue(updated);
-                api.get<TimelineEvent[]>(`/issues/${id}/timeline`).then(setTimeline);
+                fetchTimeline();
               }}
             />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Two Column Layout: Main Content vs Sidebar */}
+      {/* 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Main Column (2 spans) */}
+        {/* Left Column (2 spans) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Description Card */}
+          {/* Description & Repro Steps Card */}
           <Card className="border-border/80 bg-card/80">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-semibold">Overview & Description</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDiagnoseRootCause}
-                disabled={analyzingRootCause}
-                className="gap-1.5 text-xs h-7 border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
-              >
-                <Sparkles className="h-3 w-3 text-purple-400" />
-                <span>{analyzingRootCause ? 'Diagnosing with Grok AI...' : 'AI Root Cause Diagnosis'}</span>
-              </Button>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Technical Context & Reproduction
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-xs text-foreground leading-relaxed">
-              <p className="whitespace-pre-wrap">{issue.description}</p>
+            <CardContent className="space-y-4 text-xs">
+              <div>
+                <span className="font-semibold text-foreground block mb-1">Description:</span>
+                <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  {issue.description}
+                </p>
+              </div>
 
-              {/* Repro Steps */}
               {issue.repro_steps && (
-                <div className="p-3 rounded-lg bg-secondary/40 border border-border/50 space-y-1.5">
-                  <span className="font-semibold text-primary flex items-center gap-1.5">
-                    <Bug className="h-3.5 w-3.5" />
-                    <span>Steps to Reproduce:</span>
+                <div className="p-3 rounded-lg bg-black/40 border border-border/60 space-y-1">
+                  <span className="font-semibold text-foreground block font-mono text-[11px]">
+                    Steps to Reproduce:
                   </span>
-                  <pre className="font-mono text-[11px] whitespace-pre-wrap text-foreground/90 p-2 rounded bg-black/30">
+                  <p className="text-muted-foreground font-mono whitespace-pre-wrap text-[11px] leading-relaxed">
                     {issue.repro_steps}
-                  </pre>
+                  </p>
                 </div>
               )}
 
-              {/* Expected vs Actual */}
-              {(issue.expected_behavior || issue.actual_behavior) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  {issue.expected_behavior && (
-                    <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 text-xs">
-                      <span className="font-semibold text-emerald-400 block mb-1">Expected:</span>
-                      <span className="text-muted-foreground">{issue.expected_behavior}</span>
-                    </div>
-                  )}
-                  {issue.actual_behavior && (
-                    <div className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/5 text-xs">
-                      <span className="font-semibold text-red-400 block mb-1">Actual:</span>
-                      <span className="text-muted-foreground">{issue.actual_behavior}</span>
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/60">
+                {issue.expected_behavior && (
+                  <div className="p-2.5 rounded bg-emerald-500/5 border border-emerald-500/10 space-y-1">
+                    <span className="font-semibold text-emerald-400 block text-[11px]">
+                      Expected Outcome:
+                    </span>
+                    <p className="text-muted-foreground text-[11px]">{issue.expected_behavior}</p>
+                  </div>
+                )}
 
-              {/* Environment */}
+                {issue.actual_behavior && (
+                  <div className="p-2.5 rounded bg-red-500/5 border border-red-500/10 space-y-1">
+                    <span className="font-semibold text-red-400 block text-[11px]">
+                      Actual Failure:
+                    </span>
+                    <p className="text-muted-foreground text-[11px]">{issue.actual_behavior}</p>
+                  </div>
+                )}
+              </div>
+
               {issue.environment && (
                 <div className="pt-2 text-[11px] text-muted-foreground flex items-center gap-1.5 font-mono">
                   <span className="font-semibold text-foreground">Environment:</span>
@@ -397,7 +501,7 @@ export const IssueDetailPage: React.FC = () => {
             </Card>
           )}
 
-          {/* Unified Activity Timeline */}
+          {/* Unified Activity & Collaboration Timeline */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -418,55 +522,54 @@ export const IssueDetailPage: React.FC = () => {
                       <div className="absolute -left-6 mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-card border border-border">
                         {getTimelineIcon(event.type)}
                       </div>
-
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-foreground">
-                            {event.actor?.full_name || 'System Automation'}
-                          </span>
-                          <span className="text-muted-foreground">{event.title}</span>
-                          <span className="text-[10px] text-muted-foreground/60 font-mono">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-foreground">{event.title}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground">
                             {new Date(event.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-
                         {event.description && (
-                          <div className="p-3 rounded-md bg-secondary/40 border border-border/40 text-foreground font-sans mt-1">
-                            <p className="whitespace-pre-wrap">{event.description}</p>
-                          </div>
+                          <p className="text-muted-foreground text-xs">{event.description}</p>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Comment Composer */}
-                <form onSubmit={handlePostComment} className="pt-4 border-t border-border/60 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Avatar fallback={user?.full_name || 'User'} size="sm" />
-                    <span className="text-xs font-semibold text-foreground">Leave a Comment / Technical Note</span>
-                    <span className="text-[10px] text-muted-foreground ml-auto">Supports @mentions & markdown</span>
+                {/* Live Typing Indicator */}
+                {typingUsers.length > 0 && (
+                  <div className="text-[11px] text-indigo-400 font-mono flex items-center gap-2 animate-pulse pt-2 border-t border-border/40">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                    <span>{typingUsers.join(', ')} is typing a comment...</span>
                   </div>
+                )}
 
+                {/* Comment Box */}
+                <form onSubmit={handleAddComment} className="pt-4 border-t border-border/60 space-y-3">
                   <textarea
-                    placeholder="Type your comment... Mention teammates with @Bob Chen"
+                    placeholder="Add a comment or @mention an engineer (e.g. @bob)..."
                     value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
+                    onChange={(e) => {
+                      setCommentText(e.target.value);
+                      sendTypingNotification();
+                    }}
                     rows={3}
-                    className="w-full rounded-md border border-input bg-secondary/40 p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                    required
+                    className="w-full rounded-lg border border-input bg-secondary/40 p-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   />
-
-                  <div className="flex justify-end">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      Markdown supported & live synced
+                    </span>
                     <Button
                       type="submit"
                       variant="glow"
                       size="sm"
                       disabled={submittingComment || !commentText.trim()}
-                      className="gap-1.5"
+                      className="gap-1.5 text-xs font-semibold"
                     >
-                      <Send className="h-3.5 w-3.5" />
-                      <span>{submittingComment ? 'Posting...' : 'Post Comment'}</span>
+                      <Send className="h-3 w-3" />
+                      <span>{submittingComment ? 'Posting...' : 'Comment'}</span>
                     </Button>
                   </div>
                 </form>
@@ -553,46 +656,12 @@ export const IssueDetailPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Related Development (Commits, PRs, CI) */}
-          <Card className="border-border/80 bg-card/80">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Related Development
-              </CardTitle>
-              <GitPullRequest className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="space-y-3 text-xs">
-              {gitLinks.length === 0 ? (
-                <div className="text-[11px] text-muted-foreground">No linked git branches or pull requests yet.</div>
-              ) : (
-                gitLinks.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block p-2.5 rounded-md border border-border/60 bg-secondary/30 hover:bg-secondary/60 transition-all space-y-1"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-primary">
-                        {link.link_type === 'PR' && <GitPullRequest className="h-3 w-3" />}
-                        {link.link_type === 'COMMIT' && <GitCommit className="h-3 w-3" />}
-                        {link.link_type === 'BRANCH' && <GitBranch className="h-3 w-3" />}
-                        {link.link_type === 'CI_RUN' && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
-                        <span>{link.external_id}</span>
-                      </div>
-                      {link.status && (
-                        <Badge variant="outline" className="text-[9px] font-mono px-1 py-0">
-                          {link.status}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground line-clamp-1">{link.title}</p>
-                  </a>
-                ))
-              )}
-            </CardContent>
-          </Card>
+          {/* GitHub Activity & Development Panel */}
+          <GitHubActivityPanel
+            issue={issue}
+            gitLinks={gitLinks}
+            onGitLinkAdded={fetchGitLinks}
+          />
         </div>
       </div>
     </div>
