@@ -18,6 +18,8 @@ export type IssueSeverity = 'BLOCKER' | 'CRITICAL' | 'MAJOR' | 'MINOR' | 'TRIVIA
 
 export type IssueType = 'BUG' | 'FEATURE' | 'TASK' | 'IMPROVEMENT';
 
+export type IssueResolution = 'FIXED' | 'WONT_FIX' | 'DUPLICATE' | 'INVALID' | 'CANNOT_REPRODUCE';
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -96,6 +98,17 @@ export interface Label {
   color: string;
 }
 
+export interface IssueHistoryItem {
+  id: string;
+  issue_id: string;
+  actor_id?: string;
+  field_name: string;
+  old_value?: string | null;
+  new_value?: string | null;
+  created_at: string;
+  actor?: UserProfile;
+}
+
 export interface Issue {
   id: string;
   project_id: string;
@@ -108,28 +121,31 @@ export interface Issue {
   priority: IssuePriority;
   severity: IssueSeverity;
   reporter_id: string;
-  assignee_id?: string;
-  component_id?: string;
-  version_id?: string;
-  milestone_id?: string;
-  environment?: string;
-  repro_steps?: string;
-  expected_behavior?: string;
-  actual_behavior?: string;
-  resolution?: string;
-  duplicate_of_id?: string;
-  due_date?: string;
-  resolved_at?: string;
-  closed_at?: string;
+  assignee_id?: string | null;
+  component_id?: string | null;
+  version_id?: string | null;
+  milestone_id?: string | null;
+  environment?: string | null;
+  repro_steps?: string | null;
+  expected_behavior?: string | null;
+  actual_behavior?: string | null;
+  resolution?: IssueResolution | null;
+  duplicate_of_id?: string | null;
+  due_date?: string | null;
+  resolved_at?: string | null;
+  closed_at?: string | null;
   created_at: string;
   updated_at: string;
 
   // Joined relations
   reporter?: UserProfile;
-  assignee?: UserProfile;
+  assignee?: UserProfile | null;
   project?: Project;
-  component?: Component;
+  component?: Component | null;
+  version?: Version | null;
+  milestone?: Milestone | null;
   labels?: Label[];
+  history?: IssueHistoryItem[];
   comments_count?: number;
   attachments_count?: number;
 }

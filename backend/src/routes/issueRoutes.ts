@@ -11,4 +11,7 @@ issueRoutes.use(requireAuth);
 issueRoutes.get('/', asyncHandler(IssueController.listIssues));
 issueRoutes.post('/', asyncHandler(IssueController.createIssue));
 issueRoutes.get('/:id', asyncHandler(IssueController.getIssue));
+issueRoutes.patch('/:id', asyncHandler(IssueController.updateAttributes));
+issueRoutes.get('/:id/transitions', asyncHandler(IssueController.getTransitions));
+issueRoutes.post('/:id/transition', asyncHandler(IssueController.transitionStatus));
 issueRoutes.get('/:id/history', asyncHandler(IssueController.getIssueHistory));

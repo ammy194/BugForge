@@ -4,12 +4,14 @@ import {
   IssueStatus,
   IssuePriority,
   IssueSeverity,
+  IssueResolution,
   IssueHistoryItem,
   Label,
 } from '../types/issue';
 import { ProjectService } from './projectService';
 import { UserService, DEMO_PERSONAS } from './userService';
 import { NotificationService } from './notificationService';
+import { WorkflowEngine } from './workflowEngine';
 import { AppError } from '../utils/appError';
 import { logger } from '../utils/logger';
 
@@ -56,7 +58,7 @@ function initSeedIssues() {
       repro_steps: '1. Add any item to cart ($49.99)\n2. Proceed to checkout\n3. Enter promo code "SUMMER2025" (expired)\n4. Click Apply Button',
       expected_behavior: 'Friendly error banner: "Coupon code has expired."',
       actual_behavior: 'Red screen crash with 500 Internal Server Error: undefined price.discount',
-      created_at: new Date(now.getTime() - 45 * 60 * 1000).toISOString(), // 45m ago
+      created_at: new Date(now.getTime() - 45 * 60 * 1000).toISOString(),
       updated_at: new Date(now.getTime() - 10 * 60 * 1000).toISOString(),
     },
     {
@@ -143,7 +145,6 @@ function initSeedIssues() {
     const issue = i as Issue;
     issuesStore.set(issue.id, issue);
 
-    // Seed initial history
     issueHistoryStore.set(issue.id, [
       {
         id: `h-${issue.id}-1`,
@@ -171,13 +172,7 @@ initSeedIssues();
 
 export class IssueService {
   /**
-   * Core Bug Creation Workflow:
-   * 1. Validates project membership
-   * 2. Atomically increments project issue counter (e.g. 1042 -> 1043)
-   * 3. Generates human-readable key (e.g. ECOM-1043)
-   * 4. Persists issue entity
-   * 5. Creates immutable history audit entry
-   * 6. Triggers assignment notification if assigned
+   * Core Bug Creation Workflow
    */
   static async createIssue(
     data: {
@@ -206,7 +201,6 @@ export class IssueService {
     const reporter = await UserService.getProfileById(reporterId);
     if (!reporter) throw AppError.unauthorized('Reporter profile not found');
 
-    // Atomic key generation
     project.issue_counter = (project.issue_counter || 1000) + 1;
     project.open_issues_count = (project.open_issues_count || 0) + 1;
     const issueNumber = project.issue_counter;
@@ -242,7 +236,6 @@ export class IssueService {
 
     issuesStore.set(issueId, newIssue);
 
-    // Initial Audit History Entry
     const initialHistory: IssueHistoryItem[] = [
       {
         id: `hist-${Date.now()}-1`,
@@ -256,7 +249,6 @@ export class IssueService {
       },
     ];
 
-    // If assignee was designated at creation time
     if (data.assignee_id) {
       const assignee = await UserService.getProfileById(data.assignee_id);
       if (assignee) {
@@ -271,7 +263,6 @@ export class IssueService {
           actor: reporter,
         });
 
-        // Trigger Notification
         await NotificationService.createNotification({
           user_id: data.assignee_id,
           actor_id: reporterId,
@@ -285,14 +276,216 @@ export class IssueService {
     }
 
     issueHistoryStore.set(issueId, initialHistory);
-
     logger.info(`✅ Created issue ${issueKey}: "${data.title}" by ${reporter.email}`);
 
     return this.getIssue(issueId) as Promise<Issue>;
   }
 
   /**
-   * Fetch issue by ID or Key with all joined relations
+   * Execute validated workflow transition
+   */
+  static async transitionStatus(
+    issueId: string,
+    nextStatus: IssueStatus,
+    payload: { resolution?: IssueResolution | null; comment?: string; assignee_id?: string | null },
+    actorId: string
+  ): Promise<Issue> {
+    const rawIssue = issuesStore.get(issueId) || Array.from(issuesStore.values()).find((i) => i.key.toUpperCase() === issueId.toUpperCase());
+    if (!rawIssue) throw AppError.notFound(`Issue '${issueId}' not found`);
+
+    const actor = await UserService.getProfileById(actorId);
+    if (!actor) throw AppError.unauthorized('Actor not found');
+
+    const member = await ProjectService.getMember(rawIssue.project_id, actorId);
+    const userRole = actor.global_role === 'ADMIN' ? 'ADMIN' : (member?.role || 'DEVELOPER');
+    const isReporter = rawIssue.reporter_id === actorId;
+
+    // Validate Transition Rules using WorkflowEngine
+    const validation = WorkflowEngine.validateTransition(
+      rawIssue.status,
+      nextStatus,
+      payload.resolution,
+      userRole,
+      isReporter
+    );
+
+    if (!validation.valid) {
+      throw AppError.badRequest(validation.reason || 'Invalid workflow transition');
+    }
+
+    const prevStatus = rawIssue.status;
+    const now = new Date().toISOString();
+
+    // Update Issue State
+    rawIssue.status = nextStatus;
+    rawIssue.updated_at = now;
+
+    if (nextStatus === 'RESOLVED') {
+      rawIssue.resolution = payload.resolution || 'FIXED';
+      rawIssue.resolved_at = now;
+    } else if (nextStatus === 'CLOSED') {
+      rawIssue.closed_at = now;
+      if (!rawIssue.resolution && payload.resolution) {
+        rawIssue.resolution = payload.resolution;
+      }
+    } else if (nextStatus === 'REOPENED') {
+      rawIssue.resolution = null;
+      rawIssue.resolved_at = null;
+      rawIssue.closed_at = null;
+    }
+
+    if (payload.assignee_id !== undefined) {
+      rawIssue.assignee_id = payload.assignee_id;
+    }
+
+    // Log History
+    const historyList = issueHistoryStore.get(rawIssue.id) || [];
+    const historyItem: IssueHistoryItem = {
+      id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      issue_id: rawIssue.id,
+      actor_id: actorId,
+      field_name: 'status',
+      old_value: prevStatus,
+      new_value: `${nextStatus}${payload.resolution ? ` (${payload.resolution})` : ''}${payload.comment ? ` - ${payload.comment}` : ''}`,
+      created_at: now,
+      actor,
+    };
+    historyList.push(historyItem);
+    issueHistoryStore.set(rawIssue.id, historyList);
+
+    // Notify Reporter and Assignee
+    const notifyUsers = new Set<string>();
+    if (rawIssue.reporter_id && rawIssue.reporter_id !== actorId) notifyUsers.add(rawIssue.reporter_id);
+    if (rawIssue.assignee_id && rawIssue.assignee_id !== actorId) notifyUsers.add(rawIssue.assignee_id);
+
+    for (const targetUserId of notifyUsers) {
+      await NotificationService.createNotification({
+        user_id: targetUserId,
+        actor_id: actorId,
+        issue_id: rawIssue.id,
+        issue_key: rawIssue.key,
+        type: nextStatus === 'RESOLVED' ? 'RESOLVED' : nextStatus === 'REOPENED' ? 'REOPENED' : 'STATUS_CHANGED',
+        title: `Status Changed: ${rawIssue.key} → ${nextStatus}`,
+        message: `${actor.full_name} changed status from ${prevStatus} to ${nextStatus}`,
+      });
+    }
+
+    logger.info(`🔄 Transitioned ${rawIssue.key} from ${prevStatus} → ${nextStatus} by ${actor.email}`);
+
+    return this.getIssue(rawIssue.id) as Promise<Issue>;
+  }
+
+  /**
+   * Update issue attributes with granular audit trail diffing
+   */
+  static async updateAttributes(
+    issueId: string,
+    updates: Partial<Record<string, any>>,
+    actorId: string
+  ): Promise<Issue> {
+    const rawIssue = issuesStore.get(issueId) || Array.from(issuesStore.values()).find((i) => i.key.toUpperCase() === issueId.toUpperCase());
+    if (!rawIssue) throw AppError.notFound(`Issue '${issueId}' not found`);
+
+    const actor = await UserService.getProfileById(actorId);
+    if (!actor) throw AppError.unauthorized('Actor not found');
+
+    const now = new Date().toISOString();
+    const historyList = issueHistoryStore.get(rawIssue.id) || [];
+
+    const fieldsToTrack = [
+      'title',
+      'priority',
+      'severity',
+      'issue_type',
+      'assignee_id',
+      'component_id',
+      'version_id',
+      'milestone_id',
+      'due_date',
+      'environment',
+    ];
+
+    for (const field of fieldsToTrack) {
+      if (updates[field] !== undefined && (rawIssue as any)[field] !== updates[field]) {
+        const oldValue = (rawIssue as any)[field];
+        const newValue = updates[field];
+
+        (rawIssue as any)[field] = newValue;
+
+        // Populate friendly label for audit history
+        let displayOld = String(oldValue || 'None');
+        let displayNew = String(newValue || 'None');
+
+        if (field === 'assignee_id') {
+          const oldUser = oldValue ? await UserService.getProfileById(oldValue) : null;
+          const newUser = newValue ? await UserService.getProfileById(newValue) : null;
+          displayOld = oldUser?.full_name || 'Unassigned';
+          displayNew = newUser?.full_name || 'Unassigned';
+
+          // Trigger assignment notification
+          if (newValue && newValue !== actorId) {
+            await NotificationService.createNotification({
+              user_id: newValue,
+              actor_id: actorId,
+              issue_id: rawIssue.id,
+              issue_key: rawIssue.key,
+              type: 'ASSIGNED',
+              title: `Assigned: ${rawIssue.key}`,
+              message: `${actor.full_name} assigned you to "${rawIssue.title}"`,
+            });
+          }
+        }
+
+        historyList.push({
+          id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          issue_id: rawIssue.id,
+          actor_id: actorId,
+          field_name: field,
+          old_value: displayOld,
+          new_value: displayNew,
+          created_at: now,
+          actor,
+        });
+      }
+    }
+
+    if (updates.description !== undefined && updates.description !== rawIssue.description) {
+      rawIssue.description = updates.description;
+      historyList.push({
+        id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        issue_id: rawIssue.id,
+        actor_id: actorId,
+        field_name: 'description',
+        old_value: 'Previous description updated',
+        new_value: 'Description modified',
+        created_at: now,
+        actor,
+      });
+    }
+
+    rawIssue.updated_at = now;
+    issueHistoryStore.set(rawIssue.id, historyList);
+
+    return this.getIssue(rawIssue.id) as Promise<Issue>;
+  }
+
+  /**
+   * Get legal next transition actions for an issue
+   */
+  static async getAvailableTransitions(issueId: string, actorId: string) {
+    const issue = await this.getIssue(issueId);
+    if (!issue) throw AppError.notFound(`Issue '${issueId}' not found`);
+
+    const actor = await UserService.getProfileById(actorId);
+    const member = await ProjectService.getMember(issue.project_id, actorId);
+    const userRole = actor?.global_role === 'ADMIN' ? 'ADMIN' : (member?.role || 'DEVELOPER');
+    const isReporter = issue.reporter_id === actorId;
+
+    return WorkflowEngine.getAvailableTransitions(issue, userRole, isReporter);
+  }
+
+  /**
+   * Fetch full issue with relations
    */
   static async getIssue(identifier: string): Promise<Issue | null> {
     let issue = issuesStore.get(identifier);
@@ -303,7 +496,6 @@ export class IssueService {
     }
     if (!issue) return null;
 
-    // Join relations
     const [project, reporter, assignee, history] = await Promise.all([
       ProjectService.getProject(issue.project_id),
       UserService.getProfileById(issue.reporter_id),
@@ -333,9 +525,17 @@ export class IssueService {
   }
 
   /**
-   * Retrieve immutable audit history for an issue
+   * Retrieve audit history
    */
-  static async getIssueHistory(issueId: string): Promise<IssueHistoryItem[]> {
+  static async getIssueHistory(identifier: string): Promise<IssueHistoryItem[]> {
+    let issueId = identifier;
+    if (!issuesStore.has(identifier)) {
+      const found = Array.from(issuesStore.values()).find(
+        (i) => i.key.toUpperCase() === identifier.toUpperCase()
+      );
+      if (found) issueId = found.id;
+    }
+
     const history = issueHistoryStore.get(issueId) || [];
     const populated = await Promise.all(
       history.map(async (h) => ({
@@ -347,7 +547,7 @@ export class IssueService {
   }
 
   /**
-   * Query and filter issues with pagination
+   * List and filter issues
    */
   static async listIssues(query: {
     project_id?: string;
@@ -405,7 +605,6 @@ export class IssueService {
       );
     }
 
-    // Default sort by created_at desc
     list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     const total = list.length;
@@ -413,7 +612,6 @@ export class IssueService {
     const offset = query.offset || 0;
     const paginated = list.slice(offset, offset + limit);
 
-    // Populate joined relations
     const populated = await Promise.all(paginated.map((i) => this.getIssue(i.id)));
     return {
       issues: populated.filter(Boolean) as Issue[],

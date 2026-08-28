@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { useProject } from '../contexts/ProjectContext';
 import { CreateIssueModal } from '../components/issues/CreateIssueModal';
+import { WorkflowActions } from '../components/issues/WorkflowActions';
 import { Issue, IssueStatus, IssuePriority } from '../types';
 import { api } from '../lib/api';
 import {
@@ -21,17 +22,19 @@ import {
   Clock,
   Layers,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 export const IssuesPage: React.FC = () => {
   const { activeProject } = useProject();
   const [issues, setIssues] = useState<Issue[]>([]);
-  const [totalIssues, setTotalIssues] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
+  const [expandedIssueId, setExpandedIssueId] = useState<string | null>(null);
 
   const fetchIssues = async () => {
     setLoading(true);
@@ -44,7 +47,6 @@ export const IssuesPage: React.FC = () => {
 
       const res = await api.get<Issue[]>(`/issues?${params.toString()}`);
       setIssues(res);
-      setTotalIssues(res.length);
     } catch {
       //
     } finally {
@@ -59,6 +61,10 @@ export const IssuesPage: React.FC = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchIssues();
+  };
+
+  const handleStatusUpdated = (updatedIssue: Issue) => {
+    setIssues((prev) => prev.map((i) => (i.id === updatedIssue.id ? updatedIssue : i)));
   };
 
   const getStatusBadge = (status: IssueStatus) => {
@@ -102,8 +108,8 @@ export const IssuesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Issues & Defect Backlog"
-        description={`Track, assign, and resolve issues in ${activeProject?.name || 'current project'}.`}
+        title="Issues & Defect Lifecycle"
+        description={`FSM workflow engine, state transitions, and defect triage in ${activeProject?.name || 'current project'}.`}
         badge={
           <Badge variant="purple" className="font-mono text-[11px]">
             {activeProject?.key || '---'}
@@ -125,7 +131,7 @@ export const IssuesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <form onSubmit={handleSearchSubmit} className="relative flex-1 w-full">
           <Input
-            placeholder="Search by key, title, description, or environment... (Press Enter)"
+            placeholder="Search by key, title, description, environment... (Press Enter)"
             icon={<Search className="h-4 w-4" />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -181,46 +187,88 @@ export const IssuesPage: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-border/60">
-              {issues.map((issue) => (
-                <div
-                  key={issue.id}
-                  className="group flex flex-col md:flex-row md:items-center justify-between p-4 hover:bg-secondary/30 transition-all cursor-pointer gap-3"
-                >
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="mt-0.5">
-                      <Bug className={`h-4 w-4 ${issue.priority === 'P0_CRITICAL' ? 'text-red-400' : 'text-amber-400'}`} />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-bold text-primary group-hover:underline">
-                          {issue.key}
-                        </span>
-                        <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                          {issue.title}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono flex-wrap">
-                        <span>
-                          Assignee: <strong className="text-foreground">{issue.assignee?.full_name || 'Unassigned'}</strong>
-                        </span>
-                        {issue.component && (
-                          <>
+              {issues.map((issue) => {
+                const isExpanded = expandedIssueId === issue.id;
+                return (
+                  <div
+                    key={issue.id}
+                    className="group flex flex-col p-4 hover:bg-secondary/20 transition-all cursor-pointer gap-3"
+                    onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className="mt-0.5">
+                          <Bug className={`h-4 w-4 ${issue.priority === 'P0_CRITICAL' ? 'text-red-400' : 'text-amber-400'}`} />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-bold text-primary group-hover:underline">
+                              {issue.key}
+                            </span>
+                            <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {issue.title}
+                            </span>
+                            {issue.resolution && (
+                              <Badge variant="purple" className="text-[9px] font-mono px-1 py-0">
+                                {issue.resolution}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono flex-wrap">
+                            <span>
+                              Assignee: <strong className="text-foreground">{issue.assignee?.full_name || 'Unassigned'}</strong>
+                            </span>
+                            {issue.component && (
+                              <>
+                                <span>•</span>
+                                <span className="text-indigo-300 font-sans">{issue.component.name}</span>
+                              </>
+                            )}
                             <span>•</span>
-                            <span className="text-indigo-300 font-sans">{issue.component.name}</span>
-                          </>
-                        )}
-                        <span>•</span>
-                        <span>Severity: {issue.severity}</span>
+                            <span>Severity: {issue.severity}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
+                        {getPriorityBadge(issue.priority)}
+                        {getStatusBadge(issue.status)}
+                        <button className="text-muted-foreground hover:text-foreground p-1">
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
-                    {getPriorityBadge(issue.priority)}
-                    {getStatusBadge(issue.status)}
+                    {/* Expanded Detail & Workflow Transition Actions */}
+                    {isExpanded && (
+                      <div
+                        className="mt-3 pt-3 border-t border-border/60 space-y-3 animate-in fade-in"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {issue.description}
+                        </p>
+
+                        {issue.repro_steps && (
+                          <div className="p-2.5 rounded-md bg-secondary/40 border border-border/40 text-xs">
+                            <span className="font-semibold text-foreground block mb-1">Reproduction Steps:</span>
+                            <pre className="font-mono text-[11px] whitespace-pre-wrap text-muted-foreground">
+                              {issue.repro_steps}
+                            </pre>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-border/40">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                            <span>Workflow Actions:</span>
+                          </div>
+                          <WorkflowActions issue={issue} onStatusChanged={handleStatusUpdated} />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

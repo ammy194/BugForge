@@ -3,6 +3,7 @@ import { ApiResponse } from '../utils/apiResponse';
 import { AppError } from '../utils/appError';
 import { IssueService } from '../services/issueService';
 import { createIssueSchema, queryIssuesSchema } from '../validators/issueValidators';
+import { transitionIssueSchema, updateIssueAttributesSchema } from '../validators/workflowValidators';
 
 export class IssueController {
   /**
@@ -59,6 +60,65 @@ export class IssueController {
         offset: query.offset,
       },
       message: 'Issues retrieved',
+    });
+  }
+
+  /**
+   * POST /api/v1/issues/:id/transition
+   * Execute validated finite state machine status transition
+   */
+  static async transitionStatus(req: Request, res: Response) {
+    if (!req.user) throw AppError.unauthorized();
+
+    const validated = transitionIssueSchema.parse(req.body);
+    const updatedIssue = await IssueService.transitionStatus(
+      req.params.id,
+      validated.status,
+      {
+        resolution: validated.resolution,
+        comment: validated.comment,
+        assignee_id: validated.assignee_id,
+      },
+      req.user.id
+    );
+
+    return ApiResponse.success({
+      res,
+      data: updatedIssue,
+      message: `Issue ${updatedIssue.key} transitioned to ${validated.status}`,
+    });
+  }
+
+  /**
+   * GET /api/v1/issues/:id/transitions
+   * Retrieve valid next transitions based on current user role
+   */
+  static async getTransitions(req: Request, res: Response) {
+    if (!req.user) throw AppError.unauthorized();
+
+    const transitions = await IssueService.getAvailableTransitions(req.params.id, req.user.id);
+
+    return ApiResponse.success({
+      res,
+      data: transitions,
+      message: 'Available transitions retrieved',
+    });
+  }
+
+  /**
+   * PATCH /api/v1/issues/:id
+   * Modify issue attributes with granular audit log diffs
+   */
+  static async updateAttributes(req: Request, res: Response) {
+    if (!req.user) throw AppError.unauthorized();
+
+    const validated = updateIssueAttributesSchema.parse(req.body);
+    const updatedIssue = await IssueService.updateAttributes(req.params.id, validated, req.user.id);
+
+    return ApiResponse.success({
+      res,
+      data: updatedIssue,
+      message: 'Issue attributes updated successfully',
     });
   }
 
