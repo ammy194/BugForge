@@ -134,4 +134,41 @@ export class IssueController {
       message: 'Issue history retrieved',
     });
   }
+
+  /**
+   * POST /api/v1/issues/quality-score
+   */
+  static async calculateQualityScore(req: Request, res: Response) {
+    const { QualityScoreService } = await import('../services/qualityScoreService');
+    const result = QualityScoreService.calculateScore(req.body);
+    return ApiResponse.success({
+      res,
+      data: result,
+      message: 'Bug quality score calculated',
+    });
+  }
+
+  /**
+   * POST /api/v1/issues/:id/mark-duplicate
+   */
+  static async markDuplicate(req: Request, res: Response) {
+    if (!req.user) throw AppError.unauthorized('Authentication required');
+    const { duplicate_of_key } = req.body;
+    if (!duplicate_of_key) {
+      return res.status(400).json({ success: false, error: 'duplicate_of_key is required' });
+    }
+
+    const { DuplicateDetectionService } = await import('../services/duplicateDetectionService');
+    const updated = await DuplicateDetectionService.markAsDuplicate(
+      req.params.id,
+      duplicate_of_key,
+      req.user.id
+    );
+
+    return ApiResponse.success({
+      res,
+      data: updated,
+      message: `Issue marked as duplicate of ${duplicate_of_key}`,
+    });
+  }
 }

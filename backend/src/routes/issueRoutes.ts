@@ -29,6 +29,10 @@ issueRoutes.post('/:id/comments', asyncHandler(CollaborationController.createCom
 issueRoutes.patch('/:id/comments/:commentId', asyncHandler(CollaborationController.updateComment));
 issueRoutes.delete('/:id/comments/:commentId', asyncHandler(CollaborationController.deleteComment));
 
+// Quality Score
+issueRoutes.post('/quality-score', asyncHandler(IssueController.calculateQualityScore));
+issueRoutes.post('/:id/mark-duplicate', asyncHandler(IssueController.markDuplicate));
+
 // Git & Development Links
 issueRoutes.get('/:id/git-links', asyncHandler(CollaborationController.getGitLinks));
 issueRoutes.post('/:id/git-links', asyncHandler(CollaborationController.addGitLink));

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { AITriageInspector, AITriageData } from './AITriageInspector';
+import { BugQualityMeter, BugQualityScoreData } from './BugQualityMeter';
+import { DuplicateResolutionCard, DuplicateCandidate } from './DuplicateResolutionCard';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../lib/api';
@@ -41,16 +43,6 @@ interface CreateIssueModalProps {
   onIssueCreated?: (issue: Issue) => void;
 }
 
-interface DuplicateMatch {
-  issue_id: string;
-  key: string;
-  title: string;
-  status: string;
-  priority: string;
-  similarity_score: number;
-  reason: string;
-}
-
 export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   isOpen,
   onClose,
@@ -84,7 +76,8 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   const [tagsInput, setTagsInput] = useState('');
 
   // AI & Duplicate Radar State
-  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
+  const [duplicates, setDuplicates] = useState<DuplicateCandidate[]>([]);
+  const [ignoredDuplicates, setIgnoredDuplicates] = useState(false);
   const [aiSynthesizing, setAiSynthesizing] = useState(false);
   const [showAiLogModal, setShowAiLogModal] = useState(false);
   const [rawLogText, setRawLogText] = useState('');
@@ -130,16 +123,91 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     loadProjectData();
   }, [projectId]);
 
+  // Compute live Bug Quality Score locally
+  const qualityScoreData: BugQualityScoreData = useMemo(() => {
+    const checklist = [
+      {
+        id: 'title',
+        label: 'Clear & Actionable Title',
+        passed: title.trim().length >= 10 && !/^(bug|error|broken|fix|issue)$/i.test(title.trim()),
+        points: 15,
+        tip: 'Provide a specific summary (e.g. "Checkout crashes on expired coupon")',
+      },
+      {
+        id: 'description',
+        label: 'Detailed Description',
+        passed: description.trim().length >= 25,
+        points: 15,
+        tip: 'Include detailed background and stack trace',
+      },
+      {
+        id: 'repro_steps',
+        label: 'Numbered Reproduction Steps',
+        passed: /\b(1\.|2\.|step)/i.test(reproSteps) || reproSteps.trim().length >= 25,
+        points: 20,
+        tip: 'Add step-by-step sequence (1. Open cart, 2. Apply code)',
+      },
+      {
+        id: 'expected_behavior',
+        label: 'Expected Behavior',
+        passed: expectedBehavior.trim().length >= 10,
+        points: 10,
+        tip: 'State expected outcome under normal operation',
+      },
+      {
+        id: 'actual_behavior',
+        label: 'Actual Observed Failure',
+        passed: actualBehavior.trim().length >= 10,
+        points: 10,
+        tip: 'State observed error code or visual symptom',
+      },
+      {
+        id: 'environment',
+        label: 'Environment (Browser / OS / Node)',
+        passed: environment.trim().length >= 4,
+        points: 10,
+        tip: 'Specify Chrome/Firefox, macOS/Windows or Node 22',
+      },
+      {
+        id: 'component',
+        label: 'Subsystem Component Selected',
+        passed: Boolean(componentId && componentId.length > 0),
+        points: 10,
+        tip: 'Route this ticket to a component (e.g. Checkout & Cart)',
+      },
+      {
+        id: 'version',
+        label: 'Target Release Version Tagged',
+        passed: Boolean(versionId && versionId.length > 0),
+        points: 10,
+        tip: 'Tag target release (e.g. v2.4.0)',
+      },
+    ];
+
+    const score = checklist.filter((c) => c.passed).reduce((sum, c) => sum + c.points, 0);
+    let rating: BugQualityScoreData['rating'] = 'POOR';
+    if (score >= 85) rating = 'EXCELLENT';
+    else if (score >= 70) rating = 'GOOD';
+    else if (score >= 50) rating = 'FAIR';
+
+    return {
+      score,
+      rating,
+      checklist,
+      recommendations: checklist.filter((c) => !c.passed).map((c) => c.tip || c.label),
+    };
+  }, [title, description, reproSteps, expectedBehavior, actualBehavior, environment, componentId, versionId]);
+
   // Debounced Duplicate Detection Radar
   useEffect(() => {
-    if (!projectId || title.trim().length < 4) {
-      setDuplicates([]);
+    if (!projectId || title.trim().length < 4 || ignoredDuplicates) {
+      if (!ignoredDuplicates) setDuplicates([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       try {
-        const res = await api.post<{ duplicates: DuplicateMatch[]; isDuplicateRisk: boolean }>(
+        const res = await api.post<{ duplicates: DuplicateCandidate[]; isDuplicateRisk: boolean }>(
           '/ai/duplicates',
           { project_id: projectId, title, description }
         );
@@ -150,7 +218,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     }, 450);
 
     return () => clearTimeout(timer);
-  }, [title, description, projectId]);
+  }, [title, description, projectId, ignoredDuplicates]);
 
   if (!isOpen) return null;
 
@@ -228,6 +296,16 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     }
   };
 
+  const handleOpenExistingDuplicate = (key: string) => {
+    window.open(`/issues/${key}`, '_blank');
+  };
+
+  const handleMarkAsDuplicateAndClose = (key: string) => {
+    alert(`Marked current draft as duplicate of existing issue ${key}. Form dismissed.`);
+    handleReset();
+    onClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) {
@@ -286,6 +364,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     setEnvironment('');
     setTagsInput('');
     setDuplicates([]);
+    setIgnoredDuplicates(false);
     setTriageData(null);
     setCreatedIssue(null);
     setError(null);
@@ -308,7 +387,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 </Badge>
               </CardTitle>
               <CardDescription className="text-xs">
-                Provide structured reproduction steps or use AI Triage for automated impact & component suggestions.
+                Structured reproduction workflow with live Quality Score & Grok AI triage assistant.
               </CardDescription>
             </div>
           </div>
@@ -346,6 +425,9 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
 
         {/* Modal Body */}
         <CardContent className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* Live Bug Quality Score Meter */}
+          <BugQualityMeter scoreData={qualityScoreData} />
+
           {/* AI Log Synthesizer Expansion Drawer */}
           {showAiLogModal && (
             <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-950/20 space-y-3 animate-in slide-in-from-top-3">
@@ -399,38 +481,18 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
             onDismiss={() => setTriageData(null)}
           />
 
-          {/* AI Duplicate Detection Radar Banner */}
-          {duplicates.length > 0 && (
-            <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 space-y-2 animate-in fade-in">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
-                  <Flame className="h-4 w-4" />
-                  <span>Duplicate Radar Warning ({duplicates[0].similarity_score}% Match)</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground font-mono">Potential duplicates detected</span>
-              </div>
-              <div className="space-y-1.5">
-                {duplicates.map((d) => (
-                  <div
-                    key={d.issue_id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-amber-500/20 text-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-primary">{d.key}</span>
-                      <span className="text-foreground line-clamp-1">{d.title}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="outline" className="text-[10px] font-mono">
-                        {d.similarity_score}% SIMILAR
-                      </Badge>
-                      <Badge variant="secondary" className="text-[10px] font-mono">
-                        {d.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* 2-Tier Duplicate Radar Resolution Card */}
+          {duplicates.length > 0 && !ignoredDuplicates && (
+            <DuplicateResolutionCard
+              duplicates={duplicates}
+              onOpenExisting={handleOpenExistingDuplicate}
+              onMarkAsDuplicate={handleMarkAsDuplicateAndClose}
+              onContinueCreating={() => setIgnoredDuplicates(true)}
+              onCancel={() => {
+                handleReset();
+                onClose();
+              }}
+            />
           )}
 
           {/* Success Banner */}
