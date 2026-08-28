@@ -97,10 +97,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     {
       id: 'nav-analytics',
       title: 'Go to Analytics & MTTR Telemetry',
-      shortcut: 'G A',
+      shortcut: 'G T',
       icon: <BarChart3 className="h-4 w-4 text-emerald-400" />,
       run: () => {
         navigate('/analytics');
+        onClose();
+      },
+    },
+    {
+      id: 'nav-audit',
+      title: 'Go to Security & Audit Center',
+      shortcut: 'G A',
+      icon: <Sparkles className="h-4 w-4 text-indigo-400" />,
+      run: () => {
+        navigate('/audit');
         onClose();
       },
     },

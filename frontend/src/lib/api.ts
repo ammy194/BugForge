@@ -1,6 +1,6 @@
 import { SystemHealthData } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+export const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 export class ApiError extends Error {
   public statusCode: number;
@@ -43,6 +43,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const api = {
+  baseURL: API_BASE,
   get: <T>(endpoint: string) => request<T>(endpoint, { method: 'GET' }),
   post: <T>(endpoint: string, body?: any) =>
     request<T>(endpoint, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),

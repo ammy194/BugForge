@@ -18,6 +18,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { ReleasesPage } from './pages/ReleasesPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { CIFailuresPage } from './pages/CIFailuresPage';
+import { AuditPage } from './pages/AuditPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -60,6 +61,7 @@ export const App: React.FC = () => {
                 <Route path="releases" element={<ReleasesPage />} />
                 <Route path="ci-failures" element={<CIFailuresPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
+                <Route path="audit" element={<AuditPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
 

@@ -6,7 +6,7 @@ export interface TrendDataPoint {
   resolved: number;
 }
 
-export interface ComponentDefectStat {
+export interface ComponentHealthStat {
   component_id: string;
   component_name: string;
   total_issues: number;
@@ -14,6 +14,8 @@ export interface ComponentDefectStat {
   resolved_issues: number;
   blocker_count: number;
   defect_percentage: number;
+  health_status: 'HEALTHY' | 'AT_RISK' | 'CRITICAL';
+  mttr_hours: number;
 }
 
 export interface DeveloperWorkloadStat {
@@ -39,8 +41,12 @@ export interface ReleaseReadinessReport {
 export interface ProjectAnalyticsOverview {
   project_id: string;
   project_key: string;
+  mttd_hours: number;
+  mttd_formatted: string;
   mttr_hours: number;
   mttr_formatted: string;
+  reopen_rate_percentage: number;
+  defect_escape_rate_percentage: number;
   total_issues: number;
   open_issues: number;
   resolved_issues: number;
@@ -50,7 +56,7 @@ export interface ProjectAnalyticsOverview {
   regression_rate_percentage: number;
   severity_distribution: Record<IssueSeverity, number>;
   priority_distribution: Record<IssuePriority, number>;
-  component_stats: ComponentDefectStat[];
+  component_stats: ComponentHealthStat[];
   developer_workload: DeveloperWorkloadStat[];
   release_readiness: ReleaseReadinessReport;
   weekly_trends: TrendDataPoint[];

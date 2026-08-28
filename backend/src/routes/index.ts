@@ -12,6 +12,7 @@ import { ciRoutes } from './ciRoutes';
 import { webhookRoutes } from './webhookRoutes';
 import { analyticsRoutes } from './analyticsRoutes';
 import { releaseRoutes } from './releaseRoutes';
+import { auditRoutes } from './auditRoutes';
 
 export const apiRouter = Router();
 
@@ -29,6 +30,7 @@ apiRouter.use('/ci', ciRoutes);
 apiRouter.use('/webhooks', webhookRoutes);
 apiRouter.use('/analytics', analyticsRoutes);
 apiRouter.use('/releases', releaseRoutes);
+apiRouter.use('/audit', auditRoutes);
 
 // Root API v1 welcome info
 apiRouter.get('/', (_req, res) => {
