@@ -50,7 +50,13 @@ export const checkSupabaseConnection = async (): Promise<{
   const start = Date.now();
   try {
     const client = getSupabaseAdminClient();
-    const { error } = await client.from('profiles').select('count', { count: 'exact', head: true });
+    
+    const queryPromise = client.from('profiles').select('count', { count: 'exact', head: true });
+    const timeoutPromise = new Promise<{ error: any }>((_, reject) => {
+      setTimeout(() => reject(new Error('Supabase connection timed out')), 3000);
+    });
+    
+    const { error } = await Promise.race([queryPromise, timeoutPromise]);
     const latencyMs = Date.now() - start;
 
     if (error && error.code !== 'PGRST116') {
