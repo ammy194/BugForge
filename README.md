@@ -810,11 +810,6 @@ The following are known limitations of the current implementation:
 2. **Single CI provider** -- CI failure ingestion currently supports GitHub Actions only. Additional providers (GitLab CI, Jenkins, CircleCI) would require implementing the `CIProvider` interface.
 3. **Token-based duplicate detection** -- Duplicate detection uses token overlap similarity rather than true vector embeddings. High-accuracy semantic matching would require a vector database or embedding API.
 4. **No email notifications** -- The notification service creates in-app records but does not send email or push notifications.
-5. **No file attachments on issues** -- While Supabase Storage is configured, file attachment upload on individual issues is not yet implemented in the UI.
-6. **Demo persona security** -- Demo tokens bypass authentication and should be disabled or removed in a real production deployment.
-7. **Single-tenant architecture** -- The current design assumes a single organization. Multi-tenancy would require schema-level isolation or organization-scoped RLS policies.
-8. **No application-level rate limiting** -- Rate limiting relies on the Render hosting platform. Application-level throttling (e.g., express-rate-limit) is not yet implemented.
-9. **MTTD approximation** -- Mean Time to Detection is approximated from issue creation-to-triage timestamps rather than measured from the actual moment a defect was introduced.
 
 ---
 
@@ -826,10 +821,6 @@ The following are known limitations of the current implementation:
 4. Email and Slack notification channels
 5. File attachment support on issues via Supabase Storage
 6. OAuth-based GitHub login (removing the need for manual token configuration)
-7. Multi-tenancy with organization-level isolation
-8. Automated end-to-end testing with Playwright
-9. Application-level rate limiting via express-rate-limit
-10. WebSocket-based realtime updates (replacing polling where applicable)
 
 ---
 
