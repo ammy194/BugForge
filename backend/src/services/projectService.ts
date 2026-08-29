@@ -29,13 +29,13 @@ function initSeedData() {
     name: 'E-Commerce Platform',
     description: 'Core storefront, payment gateways, checkout flows, and user inventory systems.',
     owner_id: DEMO_PERSONAS.admin.id,
-    issue_counter: 45,
+    issue_counter: 1045,
     archived: false,
     created_at: new Date('2026-01-10').toISOString(),
     updated_at: new Date('2026-01-10').toISOString(),
     members_count: 4,
-    open_issues_count: 18,
-    resolved_issues_count: 142,
+    open_issues_count: 4,
+    resolved_issues_count: 2,
   };
 
   const p2: Project = {
@@ -44,13 +44,13 @@ function initSeedData() {
     name: 'Mobile Banking App',
     description: 'iOS & Android native client applications with biometric authentication.',
     owner_id: DEMO_PERSONAS.pm.id,
-    issue_counter: 28,
+    issue_counter: 0,
     archived: false,
     created_at: new Date('2026-02-01').toISOString(),
     updated_at: new Date('2026-02-01').toISOString(),
     members_count: 3,
-    open_issues_count: 7,
-    resolved_issues_count: 89,
+    open_issues_count: 0,
+    resolved_issues_count: 0,
   };
 
   const p3: Project = {
@@ -59,13 +59,13 @@ function initSeedData() {
     name: 'Developer Public API',
     description: 'High-throughput GraphQL & REST gateway with rate limiting and OAuth2.',
     owner_id: DEMO_PERSONAS.admin.id,
-    issue_counter: 19,
+    issue_counter: 0,
     archived: false,
     created_at: new Date('2026-02-15').toISOString(),
     updated_at: new Date('2026-02-15').toISOString(),
     members_count: 3,
-    open_issues_count: 3,
-    resolved_issues_count: 64,
+    open_issues_count: 0,
+    resolved_issues_count: 0,
   };
 
   [p1, p2, p3].forEach((p) => projectsStore.set(p.id, p));
