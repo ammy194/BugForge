@@ -80,8 +80,24 @@ export const AuditPage: React.FC = () => {
     fetchLogs();
   };
 
-  const handleExportCSV = () => {
-    window.open(`${api.baseURL}/audit/export?format=csv`, '_blank');
+  const handleExportCSV = async () => {
+    try {
+      const token = localStorage.getItem('bugforge_auth_token') || 'demo_admin';
+      const res = await fetch(`${api.baseURL}/audit/export?format=csv`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `audit-trail-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to export CSV', e);
+    }
   };
 
   const getActionBadge = (action: string) => {

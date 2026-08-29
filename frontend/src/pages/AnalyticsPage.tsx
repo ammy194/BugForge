@@ -175,7 +175,18 @@ export const AnalyticsPage: React.FC = () => {
     try {
       if (format === 'csv') {
         const token = localStorage.getItem('bugforge_auth_token') || 'demo_admin';
-        window.open(`${api.baseURL}/analytics/export?format=csv&project_id=${activeProject.id}`, '_blank');
+        const res = await fetch(`${api.baseURL}/analytics/export?format=csv&project_id=${activeProject.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${activeProject.key}-defects-export.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
       } else {
         const res = await api.get<any[]>(`/analytics/export?format=json&project_id=${activeProject.id}`);
         const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(res, null, 2));
