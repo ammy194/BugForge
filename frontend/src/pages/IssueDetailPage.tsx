@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -405,9 +406,9 @@ export const IssueDetailPage: React.FC = () => {
             <CardContent className="space-y-4 text-xs">
               <div>
                 <span className="font-semibold text-foreground block mb-1">Description:</span>
-                <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                  {issue.description}
-                </p>
+                <div className="text-muted-foreground prose prose-sm prose-invert max-w-none leading-relaxed prose-pre:bg-black/40 prose-pre:border prose-pre:border-border/60">
+                  <ReactMarkdown>{issue.description || ''}</ReactMarkdown>
+                </div>
               </div>
 
               {issue.repro_steps && (
