@@ -287,7 +287,7 @@ export class IssueService {
   static async transitionStatus(
     issueId: string,
     nextStatus: IssueStatus,
-    payload: { resolution?: IssueResolution | null; comment?: string; assignee_id?: string | null },
+    payload: { resolution?: IssueResolution | null; comment?: string | null; assignee_id?: string | null },
     actorId: string
   ): Promise<Issue> {
     const rawIssue = issuesStore.get(issueId) || Array.from(issuesStore.values()).find((i) => i.key.toUpperCase() === issueId.toUpperCase());
