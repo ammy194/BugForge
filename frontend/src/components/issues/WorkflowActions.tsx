@@ -66,7 +66,8 @@ export const WorkflowActions: React.FC<WorkflowActionsProps> = ({ issue, onStatu
       setComment('');
       setResolution('FIXED');
     } catch (err: any) {
-      setError(err.message || 'Transition failed');
+      const details = err.details ? ` - ${JSON.stringify(err.details)}` : '';
+      setError((err.message || 'Transition failed') + details);
     } finally {
       setSubmitting(false);
     }
