@@ -42,7 +42,7 @@ export const createApp = () => {
         if (isAllowed) {
           callback(null, true);
         } else {
-          callback(null, true); // Permissive fallback with credentials enabled
+          callback(new Error(`Origin '${origin}' is not allowed by CORS policy`));
         }
       },
       credentials: true,

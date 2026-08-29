@@ -195,7 +195,9 @@ export class ReleaseHealthService {
       open_critical: criticalIssues.length,
       regressions_count: regressionIssues.length,
       unverified_fixes: unverifiedIssues.length,
-      ci_pass_rate: 98,
+      ci_pass_rate: versionIssues.length > 0
+        ? Math.round((resolvedIssues.length / versionIssues.length) * 100)
+        : 100,
       formula_breakdown: {
         base_score: 100,
         deductions,

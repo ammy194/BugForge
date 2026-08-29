@@ -33,8 +33,17 @@ export class AnalyticsService {
     const mttrFormatted = mttrHours < 24 ? `${mttrHours} hours` : `${(mttrHours / 24).toFixed(1)} days`;
 
     // 2. Calculate MTTD (Mean Time to Detection)
-    const mttdHours = 2.4;
-    const mttdFormatted = '2.4 hours';
+    // Approximated as time from issue creation to first triage (issues past OPEN status)
+    const triagedIssues = issues.filter((i) => i.status !== 'OPEN' && i.created_at);
+    let totalDetectionHours = 0;
+    triagedIssues.forEach((i) => {
+      const created = new Date(i.created_at).getTime();
+      const updated = new Date(i.updated_at || i.created_at).getTime();
+      const diffHours = Math.max(0.5, (updated - created) / (1000 * 3600));
+      totalDetectionHours += Math.min(diffHours, 72); // Cap at 72h to avoid outlier skew
+    });
+    const mttdHours = triagedIssues.length > 0 ? Number((totalDetectionHours / triagedIssues.length).toFixed(1)) : 2.4;
+    const mttdFormatted = mttdHours < 24 ? `${mttdHours} hours` : `${(mttdHours / 24).toFixed(1)} days`;
 
     // 3. Calculate Bug Reopen Rate (%)
     const reopenedIssuesCount = issues.filter((i) => i.status === 'REOPENED').length;
@@ -94,7 +103,15 @@ export class AnalyticsService {
         blocker_count: blockerCount,
         defect_percentage: Math.round((compIssues.length / totalIssuesCount) * 100),
         health_status: healthStatus,
-        mttr_hours: 4.2,
+        mttr_hours: (() => {
+          const resolved = compIssues.filter((ci) => ci.resolved_at && ci.created_at);
+          if (resolved.length === 0) return 0;
+          const total = resolved.reduce((sum, ci) => {
+            const diff = (new Date(ci.resolved_at!).getTime() - new Date(ci.created_at).getTime()) / (1000 * 3600);
+            return sum + Math.max(0, diff);
+          }, 0);
+          return Number((total / resolved.length).toFixed(1));
+        })(),
       };
     });
 
