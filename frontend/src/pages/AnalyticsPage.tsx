@@ -305,7 +305,7 @@ export const AnalyticsPage: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold">Bug Reopen Rate</span>
                 <span title="The percentage of resolved bugs that failed QA verification and were reopened.">
-                  <Info className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                  <Info className="h-3.5 w-3.5 text-primary/70 hover:text-primary cursor-help transition-colors" />
                 </span>
               </div>
               <RotateCcw className="h-4 w-4 text-amber-400" />
@@ -328,7 +328,7 @@ export const AnalyticsPage: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold">Defect Escape Rate</span>
                 <span title="The percentage of total bugs that were discovered by end users in production rather than by QA during testing.">
-                  <Info className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                  <Info className="h-3.5 w-3.5 text-primary/70 hover:text-primary cursor-help transition-colors" />
                 </span>
               </div>
               <AlertOctagon className="h-4 w-4 text-primary" />
