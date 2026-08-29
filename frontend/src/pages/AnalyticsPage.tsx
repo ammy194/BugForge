@@ -25,6 +25,7 @@ import {
   AlertOctagon,
   Eye,
   Crosshair,
+  Info,
 } from 'lucide-react';
 
 interface ComponentHealthStat {
@@ -248,7 +249,13 @@ export const AnalyticsPage: React.FC = () => {
         <Card className="border-border/80 bg-card/80">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">Mean Time to Detect (MTTD)</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold">Mean Time to Detect (MTTD)</span>
+                <Info 
+                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
+                  title="The average time it takes for a defect to be discovered after it was introduced." 
+                />
+              </div>
               <Crosshair className="h-4 w-4 text-cyan-400" />
             </div>
             <div className="flex items-baseline gap-2">
@@ -264,7 +271,13 @@ export const AnalyticsPage: React.FC = () => {
         <Card className="border-border/80 bg-card/80">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">Mean Time to Resolve (MTTR)</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold">Mean Time to Resolve (MTTR)</span>
+                <Info 
+                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
+                  title="The average time it takes for a developer to fix a defect after it was reported." 
+                />
+              </div>
               <Clock className="h-4 w-4 text-primary" />
             </div>
             <div className="flex items-baseline gap-2">
@@ -280,7 +293,13 @@ export const AnalyticsPage: React.FC = () => {
         <Card className="border-border/80 bg-card/80">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">Bug Reopen Rate</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold">Bug Reopen Rate</span>
+                <Info 
+                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
+                  title="The percentage of resolved bugs that failed QA verification and were reopened." 
+                />
+              </div>
               <RotateCcw className="h-4 w-4 text-amber-400" />
             </div>
             <div className="flex items-baseline gap-2">
@@ -298,7 +317,13 @@ export const AnalyticsPage: React.FC = () => {
         <Card className="border-border/80 bg-card/80">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">Defect Escape Rate</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold">Defect Escape Rate</span>
+                <Info 
+                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
+                  title="The percentage of total bugs that were discovered by end users in production rather than by QA during testing." 
+                />
+              </div>
               <AlertOctagon className="h-4 w-4 text-primary" />
             </div>
             <div className="flex items-baseline gap-2">
