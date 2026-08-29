@@ -204,7 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
               onMouseLeave={() => setNotificationsOpen(false)}
             >
               <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-2">
-                <span className="text-xs font-semibold text-foreground">Notifications</span>
+                <span className="text-xs font-semibold text-foreground">Live Notifications</span>
                 {unreadCount > 0 && (
                   <button 
                     onClick={handleMarkAllRead}

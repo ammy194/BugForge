@@ -4,6 +4,7 @@ import { AppError } from '../utils/appError';
 import { IssueService } from '../services/issueService';
 import { createIssueSchema, queryIssuesSchema } from '../validators/issueValidators';
 import { transitionIssueSchema, updateIssueAttributesSchema } from '../validators/workflowValidators';
+import { NotificationService } from '../services/notificationService';
 
 export class IssueController {
   /**
@@ -116,6 +117,16 @@ export class IssueController {
     };
 
     const createdIssue = await IssueService.createIssue(simulatedIssueData as any, req.user.id);
+
+    await NotificationService.createNotification({
+      user_id: req.user.id,
+      actor_id: req.user.id,
+      issue_id: createdIssue.id,
+      type: 'ASSIGNED',
+      title: `Live Alert: New Issue Simulated`,
+      message: `${createdIssue.title}`,
+      issue_key: createdIssue.key
+    });
 
     return ApiResponse.success({
       res,
