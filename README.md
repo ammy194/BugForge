@@ -81,8 +81,11 @@ BugForge is a developer-first platform that replaces passive bug-filing with an 
 - **Project-scoped RBAC** with four roles (Admin, Project Manager, Developer, Reporter) and hierarchical permission enforcement
 - **Row Level Security** on all Supabase tables, matching user project membership at the database layer
 - **Rich Markdown Rendering** for technical context, crash logs, and reproduction steps in issue descriptions
-- **Live Defect Simulation Mode** featuring an active background loop that generates synthetic incoming bugs with non-intrusive animated pulse notifications
+- **Live Defect Simulation Mode** featuring an active background loop that rapidly generates synthetic incoming bugs, broadcasting **Live Notifications** to demonstrate system activity.
 - **Human-Readable Urgency Labels** translating internal technical priorities (e.g. `P0_CRITICAL`) into clean UI indicators (Urgent, High, Medium, Low)
+- **Global Command Palette (Cmd+K)** for rapid, keyboard-first navigation and realtime issue search across the workspace
+- **Contextual Onboarding Tooltips** applied across KPI dashboards, analytics, and complex administrative interfaces for immediate feature clarification
+- **Secure Data Exports (CSV/JSON)** for audits and telemetry powered by backend API streams to preserve authentication context and bypass popup blockers
 
 ---
 
