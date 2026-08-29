@@ -138,7 +138,7 @@ export const SettingsPage: React.FC = () => {
       <PageHeader
         title="Settings & Integrations"
         description="Configure GitHub bidirectional webhooks, CI/CD automated defect ingestion, and outbound event dispatches."
-        badge={<Badge variant="purple">DEVELOPER SUITE</Badge>}
+        badge={<Badge variant="default">DEVELOPER SUITE</Badge>}
       />
 
       {/* Tabs */}
@@ -411,7 +411,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-muted-foreground block mb-1 font-semibold">Global Role:</span>
-                <Badge variant="purple" className="font-mono">{user?.global_role}</Badge>
+                <Badge variant="default" className="font-mono">{user?.global_role}</Badge>
               </div>
             </div>
           </CardContent>

@@ -58,7 +58,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       id: 'nav-issues',
       title: 'Go to Issues Backlog',
       shortcut: 'G I',
-      icon: <Layers className="h-4 w-4 text-purple-400" />,
+      icon: <Layers className="h-4 w-4 text-primary" />,
       run: () => {
         navigate('/issues');
         onClose();
@@ -68,7 +68,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       id: 'nav-projects',
       title: 'Go to Projects & RBAC',
       shortcut: 'G P',
-      icon: <FolderGit2 className="h-4 w-4 text-indigo-400" />,
+      icon: <FolderGit2 className="h-4 w-4 text-primary" />,
       run: () => {
         navigate('/projects');
         onClose();
@@ -108,7 +108,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       id: 'nav-audit',
       title: 'Go to Security & Audit Center',
       shortcut: 'G A',
-      icon: <Sparkles className="h-4 w-4 text-indigo-400" />,
+      icon: <Sparkles className="h-4 w-4 text-primary" />,
       run: () => {
         navigate('/audit');
         onClose();
