@@ -15,7 +15,7 @@ export const transitionIssueSchema = z.object({
     .enum(['FIXED', 'WONT_FIX', 'DUPLICATE', 'INVALID', 'CANNOT_REPRODUCE'])
     .optional()
     .nullable(),
-  comment: z.string().max(2000).optional(),
+  comment: z.string().max(2000).optional().nullable(),
   assignee_id: z.string().optional().nullable(),
 });
 

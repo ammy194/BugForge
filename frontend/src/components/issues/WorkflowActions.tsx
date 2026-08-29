@@ -136,6 +136,12 @@ export const WorkflowActions: React.FC<WorkflowActionsProps> = ({ issue, onStatu
           <span>{t.label}</span>
         </Button>
       ))}
+      
+      {error && !selectedTransition && (
+        <div className="w-full mt-2 rounded border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-400">
+          {error}
+        </div>
+      )}
 
       {/* Transition Dialog for Resolutions / Comments */}
       {selectedTransition && createPortal(
