@@ -24,12 +24,16 @@ interface AvailableTransition {
   requiresResolution: boolean;
 }
 
+import { useProject } from '../../contexts/ProjectContext';
+
 interface WorkflowActionsProps {
   issue: Issue;
   onStatusChanged: (updatedIssue: Issue) => void;
 }
 
 export const WorkflowActions: React.FC<WorkflowActionsProps> = ({ issue, onStatusChanged }) => {
+  const { userProjectRole } = useProject();
+
   const [transitions, setTransitions] = useState<AvailableTransition[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTransition, setSelectedTransition] = useState<AvailableTransition | null>(null);
@@ -37,6 +41,10 @@ export const WorkflowActions: React.FC<WorkflowActionsProps> = ({ issue, onStatu
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (userProjectRole === 'REPORTER') {
+    return null;
+  }
 
   const fetchTransitions = async () => {
     try {

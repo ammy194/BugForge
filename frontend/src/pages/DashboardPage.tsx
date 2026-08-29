@@ -35,12 +35,18 @@ import {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { activeProject } = useProject();
+  const { activeProject, userProjectRole } = useProject();
 
   const [health, setHealth] = useState<SystemHealthData | null>(null);
   const [allIssues, setAllIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionTab, setActionTab] = useState<'TRIAGE' | 'BLOCKERS' | 'VERIFY' | 'STALE' | 'CI'>('TRIAGE');
+  const [actionTab, setActionTab] = useState<'TRIAGE' | 'BLOCKERS' | 'VERIFY' | 'STALE' | 'CI' | 'MY_REPORTED'>('TRIAGE');
+
+  useEffect(() => {
+    if (userProjectRole === 'DEVELOPER') setActionTab('BLOCKERS');
+    else if (userProjectRole === 'REPORTER') setActionTab('MY_REPORTED');
+    else setActionTab('TRIAGE');
+  }, [userProjectRole]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -88,6 +94,8 @@ export const DashboardPage: React.FC = () => {
   const criticalCount = safeIssues.filter((i) => i.priority === 'P0_CRITICAL').length;
   const resolvedCount = safeIssues.filter((i) => ['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)).length;
 
+  const myReportedIssues = safeIssues.filter((i) => i.reporter_id === user?.id);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Welcome Banner */}
@@ -103,8 +111,14 @@ export const DashboardPage: React.FC = () => {
               </h1>
             </div>
             <p className="text-muted-foreground text-sm">
-              Here is your daily engineering digest. You have {blockersAssigned.length} critical blockers
-              and {needsTriageIssues.length} issues awaiting triage.
+              {userProjectRole === 'REPORTER' ? (
+                <>Here is your daily digest. You have reported {myReportedIssues.length} issues in this workspace.</>
+              ) : (
+                <>
+                  Here is your daily engineering digest. You have {blockersAssigned.length} critical blockers
+                  and {needsTriageIssues.length} issues awaiting triage.
+                </>
+              )}
             </p>
           </div>
 
@@ -132,7 +146,8 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Feature 12: KEY METRICS ROW */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {userProjectRole !== 'REPORTER' && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Open Issues</CardTitle>
@@ -181,7 +196,9 @@ export const DashboardPage: React.FC = () => {
             </p>
           </CardContent>
         </Card>
+        </Card>
       </div>
+      )}
 
       {/* FEATURE 13: DASHBOARD ACTION CENTER */}
       <Card className="border-border/80 bg-card/90 shadow-xl overflow-hidden">
@@ -190,17 +207,37 @@ export const DashboardPage: React.FC = () => {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary">
               <Zap className="h-4 w-4" />
             </div>
-            <div>
-              <CardTitle className="text-sm font-bold">Developer & PM Action Center</CardTitle>
+            <div className="flex flex-col">
+              <CardTitle className="text-sm font-bold">
+                {userProjectRole === 'REPORTER' ? 'My Reported Issues' : 'Developer & PM Action Center'}
+              </CardTitle>
               <CardDescription className="text-xs">
-                Real-time prioritized queues for triage, blocker resolution, and QA verification.
+                {userProjectRole === 'REPORTER'
+                  ? 'Track the status of the issues you have reported.'
+                  : 'Real-time prioritized queues for triage, blocker resolution, and QA verification.'}
               </CardDescription>
             </div>
           </div>
 
           {/* Action Center Tabs */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <button
+            {userProjectRole === 'REPORTER' ? (
+              <button
+                onClick={() => setActionTab('MY_REPORTED')}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+                  actionTab === 'MY_REPORTED'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+                }`}
+              >
+                <span>My Reported Issues</span>
+                <Badge variant="secondary" className="text-[10px] px-1 py-0 font-mono">
+                  {myReportedIssues.length}
+                </Badge>
+              </button>
+            ) : (
+              <>
+                <button
               onClick={() => setActionTab('TRIAGE')}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
                 actionTab === 'TRIAGE'
@@ -263,10 +300,59 @@ export const DashboardPage: React.FC = () => {
               <Flame className="h-3 w-3" />
               <span>CI Ingest</span>
             </button>
+            </>
+            )}
           </div>
         </CardHeader>
 
         <CardContent className="p-0">
+          {actionTab === 'MY_REPORTED' && (
+            <div className="divide-y divide-border/40">
+              {myReportedIssues.length === 0 ? (
+                <div className="p-8 text-center text-xs text-muted-foreground">
+                  You haven't reported any issues yet.
+                </div>
+              ) : (
+                myReportedIssues.slice(0, 6).map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-secondary/30 transition-colors gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded bg-secondary/80 text-xs font-mono font-bold">
+                        <Bug className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex flex-col">
+                        <Link
+                          to={`/issues/${item.id}`}
+                          className="text-sm font-semibold hover:underline decoration-primary underline-offset-4"
+                        >
+                          {item.title}
+                        </Link>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-mono text-muted-foreground">{item.key}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/40 border border-border/60 text-muted-foreground font-mono uppercase">
+                            {item.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => navigate(`/issues/${item.id}`)}
+                        className="text-[10px] h-7 px-2"
+                      >
+                        View Details <ArrowRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
           {actionTab === 'TRIAGE' && (
             <div className="divide-y divide-border/40">
               {needsTriageIssues.length === 0 ? (

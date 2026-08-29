@@ -23,18 +23,20 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
-  const { activeProject } = useProject();
+  const { activeProject, userProjectRole } = useProject();
   
-  const navItems = [
-    { name: 'Dashboard', to: '/', icon: LayoutDashboard },
-    { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: (activeProject?.open_issues_count || 0) > 0 ? 'PULSE' : undefined },
-    { name: 'Projects', to: '/projects', icon: FolderGit2 },
-    { name: 'Releases', to: '/releases', icon: GitPullRequest },
-    { name: 'CI Failures', to: '/ci-failures', icon: Zap, badge: 'NEW' },
-    { name: 'Analytics', to: '/analytics', icon: BarChart3 },
-    { name: 'Audit Center', to: '/audit', icon: ShieldCheck },
-    { name: 'Settings', to: '/settings', icon: Settings },
+  const allNavItems = [
+    { name: 'Dashboard', to: '/', icon: LayoutDashboard, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'REPORTER'] },
+    { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: (activeProject?.open_issues_count || 0) > 0 ? 'PULSE' : undefined, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'REPORTER'] },
+    { name: 'Projects', to: '/projects', icon: FolderGit2, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'] },
+    { name: 'Releases', to: '/releases', icon: GitPullRequest, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'] },
+    { name: 'CI Failures', to: '/ci-failures', icon: Zap, badge: 'NEW', roles: ['ADMIN', 'DEVELOPER'] },
+    { name: 'Analytics', to: '/analytics', icon: BarChart3, roles: ['ADMIN', 'PROJECT_MANAGER'] },
+    { name: 'Audit Center', to: '/audit', icon: ShieldCheck, roles: ['ADMIN'] },
+    { name: 'Settings', to: '/settings', icon: Settings, roles: ['ADMIN', 'PROJECT_MANAGER'] },
   ];
+
+  const navItems = allNavItems.filter((item) => item.roles.includes(userProjectRole || 'REPORTER'));
 
   return (
     <aside

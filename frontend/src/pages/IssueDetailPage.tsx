@@ -595,7 +595,8 @@ export const IssueDetailPage: React.FC = () => {
                 <select
                   value={issue.assignee_id || ''}
                   onChange={(e) => handleAttributeChange('assignee_id', e.target.value || null)}
-                  className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  disabled={userProjectRole === 'REPORTER'}
+                  className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">-- Unassigned --</option>
                   {members.map((m) => (
@@ -621,7 +622,8 @@ export const IssueDetailPage: React.FC = () => {
                 <select
                   value={issue.component_id || ''}
                   onChange={(e) => handleAttributeChange('component_id', e.target.value || null)}
-                  className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  disabled={userProjectRole === 'REPORTER'}
+                  className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">-- None --</option>
                   {components.map((c) => (
@@ -638,7 +640,8 @@ export const IssueDetailPage: React.FC = () => {
                 <select
                   value={issue.priority}
                   onChange={(e) => handleAttributeChange('priority', e.target.value)}
-                  className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  disabled={userProjectRole === 'REPORTER'}
+                  className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="P0_CRITICAL">Urgent</option>
                   <option value="P1_HIGH">High</option>
