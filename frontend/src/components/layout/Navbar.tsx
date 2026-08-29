@@ -43,6 +43,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
 
   React.useEffect(() => {
     if (user) fetchNotifications();
+
+    const handler = () => {
+      if (user) fetchNotifications();
+    };
+    
+    window.addEventListener('fetch_notifications', handler);
+    return () => window.removeEventListener('fetch_notifications', handler);
   }, [user, fetchNotifications]);
 
   const handleMarkAllRead = async () => {

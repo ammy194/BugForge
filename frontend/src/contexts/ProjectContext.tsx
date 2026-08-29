@@ -61,24 +61,35 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return saved !== null ? saved === 'true' : true; // Default to TRUE
   });
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   useEffect(() => {
     localStorage.setItem('bugforge_auto_simulate', String(isAutoSimulating));
-    let interval: number | undefined;
+    let timerId: number;
 
     if (isAutoSimulating && user) {
-      interval = window.setInterval(async () => {
-        try {
-          await api.post('/issues/simulate-random');
-          // Force UI refresh (notifications will be fetched by Navbar polling or we could trigger a global event)
-          // Actually, Navbar fetches on click, but for a true live feel, let's just let the endpoint create the issue.
-          // The issue list will refresh when they navigate to it.
-        } catch (e) {
-          console.error('Auto-simulate failed', e);
-        }
-      }, 600000); // Every 10 minutes
+      const delays = [60000, 180000, 300000]; // 1 min, 3 mins, 5 mins
+      let currentIndex = 0;
+
+      const scheduleNext = () => {
+        timerId = window.setTimeout(async () => {
+          try {
+            const res = await api.post<any>('/issues/simulate-random');
+            window.dispatchEvent(new CustomEvent('fetch_notifications'));
+            setToastMessage(`Live Alert: New issue reported (${res.key})`);
+            setTimeout(() => setToastMessage(null), 5000);
+          } catch (e) {
+            console.error('Auto-simulate failed', e);
+          }
+          currentIndex = (currentIndex + 1) % delays.length;
+          scheduleNext();
+        }, delays[currentIndex]);
+      };
+
+      scheduleNext();
     }
 
-    return () => clearInterval(interval);
+    return () => clearTimeout(timerId);
   }, [isAutoSimulating, user]);
 
   useEffect(() => {
@@ -205,6 +216,19 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }}
     >
       {children}
+      
+      {/* Global Toast Notification for Live Demo */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[100] animate-in slide-in-from-right fade-in duration-300">
+          <div className="bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3 border border-emerald-500/50 max-w-sm">
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            </span>
+            <p className="text-sm font-medium leading-snug">{toastMessage}</p>
+          </div>
+        </div>
+      )}
     </ProjectContext.Provider>
   );
 };
