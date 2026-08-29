@@ -190,7 +190,7 @@ export const SettingsPage: React.FC = () => {
                   <span>Live Demo Mode (Auto-Simulate Bugs)</span>
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Automatically generate random realistic bugs every 1, 3, and 5 minutes in a continuous loop to simulate a live, active engineering environment during presentations.
+                  Automatically generate random realistic bugs every 5, 10, and 15 seconds in a continuous loop to simulate a live, active engineering environment during presentations.
                 </CardDescription>
               </div>
               

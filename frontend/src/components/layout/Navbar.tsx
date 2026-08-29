@@ -189,7 +189,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick, onSearchClick 
         {/* Notifications Bell */}
         <div className="relative">
           <button
-            title="Notifications"
+            title="Live Notifications"
             onClick={() => { setNotificationsOpen(!notificationsOpen); if (!notificationsOpen) fetchNotifications(); }}
             className="relative rounded-lg border border-border/60 bg-secondary/30 p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           >

@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Radio,
   FileSpreadsheet,
+  Info,
 } from 'lucide-react';
 
 export type AuditActionType =
@@ -126,7 +127,12 @@ export const AuditPage: React.FC = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
               <Shield className="h-4 w-4" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">Security & Audit Center</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight text-foreground">Security & Audit Center</h1>
+              <span title="An immutable, append-only log of all security, authentication, and critical data modification events across the workspace.">
+                <Info className="h-4 w-4 text-primary/70 hover:text-primary cursor-help transition-colors" />
+              </span>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Immutable enterprise audit trail tracking permissions, exports, deletions, and authentication events.

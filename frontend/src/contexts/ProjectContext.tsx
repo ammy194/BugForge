@@ -68,7 +68,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let timerId: number;
 
     if (isAutoSimulating && user) {
-      const delays = [60000, 180000, 300000]; // 1 min, 3 mins, 5 mins
+      const delays = [5000, 10000, 15000]; // 5s, 10s, 15s
       let currentIndex = 0;
 
       const scheduleNext = () => {

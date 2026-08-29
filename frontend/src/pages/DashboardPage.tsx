@@ -28,6 +28,7 @@ import {
   AlertOctagon,
   RotateCcw,
   Check,
+  Info,
   Flame,
   Radio,
 } from 'lucide-react';
@@ -150,7 +151,12 @@ export const DashboardPage: React.FC = () => {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Open Issues</CardTitle>
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-sm font-medium">Open Issues</CardTitle>
+              <span title="Total number of unresolved issues currently tracked in this project.">
+                <Info className="h-3.5 w-3.5 text-primary/70 hover:text-primary cursor-help transition-colors" />
+              </span>
+            </div>
             <Bug className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -162,7 +168,12 @@ export const DashboardPage: React.FC = () => {
         </Card>
         <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Urgent / P0</CardTitle>
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-sm font-medium">Urgent / P0</CardTitle>
+              <span title="Critical priority bugs that require immediate attention and halt regular development.">
+                <Info className="h-3.5 w-3.5 text-primary/70 hover:text-primary cursor-help transition-colors" />
+              </span>
+            </div>
             <AlertOctagon className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -174,7 +185,12 @@ export const DashboardPage: React.FC = () => {
         </Card>
         <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Resolved (30d)</CardTitle>
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-sm font-medium">Resolved (30d)</CardTitle>
+              <span title="Total number of bugs resolved and verified within the last 30 days.">
+                <Info className="h-3.5 w-3.5 text-primary/70 hover:text-primary cursor-help transition-colors" />
+              </span>
+            </div>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
@@ -186,7 +202,12 @@ export const DashboardPage: React.FC = () => {
         </Card>
         <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Cycle Time</CardTitle>
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-sm font-medium">Cycle Time</CardTitle>
+              <span title="Average time taken from when a bug is reported until it is successfully resolved.">
+                <Info className="h-3.5 w-3.5 text-primary/70 hover:text-primary cursor-help transition-colors" />
+              </span>
+            </div>
             <Clock className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
