@@ -66,20 +66,23 @@ BugForge is a developer-first platform that replaces passive bug-filing with an 
 
 ## What BugForge Provides
 
-- Full issue lifecycle management with a configurable finite-state machine (OPEN, TRIAGED, IN_PROGRESS, IN_REVIEW, RESOLVED, VERIFIED, REOPENED, CLOSED)
-- AI-powered bug triage via Grok (xAI) with deterministic heuristic fallback when the API is unavailable
-- Two-tier duplicate detection combining candidate narrowing with token-similarity scoring
-- CI failure ingestion from GitHub Actions with one-click bug creation and commit SHA linking
-- Deterministic Bug Quality Score (0-100) evaluating title clarity, reproduction steps, expected/actual behavior, and environment metadata
-- Smart assignment using multi-factor heuristics: component ownership, historical resolution expertise, and workload balancing
-- Release Health Radar with a mathematical readiness formula, blocker alerts, and automated release notes generation
-- GitHub Activity Panel displaying PR status, review state, CI check results, and branch metadata
-- Realtime collaboration with live viewer presence indicators
-- Engineering telemetry including MTTD, MTTR, Bug Reopen Rate, Defect Escape Rate, and Component Health Index
-- Immutable audit trail tracking role changes, data exports, authentication events, and workflow overrides
-- Outbound webhook dispatch with configurable event subscriptions
-- Project-scoped RBAC with four roles (Admin, Project Manager, Developer, Reporter) and hierarchical permission enforcement
-- Row Level Security on all Supabase tables, matching user project membership at the database layer
+- **Full issue lifecycle management** with a configurable finite-state machine (OPEN, TRIAGED, IN_PROGRESS, IN_REVIEW, RESOLVED, VERIFIED, REOPENED, CLOSED)
+- **AI-powered bug triage** via Grok (xAI) with deterministic heuristic fallback when the API is unavailable
+- **Two-tier duplicate detection** combining candidate narrowing with token-similarity scoring
+- **CI failure ingestion** from GitHub Actions with one-click bug creation and commit SHA linking
+- **Deterministic Bug Quality Score** (0-100) evaluating title clarity, reproduction steps, expected/actual behavior, and environment metadata
+- **Smart assignment** using multi-factor heuristics: component ownership, historical resolution expertise, and workload balancing
+- **Release Health Radar** with a mathematical readiness formula, blocker alerts, and automated release notes generation
+- **GitHub Activity Panel** displaying PR status, review state, CI check results, and branch metadata
+- **Realtime collaboration** with live viewer presence indicators
+- **Engineering telemetry** including MTTD, MTTR, Bug Reopen Rate, Defect Escape Rate, and Component Health Index
+- **Immutable audit trail** tracking role changes, data exports, authentication events, and workflow overrides
+- **Outbound webhook dispatch** with configurable event subscriptions
+- **Project-scoped RBAC** with four roles (Admin, Project Manager, Developer, Reporter) and hierarchical permission enforcement
+- **Row Level Security** on all Supabase tables, matching user project membership at the database layer
+- **Rich Markdown Rendering** for technical context, crash logs, and reproduction steps in issue descriptions
+- **Live Defect Simulation Mode** featuring an active background loop that generates synthetic incoming bugs with non-intrusive animated pulse notifications
+- **Human-Readable Urgency Labels** translating internal technical priorities (e.g. `P0_CRITICAL`) into clean UI indicators (Urgent, High, Medium, Low)
 
 ---
 
