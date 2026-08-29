@@ -33,10 +33,16 @@ export class IssueController {
   static async simulateRandomIssue(req: Request, res: Response) {
     if (!req.user) throw AppError.unauthorized();
 
-    const ecomId = 'ecom-proj-00000000-0000-0000-000000000001';
+    const projects = [
+      'ecom-proj-00000000-0000-0000-000000000001',
+      'mob-proj-00000000-0000-0000-000000000002',
+      'api-proj-00000000-0000-0000-000000000003'
+    ];
     
     const randomBugs = [
+      // ECOM Bugs
       {
+        project_id: projects[0],
         title: 'Memory leak in payment processing worker',
         description: 'The background worker for Stripe webhooks is retaining HTTP context objects in memory. Over 24h, this causes OOM crashes.',
         priority: 'P0_CRITICAL',
@@ -44,25 +50,61 @@ export class IssueController {
         issue_type: 'BUG',
       },
       {
+        project_id: projects[0],
         title: 'UI overlap on mobile Safari checkout',
         description: 'The "Complete Order" button is partially covered by the iOS safe area inset when the keyboard is open.',
-        priority: 'P2_NORMAL',
+        priority: 'P2_MEDIUM',
         severity: 'MINOR',
         issue_type: 'BUG',
       },
       {
+        project_id: projects[0],
         title: 'Database connection pool exhaustion during flash sale',
         description: 'During high load, the connection pool runs out of connections and times out requests instead of queueing them.',
         priority: 'P1_HIGH',
         severity: 'MAJOR',
         issue_type: 'BUG',
       },
+      // MOB Bugs
+      {
+        project_id: projects[1],
+        title: 'FaceID authentication failing on iOS 17.4',
+        description: 'The biometrics framework is throwing an unexpected domain error on the latest iOS update when falling back to passcode.',
+        priority: 'P0_CRITICAL',
+        severity: 'BLOCKER',
+        issue_type: 'BUG',
+      },
+      {
+        project_id: projects[1],
+        title: 'Transaction history list jitters on scroll',
+        description: 'The FlatList rendering the transaction history is dropping frames on older Android devices when scrolling fast.',
+        priority: 'P2_MEDIUM',
+        severity: 'MINOR',
+        issue_type: 'BUG',
+      },
+      // API Bugs
+      {
+        project_id: projects[2],
+        title: 'GraphQL N+1 query issue in user profiles',
+        description: 'Resolving user followers is generating separate SQL queries for each follower, causing significant database load.',
+        priority: 'P1_HIGH',
+        severity: 'MAJOR',
+        issue_type: 'BUG',
+      },
+      {
+        project_id: projects[2],
+        title: 'OAuth token refresh endpoint returning 500 intermittently',
+        description: 'The Redis cache occasionally drops the refresh token before it expires, leading to a 500 error during validation.',
+        priority: 'P1_HIGH',
+        severity: 'CRITICAL',
+        issue_type: 'BUG',
+      }
     ];
 
     const bug = randomBugs[Math.floor(Math.random() * randomBugs.length)];
 
     const simulatedIssueData = {
-      project_id: ecomId,
+      project_id: bug.project_id,
       title: bug.title,
       description: bug.description,
       issue_type: bug.issue_type as any,

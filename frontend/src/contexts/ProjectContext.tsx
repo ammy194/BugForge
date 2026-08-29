@@ -75,7 +75,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         } catch (e) {
           console.error('Auto-simulate failed', e);
         }
-      }, 30000); // Every 30 seconds
+      }, 600000); // Every 10 minutes
     }
 
     return () => clearInterval(interval);
