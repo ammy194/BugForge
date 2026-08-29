@@ -251,10 +251,9 @@ export const AnalyticsPage: React.FC = () => {
             <div className="flex items-center justify-between text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold">Mean Time to Detect (MTTD)</span>
-                <Info 
-                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
-                  title="The average time it takes for a defect to be discovered after it was introduced." 
-                />
+                <span title="The average time it takes for a defect to be discovered after it was introduced.">
+                  <Info className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                </span>
               </div>
               <Crosshair className="h-4 w-4 text-cyan-400" />
             </div>
@@ -273,10 +272,9 @@ export const AnalyticsPage: React.FC = () => {
             <div className="flex items-center justify-between text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold">Mean Time to Resolve (MTTR)</span>
-                <Info 
-                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
-                  title="The average time it takes for a developer to fix a defect after it was reported." 
-                />
+                <span title="The average time it takes for a developer to fix a defect after it was reported.">
+                  <Info className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                </span>
               </div>
               <Clock className="h-4 w-4 text-primary" />
             </div>
@@ -295,10 +293,9 @@ export const AnalyticsPage: React.FC = () => {
             <div className="flex items-center justify-between text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold">Bug Reopen Rate</span>
-                <Info 
-                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
-                  title="The percentage of resolved bugs that failed QA verification and were reopened." 
-                />
+                <span title="The percentage of resolved bugs that failed QA verification and were reopened.">
+                  <Info className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                </span>
               </div>
               <RotateCcw className="h-4 w-4 text-amber-400" />
             </div>
@@ -319,10 +316,9 @@ export const AnalyticsPage: React.FC = () => {
             <div className="flex items-center justify-between text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold">Defect Escape Rate</span>
-                <Info 
-                  className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" 
-                  title="The percentage of total bugs that were discovered by end users in production rather than by QA during testing." 
-                />
+                <span title="The percentage of total bugs that were discovered by end users in production rather than by QA during testing.">
+                  <Info className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                </span>
               </div>
               <AlertOctagon className="h-4 w-4 text-primary" />
             </div>
