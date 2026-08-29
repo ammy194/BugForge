@@ -44,7 +44,7 @@ export class IssueController {
       {
         project_id: projects[0],
         title: 'Memory leak in payment processing worker',
-        description: 'The background worker for Stripe webhooks is retaining HTTP context objects in memory. Over 24h, this causes OOM crashes.',
+        description: 'The background worker responsible for processing incoming Stripe webhook events is failing to garbage collect HTTP context objects after successful transactions. Over a 24-hour period, this slow accumulation of memory causes the Node.js process to hit the V8 memory limit, resulting in Out-Of-Memory (OOM) crashes and dropped payment confirmations.',
         priority: 'P0_CRITICAL',
         severity: 'BLOCKER',
         issue_type: 'BUG',
@@ -52,7 +52,7 @@ export class IssueController {
       {
         project_id: projects[0],
         title: 'UI overlap on mobile Safari checkout',
-        description: 'The "Complete Order" button is partially covered by the iOS safe area inset when the keyboard is open.',
+        description: 'When a user navigates to the checkout page on an iPhone using Safari, the "Complete Order" sticky button at the bottom of the screen is partially obscured by the iOS safe area inset. This overlap prevents the user from successfully clicking the button when the virtual keyboard is open.',
         priority: 'P2_MEDIUM',
         severity: 'MINOR',
         issue_type: 'BUG',
@@ -60,7 +60,7 @@ export class IssueController {
       {
         project_id: projects[0],
         title: 'Database connection pool exhaustion during flash sale',
-        description: 'During high load, the connection pool runs out of connections and times out requests instead of queueing them.',
+        description: 'During peak traffic events like flash sales, the backend API rapidly runs out of available PostgreSQL database connections. Instead of properly queueing incoming requests or expanding the connection pool dynamically, the service begins to instantly drop connections and return 504 Gateway Timeout errors to the frontend client applications.',
         priority: 'P1_HIGH',
         severity: 'MAJOR',
         issue_type: 'BUG',
@@ -69,7 +69,7 @@ export class IssueController {
       {
         project_id: projects[1],
         title: 'FaceID authentication failing on iOS 17.4',
-        description: 'The biometrics framework is throwing an unexpected domain error on the latest iOS update when falling back to passcode.',
+        description: 'Following the latest iOS 17.4 system update, the native biometrics framework is returning an unexpected domain error code when FaceID fails to recognize the user. Instead of gracefully falling back to the standard PIN passcode screen, the application crashes entirely, locking users out of their banking dashboard until they reinstall.',
         priority: 'P0_CRITICAL',
         severity: 'BLOCKER',
         issue_type: 'BUG',
@@ -77,7 +77,7 @@ export class IssueController {
       {
         project_id: projects[1],
         title: 'Transaction history list jitters on scroll',
-        description: 'The FlatList rendering the transaction history is dropping frames on older Android devices when scrolling fast.',
+        description: 'The React Native FlatList component responsible for rendering the user’s transaction history is experiencing severe frame drops on older Android devices (specifically Android 11 and below). When the user scrolls rapidly through their monthly statements, the UI stutters significantly, leading to a degraded and unprofessional user experience for budget devices.',
         priority: 'P2_MEDIUM',
         severity: 'MINOR',
         issue_type: 'BUG',
@@ -86,7 +86,7 @@ export class IssueController {
       {
         project_id: projects[2],
         title: 'GraphQL N+1 query issue in user profiles',
-        description: 'Resolving user followers is generating separate SQL queries for each follower, causing significant database load.',
+        description: 'The GraphQL resolver responsible for fetching a user’s follower network is suffering from a classic N+1 query problem. Instead of batching the database lookups using a DataLoader, the resolver executes a separate SQL query for every single follower in the list, causing massive database CPU spikes and slow response times.',
         priority: 'P1_HIGH',
         severity: 'MAJOR',
         issue_type: 'BUG',
@@ -94,7 +94,7 @@ export class IssueController {
       {
         project_id: projects[2],
         title: 'OAuth token refresh endpoint returning 500 intermittently',
-        description: 'The Redis cache occasionally drops the refresh token before it expires, leading to a 500 error during validation.',
+        description: 'The authentication service relies on a Redis cache to store active OAuth refresh tokens. However, due to a misconfigured TTL setting in the cache layer, Redis occasionally evicts the refresh token a few minutes before its actual expiration date, which causes the validation endpoint to throw a 500 Internal Error.',
         priority: 'P1_HIGH',
         severity: 'CRITICAL',
         issue_type: 'BUG',

@@ -73,7 +73,6 @@ export const DashboardPage: React.FC = () => {
   const blockersAssigned = safeIssues.filter(
     (i) =>
       (i.priority === 'P0_CRITICAL' || i.severity === 'BLOCKER') &&
-      i.assignee_id === user?.id &&
       !['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)
   );
 
@@ -99,16 +98,13 @@ export const DashboardPage: React.FC = () => {
               <Badge variant="default" className="font-mono text-xs">
                 {activeProject?.key || 'WORKSPACE'}
               </Badge>
-              <Badge variant="success" className="text-xs">
-                DEVELOPER INTELLIGENCE ACTIVE
-              </Badge>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Welcome back, {user?.full_name?.split(' ')[0]} 👋
+              </h1>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
-              Welcome back, <span className="text-primary">{user?.full_name || 'Engineer'}</span>
-            </h1>
-            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-              Monitoring active defects, Grok AI triage assistant, CI/CD test failure telemetry, and release health for{' '}
-              <strong className="text-foreground">{activeProject?.name || 'current workspace'}</strong>.
+            <p className="text-muted-foreground text-sm">
+              Here is your daily engineering digest. You have {blockersAssigned.length} critical blockers
+              and {needsTriageIssues.length} issues awaiting triage.
             </p>
           </div>
 
@@ -135,68 +131,52 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Top 4 Quick Metric Tiles */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Open Defects */}
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">Active Open Defects</span>
-              <Bug className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-foreground font-mono">{openCount}</span>
-              <span className="text-xs text-muted-foreground font-mono">/ {allIssues.length} total</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {resolvedCount} resolved in current sprint
+      {/* Feature 12: KEY METRICS ROW */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Open Issues</CardTitle>
+            <Bug className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{openCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              +12% from last week
             </p>
           </CardContent>
         </Card>
-
-        {/* P0 Criticals */}
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">P0 Critical Blockers</span>
-              <AlertOctagon className="h-4 w-4 text-red-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-red-400 font-mono">{criticalCount}</span>
-            </div>
-            <p className="text-[11px] text-red-400 font-medium">
-              {criticalCount === 0 ? '✓ Zero release blockers' : 'Requires immediate attention'}
+        <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Critical / P0</CardTitle>
+            <AlertOctagon className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">{criticalCount}</div>
+            <p className="text-xs text-red-500/70 mt-1">
+              Requires immediate attention
             </p>
           </CardContent>
         </Card>
-
-        {/* Needs QA Verification */}
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">Ready for QA Verification</span>
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-emerald-400 font-mono">{readyForQAIssues.length}</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Resolved fixes pending verification
+        <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Resolved (30d)</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{resolvedCount}</div>
+            <p className="text-xs text-emerald-500/70 mt-1">
+              Great progress this sprint
             </p>
           </CardContent>
         </Card>
-
-        {/* Mean Time to Resolve */}
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-semibold">Mean Time to Resolve</span>
-              <Clock className="h-4 w-4 text-cyan-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-foreground font-mono">4.8h</span>
-            </div>
-            <p className="text-[11px] text-emerald-400 font-medium">
+        <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Cycle Time</CardTitle>
+            <Clock className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">2.4d</div>
+            <p className="text-xs text-blue-500/70 mt-1">
               ↓ 18% speedup vs last sprint
             </p>
           </CardContent>
@@ -242,7 +222,7 @@ export const DashboardPage: React.FC = () => {
                   : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
               }`}
             >
-              <span>My Blockers</span>
+              <span>Blockers</span>
               <Badge variant="destructive" className="text-[10px] px-1 py-0 font-mono">
                 {blockersAssigned.length}
               </Badge>

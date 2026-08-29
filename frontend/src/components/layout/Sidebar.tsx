@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Badge } from '../ui/badge';
+import { useProject } from '../../contexts/ProjectContext';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -22,9 +23,11 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
+  const { activeProject } = useProject();
+  
   const navItems = [
     { name: 'Dashboard', to: '/', icon: LayoutDashboard },
-    { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: '12' },
+    { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: activeProject?.open_issues_count?.toString() || '0' },
     { name: 'Projects', to: '/projects', icon: FolderGit2 },
     { name: 'Releases', to: '/releases', icon: GitPullRequest },
     { name: 'CI Failures', to: '/ci-failures', icon: Zap, badge: 'NEW' },
