@@ -27,6 +27,63 @@ export class IssueController {
   }
 
   /**
+   * POST /api/v1/issues/simulate-random
+   * Generates a random realistic bug for hackathon live demo mode.
+   */
+  static async simulateRandomIssue(req: Request, res: Response) {
+    if (!req.user) throw AppError.unauthorized();
+
+    const ecomId = 'ecom-proj-00000000-0000-0000-000000000001';
+    
+    const randomBugs = [
+      {
+        title: 'Memory leak in payment processing worker',
+        description: 'The background worker for Stripe webhooks is retaining HTTP context objects in memory. Over 24h, this causes OOM crashes.',
+        priority: 'P0_CRITICAL',
+        severity: 'BLOCKER',
+        issue_type: 'BUG',
+      },
+      {
+        title: 'UI overlap on mobile Safari checkout',
+        description: 'The "Complete Order" button is partially covered by the iOS safe area inset when the keyboard is open.',
+        priority: 'P2_NORMAL',
+        severity: 'MINOR',
+        issue_type: 'BUG',
+      },
+      {
+        title: 'Database connection pool exhaustion during flash sale',
+        description: 'During high load, the connection pool runs out of connections and times out requests instead of queueing them.',
+        priority: 'P1_HIGH',
+        severity: 'MAJOR',
+        issue_type: 'BUG',
+      },
+    ];
+
+    const bug = randomBugs[Math.floor(Math.random() * randomBugs.length)];
+
+    const simulatedIssueData = {
+      project_id: ecomId,
+      title: bug.title,
+      description: bug.description,
+      issue_type: bug.issue_type as any,
+      priority: bug.priority as any,
+      severity: bug.severity as any,
+      assignee_id: req.user.id, // Assign to whoever clicked the button
+      component_id: 'c1',
+      version_id: 'v1',
+    };
+
+    const createdIssue = await IssueService.createIssue(simulatedIssueData as any, req.user.id);
+
+    return ApiResponse.success({
+      res,
+      statusCode: 201,
+      data: createdIssue,
+      message: `Simulated random issue ${createdIssue.key} created`,
+    });
+  }
+
+  /**
    * GET /api/v1/issues/:id
    * Fetch issue detail by UUID or Key (e.g. ECOM-1042)
    */

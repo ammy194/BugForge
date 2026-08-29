@@ -21,6 +21,8 @@ interface ProjectContextType {
   createProjectVersion: (projectId: string, data: { name: string; description?: string; status?: any; release_date?: string | null }) => Promise<Version>;
   getProjectMilestones: (projectId?: string) => Promise<Milestone[]>;
   createProjectMilestone: (projectId: string, data: { name: string; description?: string; status?: any; due_date?: string | null }) => Promise<Milestone>;
+  isAutoSimulating: boolean;
+  setAutoSimulating: (value: boolean) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -54,10 +56,31 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const [isAutoSimulating, setAutoSimulating] = useState(() => localStorage.getItem('bugforge_auto_simulate') === 'true');
+
+  useEffect(() => {
+    localStorage.setItem('bugforge_auto_simulate', String(isAutoSimulating));
+    let interval: number | undefined;
+
+    if (isAutoSimulating && user) {
+      interval = window.setInterval(async () => {
+        try {
+          await api.post('/issues/simulate-random');
+          // Force UI refresh (notifications will be fetched by Navbar polling or we could trigger a global event)
+          // Actually, Navbar fetches on click, but for a true live feel, let's just let the endpoint create the issue.
+          // The issue list will refresh when they navigate to it.
+        } catch (e) {
+          console.error('Auto-simulate failed', e);
+        }
+      }, 30000); // Every 30 seconds
+    }
+
+    return () => clearInterval(interval);
+  }, [isAutoSimulating, user]);
+
   useEffect(() => {
     refreshProjects();
   }, [user]);
-
   // Update effective role when active project or user changes
   useEffect(() => {
     const resolveRole = async () => {
@@ -174,6 +197,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         createProjectVersion,
         getProjectMilestones,
         createProjectMilestone,
+        isAutoSimulating,
+        setAutoSimulating,
       }}
     >
       {children}

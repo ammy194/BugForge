@@ -35,7 +35,7 @@ interface Webhook {
 
 export const SettingsPage: React.FC = () => {
   const { user } = useAuth();
-  const { activeProject } = useProject();
+  const { activeProject, isAutoSimulating, setAutoSimulating } = useProject();
 
   const [activeTab, setActiveTab] = useState<'integrations' | 'webhooks' | 'account'>('integrations');
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
@@ -183,6 +183,40 @@ export const SettingsPage: React.FC = () => {
       {/* Tab 1: CI/CD & GitHub Integrations */}
       {activeTab === 'integrations' && (
         <div className="space-y-6 animate-in fade-in">
+          {/* Live Demo Mode Auto-Simulate */}
+          <Card className="border-border/80 bg-card/80 border-primary/40 shadow-[0_0_15px_rgba(56,189,248,0.1)] md:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span>Live Demo Mode (Auto-Simulate Bugs)</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Automatically generate random realistic bugs every 30 seconds to simulate a live, active engineering environment during presentations.
+                </CardDescription>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <span className={`text-xs font-semibold ${isAutoSimulating ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {isAutoSimulating ? 'ACTIVE' : 'INACTIVE'}
+                </span>
+                <button
+                  onClick={() => setAutoSimulating(!isAutoSimulating)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                    isAutoSimulating ? 'bg-primary' : 'bg-muted'
+                  }`}
+                >
+                  <span className="sr-only">Toggle Live Demo Mode</span>
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      isAutoSimulating ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </CardHeader>
+          </Card>
+
           {/* GitHub Integration Card */}
           <Card className="border-border/80 bg-card/80">
             <CardHeader>

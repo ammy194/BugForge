@@ -12,6 +12,7 @@ issueRoutes.use(requireAuth);
 // Core Issue CRUD
 issueRoutes.get('/', asyncHandler(IssueController.listIssues));
 issueRoutes.post('/', asyncHandler(IssueController.createIssue));
+issueRoutes.post('/simulate-random', asyncHandler(IssueController.simulateRandomIssue));
 issueRoutes.get('/:id', asyncHandler(IssueController.getIssue));
 issueRoutes.patch('/:id', asyncHandler(IssueController.updateAttributes));
 
