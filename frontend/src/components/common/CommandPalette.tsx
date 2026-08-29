@@ -15,6 +15,7 @@ import {
   X,
   Keyboard,
 } from 'lucide-react';
+import { api } from '../../lib/api';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const { projects, activeProject, selectProject } = useProject();
   const { loginAsDemoPersona } = useAuth();
   const [query, setQuery] = useState('');
+  const [issueSuggestions, setIssueSuggestions] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,8 +41,35 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       setTimeout(() => inputRef.current?.focus(), 50);
     } else {
       setQuery('');
+      setIssueSuggestions([]);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || query.trim().length < 2) {
+      setIssueSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      try {
+        const url = activeProject 
+          ? `/issues?project_id=${activeProject.id}&search=${encodeURIComponent(query)}&limit=5`
+          : `/issues?search=${encodeURIComponent(query)}&limit=5`;
+        const res = await api.get<any>(url);
+        if (res && Array.isArray(res.issues)) {
+          setIssueSuggestions(res.issues);
+        } else {
+          setIssueSuggestions([]);
+        }
+      } catch {
+        setIssueSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, isOpen, activeProject]);
 
   if (!isOpen) return null;
 
@@ -177,6 +207,34 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               </span>
             </button>
           ))}
+
+          {/* Issue Suggestions */}
+          {issueSuggestions.length > 0 && (
+            <>
+              <div className="px-2 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex justify-between items-center">
+                <span>Issue Suggestions</span>
+                {loadingSuggestions && <span className="animate-pulse">Loading...</span>}
+              </div>
+              {issueSuggestions.map((issue) => (
+                <button
+                  key={issue.id}
+                  onClick={() => {
+                    navigate(`/issues/${issue.id}`);
+                    onClose();
+                  }}
+                  className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-secondary/60 text-xs text-foreground transition-all group text-left"
+                >
+                  <div className="flex items-center gap-2 truncate pr-2">
+                    <span className="font-mono font-bold text-primary text-[11px] shrink-0">{issue.key}</span>
+                    <span className="text-muted-foreground group-hover:text-foreground truncate">{issue.title}</span>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground px-1.5 py-0.5 rounded border border-border/50 bg-secondary/50 shrink-0">
+                    {issue.status.replace('_', ' ')}
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
 
           {/* Switch Project */}
           <div className="px-2 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">

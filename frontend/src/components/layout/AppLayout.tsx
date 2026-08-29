@@ -85,7 +85,10 @@ export const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar onReportBugClick={() => setCreateModalOpen(true)} />
+        <Navbar 
+          onReportBugClick={() => setCreateModalOpen(true)}
+          onSearchClick={() => setCommandPaletteOpen(true)} 
+        />
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-gradient-to-b from-background via-background to-secondary/10">
           <Outlet />
         </main>

@@ -20,9 +20,10 @@ export interface Notification {
 
 interface NavbarProps {
   onReportBugClick?: () => void;
+  onSearchClick?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick, onSearchClick }) => {
   const { user, logout, loginAsDemoPersona } = useAuth();
   const { projects, activeProject, selectProject, userProjectRole } = useProject();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -151,7 +152,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
           <Input
             placeholder="Search issues, commits, labels... (Press / to focus)"
             icon={<Search className="h-4 w-4" />}
-            className="bg-secondary/40 border-border/60 text-xs h-9 pr-12 focus:bg-background"
+            className="bg-secondary/40 border-border/60 text-xs h-9 pr-12 focus:bg-background cursor-pointer"
+            onClick={onSearchClick}
+            readOnly
           />
           <div className="absolute right-2.5 top-2 flex items-center gap-0.5 rounded border border-border/60 bg-background/80 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
             <Command className="h-2.5 w-2.5" />
