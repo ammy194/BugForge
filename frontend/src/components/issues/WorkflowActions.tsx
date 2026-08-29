@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
@@ -137,7 +138,7 @@ export const WorkflowActions: React.FC<WorkflowActionsProps> = ({ issue, onStatu
       ))}
 
       {/* Transition Dialog for Resolutions / Comments */}
-      {selectedTransition && (
+      {selectedTransition && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in"
           onClick={(e) => {
@@ -233,7 +234,8 @@ export const WorkflowActions: React.FC<WorkflowActionsProps> = ({ issue, onStatu
               </Button>
             </div>
           </Card>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
