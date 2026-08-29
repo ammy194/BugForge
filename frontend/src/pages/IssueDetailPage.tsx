@@ -68,7 +68,7 @@ export const IssueDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getProjectMembers, getProjectComponents } = useProject();
+  const { getProjectMembers, getProjectComponents, userProjectRole } = useProject();
 
   const [issue, setIssue] = useState<Issue | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
