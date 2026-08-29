@@ -27,19 +27,17 @@ Built with Express + TypeScript, React 18 + Vite, Tailwind CSS, Supabase (Postgr
 10. [AI Architecture](#ai-architecture)
 11. [GitHub Integration](#github-integration)
 12. [Security Architecture](#security-architecture)
-13. [Security Mind Map](#security-mind-map)
-14. [Threat Model](#threat-model)
-15. [Tech Stack](#tech-stack)
-16. [Project Structure](#project-structure)
-17. [Setup and Installation](#setup-and-installation)
-18. [Environment Variables](#environment-variables)
-19. [Testing](#testing)
-20. [Deployment](#deployment)
-21. [Demo Personas](#demo-personas)
-22. [Limitations](#limitations)
-23. [Future Improvements](#future-improvements)
-24. [Judging Criteria Alignment](#judging-criteria-alignment)
-25. [License](#license)
+13. [Threat Model](#threat-model)
+14. [Tech Stack](#tech-stack)
+15. [Project Structure](#project-structure)
+16. [Setup and Installation](#setup-and-installation)
+17. [Environment Variables](#environment-variables)
+18. [Testing](#testing)
+19. [Deployment](#deployment)
+20. [Demo Personas](#demo-personas)
+21. [Limitations](#limitations)
+22. [Future Improvements](#future-improvements)
+23. [License](#license)
 
 ---
 
@@ -404,49 +402,6 @@ The `CIIntegrationService` uses a provider registry pattern:
 | **Network** | Security headers | Helmet applies `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, and CSP |
 | **Network** | CORS | Dynamic origin validation allows production Vercel domains, preview URLs, and localhost; unknown origins are rejected |
 | **Audit** | Immutable logging | `AuditService` records role changes, exports, logins, settings updates, and transition overrides with timestamps, IP addresses, and user agents |
-
----
-
-## Security Mind Map
-
-```mermaid
-mindmap
-  root((BugForge Security))
-    Authentication
-      Supabase JWT Verification
-      Demo Persona Token Isolation
-      Local Dev Token Guard
-      Session Expiry Enforcement
-    Authorization
-      Global Role Hierarchy
-      Project-Scoped RBAC
-      Workflow Transition Guards
-      Role Rank Comparison
-    Data Protection
-      Row Level Security on All Tables
-      Server-Side API Key Storage
-      No Secrets in Browser Bundle
-      Zod Input Validation
-    Network Security
-      Helmet Security Headers
-      Dynamic CORS with Origin Rejection
-      HTTPS-Only in Production
-      Rate Limiting via Render
-    Audit and Compliance
-      Immutable Audit Log
-      IP Address Tracking
-      User Agent Recording
-      Action Type Classification
-    AI Safety
-      Server-Side Only Execution
-      Graceful Degradation on Failure
-      Temperature 0.1 Determinism
-      Structured JSON Response Format
-    Integration Security
-      GitHub Token Server-Side Only
-      Webhook Secret Validation
-      Provider Abstraction Isolation
-```
 
 ---
 
@@ -878,18 +833,6 @@ The following are known limitations of the current implementation:
 
 ---
 
-## Judging Criteria Alignment
-
-| Criterion | Score Weight | Evidence |
-|---|---|---|
-| **Problem Understanding and Core Functionality** | /20 | Seven documented pain points mapped to specific features. Full issue lifecycle FSM with 8 states and 17 transition rules. CI-to-issue pipeline, structured bug reporting, release readiness tracking. End-to-end demo workflow from CI failure to release health update. |
-| **Innovation and Meaningful Differentiation** | /20 | AI-powered triage with transparent Grok/heuristic dual-mode fallback. Deterministic Bug Quality Score with per-criterion checklist. Mathematical release readiness formula with explicit deductions. Smart assignment with component ownership, domain expertise, and workload factors. CI failure ingestion with one-click conversion. |
-| **Technical Implementation and Architecture** | /15 | Full-stack TypeScript monorepo with layered backend (routes/controllers/services/middleware). Provider abstraction for AI and CI. Zod validation on all inputs. FSM workflow engine with role-based transition guards. Seven Supabase migrations with RLS. 71 passing tests across 17 suites. |
-| **User Experience and Accessibility** | /15 | Keyboard-navigable interface with command palette (Cmd+K). Progressive disclosure in issue creation. Realtime collaboration with live presence. Responsive design via Tailwind CSS. Structured forms with validation feedback. Demo personas for immediate evaluation without setup. |
-| **Performance and Reliability / Demo Quality** | /20 | AI graceful degradation (Grok failure falls back to deterministic heuristics). Centralized error handling with production-safe messages. React Query with staleTime and retry configuration. Graceful server shutdown. Health endpoint for load balancer probes. Realistic seed data across projects, issues, CI failures, and audit logs. |
-| **Documentation and Explanation** | /10 | Architecture diagrams (ASCII and Mermaid). Security mind map. Threat model with 12 attack vectors. Full project structure tree. Setup, deployment, and environment variable documentation. Honest limitations section. Test suite coverage breakdown. |
-
----
 
 ## License
 
