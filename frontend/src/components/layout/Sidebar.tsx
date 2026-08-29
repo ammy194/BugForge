@@ -27,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
   
   const navItems = [
     { name: 'Dashboard', to: '/', icon: LayoutDashboard },
-    { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: activeProject?.open_issues_count?.toString() || '0' },
+    { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: (activeProject?.open_issues_count || 0) > 0 ? 'PULSE' : undefined },
     { name: 'Projects', to: '/projects', icon: FolderGit2 },
     { name: 'Releases', to: '/releases', icon: GitPullRequest },
     { name: 'CI Failures', to: '/ci-failures', icon: Zap, badge: 'NEW' },
@@ -85,7 +85,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
             >
               <Icon className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
               {!collapsed && <span className="flex-1 truncate">{item.name}</span>}
-              {!collapsed && item.badge && (
+              {!collapsed && item.badge === 'PULSE' && (
+                <span className="relative flex h-2 w-2 mr-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+              )}
+              {!collapsed && item.badge && item.badge !== 'PULSE' && (
                 <Badge variant="default" className="px-1.5 py-0 text-[10px] font-mono">
                   {item.badge}
                 </Badge>
