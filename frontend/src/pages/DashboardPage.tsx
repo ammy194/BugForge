@@ -292,7 +292,6 @@ export const DashboardPage: React.FC = () => {
               </Badge>
             </button>
 
-            </button>
             </>
             )}
           </div>
