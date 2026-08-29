@@ -92,11 +92,11 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-r from-card via-secondary/20 to-purple-950/20 p-6 md:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 md:p-8 shadow-xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2">
-              <Badge variant="purple" className="font-mono text-xs">
+              <Badge variant="default" className="font-mono text-xs">
                 {activeProject?.key || 'WORKSPACE'}
               </Badge>
               <Badge variant="success" className="text-xs">
@@ -104,7 +104,7 @@ export const DashboardPage: React.FC = () => {
               </Badge>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
-              Welcome back, <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">{user?.full_name || 'Engineer'}</span>
+              Welcome back, <span className="text-primary">{user?.full_name || 'Engineer'}</span>
             </h1>
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
               Monitoring active defects, Grok AI triage assistant, CI/CD test failure telemetry, and release health for{' '}
@@ -114,7 +114,7 @@ export const DashboardPage: React.FC = () => {
 
           <div className="flex items-center gap-3 shrink-0">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => navigate('/issues')}
               className="gap-1.5 text-xs h-9"
@@ -123,7 +123,7 @@ export const DashboardPage: React.FC = () => {
               <span>Browse Issues</span>
             </Button>
             <Button
-              variant="glow"
+              variant="secondary"
               size="sm"
               onClick={() => navigate('/releases')}
               className="gap-1.5 text-xs h-9 font-semibold"
@@ -278,7 +278,7 @@ export const DashboardPage: React.FC = () => {
 
             <button
               onClick={() => navigate('/ci-failures')}
-              className="px-3 py-1 text-xs font-semibold rounded-lg transition-all text-purple-400 hover:bg-purple-950/30 flex items-center gap-1"
+              className="px-3 py-1 text-xs font-semibold rounded-lg transition-all text-primary hover:bg-primary/10 flex items-center gap-1"
             >
               <Flame className="h-3 w-3" />
               <span>CI Ingest</span>
@@ -301,7 +301,7 @@ export const DashboardPage: React.FC = () => {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-primary text-xs">{item.key}</span>
+                        <span className="font-mono font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer text-xs">{item.key}</span>
                         <Link
                           to={`/issues/${item.key}`}
                           className="text-xs font-semibold text-foreground hover:underline line-clamp-1"
@@ -322,7 +322,7 @@ export const DashboardPage: React.FC = () => {
                     <div className="flex items-center gap-2 shrink-0">
                       <Button
                         size="sm"
-                        variant="glow"
+                        variant="action"
                         onClick={() => navigate(`/issues/${item.key}`)}
                         className="gap-1 text-[11px] h-7 px-3 font-semibold"
                       >
@@ -367,7 +367,7 @@ export const DashboardPage: React.FC = () => {
 
                     <Button
                       size="sm"
-                      variant="glow"
+                      variant="action"
                       onClick={() => navigate(`/issues/${item.key}`)}
                       className="gap-1 text-[11px] h-7 bg-red-600 hover:bg-red-500 font-semibold shrink-0"
                     >
@@ -394,7 +394,7 @@ export const DashboardPage: React.FC = () => {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-primary text-xs">{item.key}</span>
+                        <span className="font-mono font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer text-xs">{item.key}</span>
                         <Link
                           to={`/issues/${item.key}`}
                           className="text-xs font-semibold text-foreground hover:underline line-clamp-1"

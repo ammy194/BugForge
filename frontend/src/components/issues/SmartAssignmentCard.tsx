@@ -44,27 +44,27 @@ export const SmartAssignmentCard: React.FC<SmartAssignmentCardProps> = ({
   const isAlreadyAssigned = currentAssigneeId === assignmentData.suggested_user_id;
 
   return (
-    <div className="p-3 rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/20 via-secondary/20 to-black/30 space-y-2.5 animate-in fade-in">
+    <div className="p-3 rounded-xl border border-emerald-500/20 bg-gradient-to-r from-indigo-950/20 via-secondary/20 to-black/30 space-y-2.5 animate-in fade-in">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-indigo-500/20 text-indigo-400">
+          <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10 text-emerald-400">
             <UserCheck className="h-3.5 w-3.5" />
           </div>
           <div>
-            <span className="text-xs font-bold text-indigo-300">Suggested Assignee</span>
+            <span className="text-xs font-bold text-emerald-400">Suggested Assignee</span>
             <span className="text-[10px] text-muted-foreground block font-mono">
               Component ownership & workload optimization
             </span>
           </div>
         </div>
 
-        <Badge variant="outline" className="text-[10px] font-mono border-indigo-500/40 text-indigo-300">
+        <Badge variant="outline" className="text-[10px] font-mono border-emerald-500/20 text-emerald-400">
           {assignmentData.confidence_score}% CONFIDENCE
         </Badge>
       </div>
 
       {/* Suggested Engineer Details */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2.5 rounded-lg bg-black/40 border border-indigo-500/20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2.5 rounded-lg bg-black/40 border border-primary/20">
         <div className="flex items-center gap-2.5">
           <Avatar fallback={assignmentData.suggested_name} size="sm" />
           <div>
@@ -85,7 +85,7 @@ export const SmartAssignmentCard: React.FC<SmartAssignmentCardProps> = ({
               variant="glow"
               size="sm"
               onClick={() => onConfirmAssignee(assignmentData.suggested_user_id)}
-              className="gap-1.5 text-[11px] h-7 font-semibold bg-indigo-600 hover:bg-indigo-500 shadow-sm"
+              className="gap-1.5 text-[11px] h-7 font-semibold bg-primary text-emerald-400-foreground hover:bg-primary shadow-sm"
             >
               <Check className="h-3 w-3" />
               <span>Assign to {assignmentData.suggested_name.split(' ')[0]}</span>
@@ -102,7 +102,7 @@ export const SmartAssignmentCard: React.FC<SmartAssignmentCardProps> = ({
         <div className="space-y-0.5">
           {assignmentData.reasons.map((r, idx) => (
             <div key={idx} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <span className="text-indigo-400 font-bold">•</span>
+              <span className="text-emerald-400 font-bold">•</span>
               <span>{r}</span>
             </div>
           ))}

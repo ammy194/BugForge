@@ -43,8 +43,8 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-950/20 flex items-center justify-center gap-2 text-xs text-purple-300 animate-pulse">
-        <Sparkles className="h-4 w-4 animate-spin text-purple-400" />
+      <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 flex items-center justify-center gap-2 text-xs text-emerald-400 animate-pulse">
+        <Sparkles className="h-4 w-4 animate-spin text-emerald-400" />
         <span>Grok AI is triaging defect impact, component, and missing diagnostics...</span>
       </div>
     );
@@ -53,15 +53,15 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
   if (!triageData) return null;
 
   return (
-    <div className="p-4 rounded-xl border border-purple-500/40 bg-gradient-to-br from-purple-950/30 via-secondary/30 to-black/40 space-y-3.5 animate-in slide-in-from-top-2 shadow-lg">
+    <div className="p-4 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-primary/10 via-secondary/30 to-black/40 space-y-3.5 animate-in slide-in-from-top-2 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-purple-500/20 text-purple-400">
+          <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10 text-emerald-400">
             <Wand2 className="h-3.5 w-3.5" />
           </div>
           <div>
-            <span className="text-xs font-bold text-purple-300">
+            <span className="text-xs font-bold text-emerald-400">
               Grok AI Triage Analysis ({triageData.confidence_score}% Confidence)
             </span>
             <span className="text-[10px] text-muted-foreground block font-mono">
@@ -85,7 +85,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
             variant="glow"
             size="sm"
             onClick={onAcceptAll}
-            className="gap-1.5 text-[11px] h-6 px-2.5 font-semibold bg-purple-600 hover:bg-purple-500 shadow-sm"
+            className="gap-1.5 text-[11px] h-6 px-2.5 font-semibold bg-primary text-emerald-400-foreground hover:bg-primary shadow-sm"
           >
             <Check className="h-3 w-3" />
             <span>Accept All Suggestions</span>
@@ -101,7 +101,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
       {/* Suggested Attributes Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
         {/* Priority & Severity Card */}
-        <div className="p-2.5 rounded-lg bg-black/40 border border-purple-500/20 flex flex-col justify-between">
+        <div className="p-2.5 rounded-lg bg-black/40 border border-primary/20 flex flex-col justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-muted-foreground uppercase">
               Suggested Impact:
@@ -120,7 +120,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
             onClick={() =>
               onAcceptPrioritySeverity(triageData.suggested_priority, triageData.suggested_severity)
             }
-            className="mt-2 text-[10px] font-semibold text-primary hover:underline flex items-center gap-1 self-end"
+            className="mt-2 text-[10px] font-semibold text-emerald-400 hover:underline flex items-center gap-1 self-end"
           >
             <span>Apply Impact</span>
             <ArrowRight className="h-2.5 w-2.5" />
@@ -128,7 +128,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
         </div>
 
         {/* Component Card */}
-        <div className="p-2.5 rounded-lg bg-black/40 border border-purple-500/20 flex flex-col justify-between">
+        <div className="p-2.5 rounded-lg bg-black/40 border border-primary/20 flex flex-col justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-muted-foreground uppercase">
               Suggested Component:
@@ -141,7 +141,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
             <button
               type="button"
               onClick={() => onAcceptComponent(triageData.suggested_component_id)}
-              className="mt-2 text-[10px] font-semibold text-primary hover:underline flex items-center gap-1 self-end"
+              className="mt-2 text-[10px] font-semibold text-emerald-400 hover:underline flex items-center gap-1 self-end"
             >
               <span>Apply Component</span>
               <ArrowRight className="h-2.5 w-2.5" />
@@ -150,7 +150,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
         </div>
 
         {/* Smart Labels Card */}
-        <div className="p-2.5 rounded-lg bg-black/40 border border-purple-500/20 flex flex-col justify-between">
+        <div className="p-2.5 rounded-lg bg-black/40 border border-primary/20 flex flex-col justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-muted-foreground uppercase">
               Suggested Labels:
@@ -166,7 +166,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
           <button
             type="button"
             onClick={() => onAcceptLabels(triageData.suggested_labels)}
-            className="mt-2 text-[10px] font-semibold text-primary hover:underline flex items-center gap-1 self-end"
+            className="mt-2 text-[10px] font-semibold text-emerald-400 hover:underline flex items-center gap-1 self-end"
           >
             <span>Apply Labels</span>
             <ArrowRight className="h-2.5 w-2.5" />
@@ -176,7 +176,7 @@ export const AITriageInspector: React.FC<AITriageInspectorProps> = ({
 
       {/* Missing Information Checklist */}
       {triageData.missing_information.length > 0 && (
-        <div className="pt-2 border-t border-purple-500/20 space-y-1.5">
+        <div className="pt-2 border-t border-primary/20 space-y-1.5">
           <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-400">
             <AlertTriangle className="h-3.5 w-3.5" />
             <span>Missing Diagnostic Information Checklist:</span>

@@ -299,7 +299,7 @@ export const AnalyticsPage: React.FC = () => {
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between text-muted-foreground">
               <span className="text-xs font-semibold">Defect Escape Rate</span>
-              <AlertOctagon className="h-4 w-4 text-purple-400" />
+              <AlertOctagon className="h-4 w-4 text-primary" />
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold text-foreground font-mono">

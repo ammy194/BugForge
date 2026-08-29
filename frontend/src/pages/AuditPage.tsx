@@ -87,7 +87,7 @@ export const AuditPage: React.FC = () => {
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'ROLE_CHANGE':
-        return <Badge variant="purple" className="font-mono text-[10px]">ROLE CHANGE</Badge>;
+        return <Badge variant="default" className="font-mono text-[10px]">ROLE CHANGE</Badge>;
       case 'EXPORT_DATA':
         return <Badge variant="warning" className="font-mono text-[10px]">DATA EXPORT</Badge>;
       case 'WEBHOOK_CREATE':
@@ -107,7 +107,7 @@ export const AuditPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
               <Shield className="h-4 w-4" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">Security & Audit Center</h1>

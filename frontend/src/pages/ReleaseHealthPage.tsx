@@ -269,7 +269,7 @@ export const ReleaseHealthPage: React.FC = () => {
               <Card className="p-4 border-border/70 bg-card/60 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground">Unverified Fixes</span>
-                  <div className={`p-1.5 rounded-lg ${healthData.unverified_fixes > 0 ? 'bg-indigo-500/20 text-indigo-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                  <div className={`p-1.5 rounded-lg ${healthData.unverified_fixes > 0 ? 'bg-primary/20 text-primary' : 'bg-emerald-500/20 text-emerald-400'}`}>
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
                 </div>
@@ -356,7 +356,7 @@ export const ReleaseHealthPage: React.FC = () => {
           <Card className="p-6 border-border/80 bg-card space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary">
                   <FileText className="h-4 w-4" />
                 </div>
                 <div>

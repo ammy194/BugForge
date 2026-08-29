@@ -113,8 +113,8 @@ cp .env.example .env
 ```ini
 PORT=10000
 NODE_ENV=production
-CLIENT_URL=https://bug-forge-frontend.vercel.app
-FRONTEND_URL=https://bug-forge-frontend.vercel.app
+CLIENT_URL=https://bugforge-app.vercel.app
+FRONTEND_URL=https://bugforge-app.vercel.app
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

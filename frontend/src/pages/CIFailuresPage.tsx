@@ -130,7 +130,7 @@ export const CIFailuresPage: React.FC = () => {
         title="CI/CD Automated Test Failures"
         description="Ingest continuous integration test failures and convert them into structured defect tickets in 1 click."
         badge={
-          <Badge variant="purple" className="font-mono text-[11px]">
+          <Badge variant="default" className="font-mono text-[11px]">
             {activeProject?.key || 'PROJECT'} • CI SUITE
           </Badge>
         }

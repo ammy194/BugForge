@@ -328,7 +328,7 @@ export const ProjectsPage: React.FC = () => {
 
             <div className="hidden sm:flex items-center gap-2 pb-2">
               <span className="text-[11px] text-muted-foreground">Your Role:</span>
-              <Badge variant="purple" className="text-[10px] font-mono">
+              <Badge variant="default" className="text-[10px] font-mono">
                 {userProjectRole}
               </Badge>
             </div>
@@ -356,9 +356,9 @@ export const ProjectsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-4 text-xs space-y-1.5">
-                  <div className="flex items-center gap-2 font-semibold text-indigo-300">
-                    <Shield className="h-4 w-4 text-indigo-400" />
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-xs space-y-1.5">
+                  <div className="flex items-center gap-2 font-semibold text-primary">
+                    <Shield className="h-4 w-4 text-primary" />
                     <span>RBAC Matrix Enforcement</span>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">
@@ -416,7 +416,7 @@ export const ProjectsPage: React.FC = () => {
                             <option value="REPORTER">REPORTER</option>
                           </select>
                         ) : (
-                          <Badge variant="purple" className="font-mono text-xs">{m.role}</Badge>
+                          <Badge variant="default" className="font-mono text-xs">{m.role}</Badge>
                         )}
 
                         {isManagerOrAdmin && (
@@ -464,7 +464,7 @@ export const ProjectsPage: React.FC = () => {
                     <div key={c.id} className="rounded-lg border border-border/60 bg-secondary/20 p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-xs text-foreground">{c.name}</span>
-                        <Layers className="h-4 w-4 text-indigo-400" />
+                        <Layers className="h-4 w-4 text-primary" />
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">{c.description || 'No description'}</p>
                       {c.default_assignee && (
