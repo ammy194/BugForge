@@ -33,7 +33,7 @@
 ```
 
 ### Production Services & Target URLs
-- **Frontend SPA**: [https://bugforge-app.vercel.app](https://bugforge-app.vercel.app) (Deployed via Vercel with SPA routing)
+- **Frontend SPA**: [https://bug-forge-frontend.vercel.app/](https://bug-forge-frontend.vercel.app/) (Deployed via Vercel with SPA routing)
 - **Backend REST API**: [https://bugforge-backend.onrender.com](https://bugforge-backend.onrender.com) (Deployed via Render with `/health` checks)
 - **Database & Auth**: Supabase PostgreSQL with 7 applied migrations and defense-in-depth RLS.
 - **AI Intelligence**: Grok API (`https://api.x.ai/v1`) executed exclusively on the Render backend with resilient heuristic offline fallback.
