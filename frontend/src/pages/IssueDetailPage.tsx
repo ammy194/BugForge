@@ -242,13 +242,13 @@ export const IssueDetailPage: React.FC = () => {
   const getPriorityBadge = (p: IssuePriority) => {
     switch (p) {
       case 'P0_CRITICAL':
-        return <Badge variant="destructive" className="font-mono text-xs">P0 CRITICAL</Badge>;
+        return <Badge variant="destructive" className="font-mono text-xs">URGENT</Badge>;
       case 'P1_HIGH':
-        return <Badge variant="warning" className="font-mono text-xs">P1 HIGH</Badge>;
+        return <Badge variant="warning" className="font-mono text-xs">HIGH</Badge>;
       case 'P2_MEDIUM':
-        return <Badge variant="secondary" className="font-mono text-xs">P2 MEDIUM</Badge>;
-      default:
-        return <Badge variant="outline" className="font-mono text-xs">P3 LOW</Badge>;
+        return <Badge variant="secondary" className="font-mono text-xs">MEDIUM</Badge>;
+      case 'P3_LOW':
+        return <Badge variant="outline" className="font-mono text-xs text-muted-foreground">LOW</Badge>;
     }
   };
 
@@ -639,10 +639,10 @@ export const IssueDetailPage: React.FC = () => {
                   onChange={(e) => handleAttributeChange('priority', e.target.value)}
                   className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  <option value="P0_CRITICAL">P0 Critical</option>
-                  <option value="P1_HIGH">P1 High</option>
-                  <option value="P2_MEDIUM">P2 Medium</option>
-                  <option value="P3_LOW">P3 Low</option>
+                  <option value="P0_CRITICAL">Urgent</option>
+                  <option value="P1_HIGH">High</option>
+                  <option value="P2_MEDIUM">Medium</option>
+                  <option value="P3_LOW">Low</option>
                 </select>
               </div>
 

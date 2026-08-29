@@ -25,13 +25,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ issues, onStatusDrop }
   const getPriorityBadge = (priority: IssuePriority) => {
     switch (priority) {
       case 'P0_CRITICAL':
-        return <Badge variant="destructive" className="text-[9px] px-1 py-0 font-bold">P0</Badge>;
+        return <Badge variant="destructive" className="text-[9px] px-1 py-0 font-bold">URGENT</Badge>;
       case 'P1_HIGH':
-        return <Badge variant="warning" className="text-[9px] px-1 py-0">P1</Badge>;
+        return <Badge variant="warning" className="text-[9px] px-1 py-0 font-bold">HIGH</Badge>;
       case 'P2_MEDIUM':
-        return <Badge variant="secondary" className="text-[9px] px-1 py-0">P2</Badge>;
+        return <Badge variant="secondary" className="text-[9px] px-1 py-0 font-bold">MEDIUM</Badge>;
       case 'P3_LOW':
-        return <Badge variant="outline" className="text-[9px] px-1 py-0">P3</Badge>;
+        return <Badge variant="outline" className="text-[9px] px-1 py-0 font-bold text-muted-foreground">LOW</Badge>;
       default:
         return null;
     }

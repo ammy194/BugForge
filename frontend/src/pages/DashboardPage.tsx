@@ -147,7 +147,7 @@ export const DashboardPage: React.FC = () => {
         </Card>
         <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Critical / P0</CardTitle>
+            <CardTitle className="text-sm font-medium">Urgent / P0</CardTitle>
             <AlertOctagon className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>

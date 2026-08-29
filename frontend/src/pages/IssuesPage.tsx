@@ -168,13 +168,13 @@ export const IssuesPage: React.FC = () => {
   const getPriorityBadge = (priority: IssuePriority) => {
     switch (priority) {
       case 'P0_CRITICAL':
-        return <Badge variant="destructive" className="text-[10px]">P0 CRITICAL</Badge>;
+        return <Badge variant="destructive" className="text-[10px]">URGENT</Badge>;
       case 'P1_HIGH':
-        return <Badge variant="warning" className="text-[10px]">P1 HIGH</Badge>;
+        return <Badge variant="warning" className="text-[10px]">HIGH</Badge>;
       case 'P2_MEDIUM':
-        return <Badge variant="secondary" className="text-[10px]">P2 MEDIUM</Badge>;
+        return <Badge variant="secondary" className="text-[10px]">MEDIUM</Badge>;
       case 'P3_LOW':
-        return <Badge variant="outline" className="text-[10px]">P3 LOW</Badge>;
+        return <Badge variant="outline" className="text-[10px]">LOW</Badge>;
       default:
         return <Badge variant="secondary" className="text-[10px]">{priority}</Badge>;
     }
@@ -318,7 +318,7 @@ export const IssuesPage: React.FC = () => {
           }`}
         >
           <Flame className="h-3 w-3 text-red-400" />
-          <span>P0 Criticals</span>
+          <span>Urgent</span>
         </button>
 
         {/* Quick Filter: Needs QA Verification */}
@@ -410,10 +410,10 @@ export const IssuesPage: React.FC = () => {
             className="h-9 rounded-md border border-input bg-secondary/50 px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">All Priorities</option>
-            <option value="P0_CRITICAL">P0 Critical</option>
-            <option value="P1_HIGH">P1 High</option>
-            <option value="P2_MEDIUM">P2 Medium</option>
-            <option value="P3_LOW">P3 Low</option>
+            <option value="P0_CRITICAL">Urgent</option>
+            <option value="P1_HIGH">High</option>
+            <option value="P2_MEDIUM">Medium</option>
+            <option value="P3_LOW">Low</option>
           </select>
         </div>
       </div>

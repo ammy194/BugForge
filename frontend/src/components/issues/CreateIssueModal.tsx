@@ -624,10 +624,10 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                     onChange={(e) => setPriority(e.target.value as IssuePriority)}
                     className="w-full h-9 rounded-md border border-input bg-secondary/50 px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   >
-                    <option value="P0_CRITICAL">P0 Critical (Urgent)</option>
-                    <option value="P1_HIGH">P1 High</option>
-                    <option value="P2_MEDIUM">P2 Medium</option>
-                    <option value="P3_LOW">P3 Low</option>
+                    <option value="P0_CRITICAL">Urgent</option>
+                    <option value="P1_HIGH">High</option>
+                    <option value="P2_MEDIUM">Medium</option>
+                    <option value="P3_LOW">Low</option>
                   </select>
                 </div>
 
