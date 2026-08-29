@@ -56,7 +56,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const [isAutoSimulating, setAutoSimulating] = useState(() => localStorage.getItem('bugforge_auto_simulate') === 'true');
+  const [isAutoSimulating, setAutoSimulating] = useState(() => {
+    const saved = localStorage.getItem('bugforge_auto_simulate');
+    return saved !== null ? saved === 'true' : true; // Default to TRUE
+  });
 
   useEffect(() => {
     localStorage.setItem('bugforge_auto_simulate', String(isAutoSimulating));
