@@ -30,7 +30,8 @@ export class GitHubActionsProvider implements CIProvider {
     const title = `[CI/CD] ${failure.test_name} failed on ${failure.branch}`;
 
     const description = [
-      `### 🚨 Automated CI Pipeline Defect`,
+      `Automated CI Pipeline Defect`,
+      `============================`,
       `The automated test suite encountered a failure during continuous integration.`,
       ``,
       `**Source:** ${this.displayName}`,
