@@ -1,7 +1,10 @@
 import { SystemHealthData } from '../types';
 
+const PRODUCTION_API = 'https://bugforge-backend.onrender.com/api/v1';
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const rawBase = isLocal ? 'http://localhost:10000/api/v1' : (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api/v1');
+const rawBase = isLocal
+  ? 'http://localhost:10000/api/v1'
+  : (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || PRODUCTION_API);
 export const API_BASE = rawBase.replace(/\/+$/, '');
 
 export class ApiError extends Error {
