@@ -196,7 +196,6 @@ export const DashboardPage: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-        </Card>
       </div>
       )}
 
