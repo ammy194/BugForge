@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
-import { Search, Plus, Bell, Command, Github, ChevronDown, LogOut, Sparkles, Check, FolderGit2 } from 'lucide-react';
+import { Search, Plus, Bell, Command, Github, ChevronDown, LogOut, Sparkles, Check, FolderGit2, Zap, Bug, GitPullRequest, MessageSquare, User } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Avatar } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { useAuth, DEMO_PERSONAS } from '../../contexts/AuthContext';
 import { useProject } from '../../contexts/ProjectContext';
+import { api } from '../../lib/api';
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+  issue_key?: string;
+}
 
 interface NavbarProps {
   onReportBugClick?: () => void;
@@ -17,6 +28,42 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const fetchNotifications = React.useCallback(async () => {
+    try {
+      const data = await api.get<Notification[]>('/notifications');
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch {
+      setNotifications([]);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (user) fetchNotifications();
+  }, [user, fetchNotifications]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.post('/notifications/read-all');
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch {
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    }
+  };
+
+  const getNotifIcon = (type: string) => {
+    switch (type) {
+      case 'CI_FAILURE': return <Zap className="h-3 w-3 text-red-400" />;
+      case 'ASSIGNED': return <User className="h-3 w-3 text-blue-400" />;
+      case 'MENTIONED': return <MessageSquare className="h-3 w-3 text-purple-400" />;
+      case 'RESOLVED': return <Check className="h-3 w-3 text-emerald-400" />;
+      case 'STATUS_CHANGED': return <GitPullRequest className="h-3 w-3 text-yellow-400" />;
+      default: return <Bug className="h-3 w-3 text-primary" />;
+    }
+  };
 
   const getRoleBadgeVariant = (role?: string) => {
     switch (role) {
@@ -129,54 +176,60 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
           <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
         </a>
 
+        {/* Notifications Bell */}
         <div className="relative">
           <button
             title="Notifications"
-            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            onClick={() => { setNotificationsOpen(!notificationsOpen); if (!notificationsOpen) fetchNotifications(); }}
             className="relative rounded-lg border border-border/60 bg-secondary/30 p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-black">
-              3
-            </span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-black">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
           
           {notificationsOpen && (
             <div 
-              className="absolute right-0 mt-2 w-72 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100"
+              className="absolute right-0 mt-2 w-80 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100"
               onMouseLeave={() => setNotificationsOpen(false)}
             >
               <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-2">
                 <span className="text-xs font-semibold text-foreground">Notifications</span>
-                <button 
-                  onClick={() => setNotificationsOpen(false)}
-                  className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Mark all read
-                </button>
+                {unreadCount > 0 && (
+                  <button 
+                    onClick={handleMarkAllRead}
+                    className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Mark all read
+                  </button>
+                )}
               </div>
-              <div className="space-y-3">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
-                    <span className="text-xs font-medium text-foreground">New Issue Assigned</span>
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-muted-foreground">
+                    <Bell className="h-5 w-5 mx-auto mb-2 opacity-30" />
+                    No notifications yet
                   </div>
-                  <span className="text-[10px] text-muted-foreground pl-4">Bob assigned ECOM-1042 to you.</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
-                    <span className="text-xs font-medium text-foreground">Build Failed</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground pl-4">CI pipeline failed on main branch.</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
-                    <span className="text-xs font-medium text-foreground">Mentioned in Comment</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground pl-4">Sarah mentioned you in ECOM-1039.</span>
-                </div>
+                ) : (
+                  notifications.slice(0, 10).map(n => (
+                    <div key={n.id} className={`flex gap-2.5 rounded-lg p-2 transition-colors ${!n.read ? 'bg-primary/5 border border-primary/10' : 'hover:bg-secondary/30'}`}>
+                      <span className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${!n.read ? 'bg-primary' : 'bg-muted-foreground/30'}`}></span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          {getNotifIcon(n.type)}
+                          <span className="text-xs font-medium text-foreground truncate">{n.title}</span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground line-clamp-2">{n.message}</span>
+                        {n.issue_key && (
+                          <span className="text-[9px] font-mono text-primary/70 mt-0.5">{n.issue_key}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
