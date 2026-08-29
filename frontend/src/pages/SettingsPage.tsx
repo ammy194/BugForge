@@ -53,8 +53,6 @@ export const SettingsPage: React.FC = () => {
   const [ciResult, setCiResult] = useState<any>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
-  const baseUrl = window.location.origin.replace('5173', '5000');
-
   const fetchWebhooks = async () => {
     setLoadingWebhooks(true);
     try {
@@ -236,13 +234,13 @@ export const SettingsPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Input
                     readOnly
-                    value={`${baseUrl}/api/v1/github/webhook`}
+                    value={`${api.baseURL}/github/webhook`}
                     className="font-mono text-xs bg-secondary/50"
                   />
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleCopy(`${baseUrl}/api/v1/github/webhook`, 'gh')}
+                    onClick={() => handleCopy(`${api.baseURL}/github/webhook`, 'gh')}
                     className="gap-1.5 shrink-0"
                   >
                     {copiedUrl === 'gh' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
@@ -291,13 +289,13 @@ export const SettingsPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Input
                     readOnly
-                    value={`${baseUrl}/api/v1/ci/webhook`}
+                    value={`${api.baseURL}/ci/webhook`}
                     className="font-mono text-xs bg-secondary/50"
                   />
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleCopy(`${baseUrl}/api/v1/ci/webhook`, 'ci')}
+                    onClick={() => handleCopy(`${api.baseURL}/ci/webhook`, 'ci')}
                     className="gap-1.5 shrink-0"
                   >
                     {copiedUrl === 'ci' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}

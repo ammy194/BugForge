@@ -292,16 +292,23 @@ export const DashboardPage: React.FC = () => {
               </Badge>
             </button>
 
-            <button
-              onClick={() => navigate('/ci-failures')}
-              className="px-3 py-1 text-xs font-semibold rounded-lg transition-all text-primary hover:bg-primary/10 flex items-center gap-1"
-            >
-              <Flame className="h-3 w-3" />
-              <span>CI Ingest</span>
             </button>
             </>
             )}
           </div>
+
+          {/* Extra Actions */}
+          {userProjectRole !== 'REPORTER' && (
+            <div className="flex items-center ml-auto lg:ml-0">
+              <button
+                onClick={() => navigate('/ci-failures')}
+                className="px-3 py-1 text-xs font-semibold rounded-lg transition-all text-primary hover:bg-primary/10 flex items-center gap-1 border border-primary/20 bg-primary/5"
+              >
+                <Flame className="h-3 w-3" />
+                <span>CI Ingest</span>
+              </button>
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="p-0">
