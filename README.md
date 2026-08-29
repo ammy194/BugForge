@@ -26,18 +26,19 @@ Built with Express + TypeScript, React 18 + Vite, Tailwind CSS, Supabase (Postgr
 9. [Authentication Flow](#authentication-flow)
 10. [AI Architecture](#ai-architecture)
 11. [GitHub Integration](#github-integration)
-12. [Security Architecture](#security-architecture)
-13. [Threat Model](#threat-model)
-14. [Tech Stack](#tech-stack)
-15. [Project Structure](#project-structure)
-16. [Setup and Installation](#setup-and-installation)
-17. [Environment Variables](#environment-variables)
-18. [Testing](#testing)
-19. [Deployment](#deployment)
-20. [Demo Personas](#demo-personas)
-21. [Limitations](#limitations)
-22. [Future Improvements](#future-improvements)
-23. [License](#license)
+12. [Roles and Permissions](#roles-and-permissions)
+13. [Security Architecture](#security-architecture)
+14. [Threat Model](#threat-model)
+15. [Tech Stack](#tech-stack)
+16. [Project Structure](#project-structure)
+17. [Setup and Installation](#setup-and-installation)
+18. [Environment Variables](#environment-variables)
+19. [Testing](#testing)
+20. [Deployment](#deployment)
+21. [Demo Personas](#demo-personas)
+22. [Limitations](#limitations)
+23. [Future Improvements](#future-improvements)
+24. [License](#license)
 
 ---
 
@@ -382,6 +383,19 @@ The `CIIntegrationService` uses a provider registry pattern:
 1. `CIProviderRegistry` registers provider implementations (currently `GitHubActionsProvider`)
 2. CI failure payloads are normalized to a common `CIFailureRecord` schema
 3. One-click conversion creates a fully-linked issue with pre-populated fields, commit SHA, and build URL
+
+---
+
+## Roles and Permissions
+
+BugForge implements a strict, hierarchical Role-Based Access Control (RBAC) system. Permissions are enforced at the API layer (backend middleware) and dynamically tailored at the UI layer to reduce clutter and focus on relevant workflows.
+
+| Role | Primary Responsibilities | UI Access & Restrictions |
+|---|---|---|
+| **Admin** | Full workspace oversight, security audits, global settings. | Has access to all navigation tabs (including Audit Center and Settings). Can perform any state transition or delete operations. |
+| **Project Manager** | Triage incoming bugs, assign workloads, track release readiness, and monitor metrics. | Dashboard defaults to the "Needs Triage" queue. Has access to Analytics and Releases. Cannot access the Audit Center or CI Failures. |
+| **Developer** | Fix bugs, resolve blockers, review CI failures, and link GitHub PRs. | Dashboard defaults to the "Blockers" queue. Has access to CI Failures. Cannot access Analytics, Audit Center, or Workspace Settings. |
+| **Reporter / QA** | Discover and report bugs, verify fixes, and track the status of their reported issues. | Dashboard uses a custom "My Reported Issues" view instead of global metrics. Navigation is strictly limited to Dashboard and Issues. Cannot transition issues to "In Progress" or "Resolved", and cannot edit issue metadata (Priority, Component, Assignee) after creation. |
 
 ---
 
