@@ -1,6 +1,7 @@
 import { SystemHealthData } from '../types';
 
-const rawBase = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const rawBase = isLocal ? 'http://localhost:10000/api/v1' : (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api/v1');
 export const API_BASE = rawBase.replace(/\/+$/, '');
 
 export class ApiError extends Error {

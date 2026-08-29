@@ -6,7 +6,7 @@ dotenv.config();
 const envSchema = z.object({
   PORT: z
     .union([z.string(), z.number()])
-    .default(5000)
+    .default(10000)
     .transform((val) => (typeof val === 'string' ? parseInt(val, 10) : val)),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CLIENT_URL: z.string().default('http://localhost:5173'),

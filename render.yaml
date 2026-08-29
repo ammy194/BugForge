@@ -15,9 +15,9 @@ services:
       - key: PORT
         value: 10000
       - key: CLIENT_URL
-        sync: false
+        value: https://bug-forge-frontend.vercel.app
       - key: FRONTEND_URL
-        sync: false
+        value: https://bug-forge-frontend.vercel.app
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY

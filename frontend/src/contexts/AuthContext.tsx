@@ -144,17 +144,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginAsDemoPersona(key || 'admin');
         return;
       }
-      // Create dev user
-      const customUser: UserProfile = {
-        id: `user-${Date.now()}`,
-        email,
-        full_name: email.split('@')[0],
-        global_role: 'DEVELOPER',
-        created_at: new Date().toISOString(),
-      };
-      localStorage.setItem('bugforge_auth_token', 'demo_dev');
-      localStorage.setItem('bugforge_user_profile', JSON.stringify(customUser));
-      setUser(customUser);
+      // Force them to be admin for the hackathon demo
+      loginAsDemoPersona('admin');
       return;
     }
 
