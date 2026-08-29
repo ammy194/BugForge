@@ -45,13 +45,13 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
       {/* Ambient background glows */}
-      <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
 
       <div className="w-full max-w-md space-y-6 z-10">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-xl shadow-indigo-500/25 text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-xl shadow-primary/25 text-white">
             <Bug className="h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Welcome to BugForge</h1>
@@ -135,25 +135,25 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleDemoLogin('admin')}
-                className="flex items-center justify-between rounded-lg border border-purple-500/30 bg-purple-500/10 p-2 text-left hover:bg-purple-500/20 transition-all text-xs"
+                className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/10 p-2 text-left hover:bg-primary/20 transition-all text-xs"
               >
                 <div>
                   <div className="font-semibold text-foreground">Alex (Admin)</div>
-                  <div className="text-[10px] text-purple-400 font-mono">Full Access</div>
+                  <div className="text-[10px] text-primary font-mono">Full Access</div>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 text-purple-400" />
+                <ArrowRight className="h-3.5 w-3.5 text-primary" />
               </button>
 
               <button
                 type="button"
                 onClick={() => handleDemoLogin('pm')}
-                className="flex items-center justify-between rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-2 text-left hover:bg-indigo-500/20 transition-all text-xs"
+                className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/10 p-2 text-left hover:bg-primary/20 transition-all text-xs"
               >
                 <div>
                   <div className="font-semibold text-foreground">Sarah (PM)</div>
-                  <div className="text-[10px] text-indigo-400 font-mono">Triage & Releases</div>
+                  <div className="text-[10px] text-primary font-mono">Triage & Releases</div>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 text-indigo-400" />
+                <ArrowRight className="h-3.5 w-3.5 text-primary" />
               </button>
 
               <button

@@ -29,7 +29,7 @@ export const BugQualityMeter: React.FC<BugQualityMeterProps> = ({ scoreData }) =
       case 'EXCELLENT':
         return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
       case 'GOOD':
-        return 'text-indigo-400 border-indigo-500/40 bg-indigo-500/10';
+        return 'text-primary border-primary/40 bg-primary/10';
       case 'FAIR':
         return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
       default:
@@ -39,9 +39,9 @@ export const BugQualityMeter: React.FC<BugQualityMeterProps> = ({ scoreData }) =
 
   const getProgressGradient = (score: number) => {
     if (score >= 85) return 'from-emerald-500 to-teal-400';
-    if (score >= 70) return 'from-indigo-500 to-purple-400';
+    if (score >= 70) return 'from-primary/80 to-primary';
     if (score >= 50) return 'from-amber-500 to-orange-400';
-    return 'from-red-500 to-pink-500';
+    return 'from-red-500 to-red-400';
   };
 
   const passedCount = scoreData.checklist.filter((c) => c.passed).length;

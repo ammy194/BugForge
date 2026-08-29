@@ -44,20 +44,20 @@ export default {
         ring: 'hsl(var(--ring))',
         // Modern developer status colors
         status: {
-          open: '#38bdf8',       // sky-400
-          triaged: '#a855f7',    // purple-500
-          progress: '#f59e0b',   // amber-500
+          open: '#65B9FF',       // INFO
+          triaged: '#B8F34A',    // PRIMARY (formerly purple)
+          progress: '#F2B84B',   // WARNING
           review: '#6366f1',     // indigo-500
-          resolved: '#10b981',   // emerald-500
+          resolved: '#B8F34A',   // PRIMARY
           verified: '#06b6d4',   // cyan-500
-          closed: '#64748b',     // slate-500
-          reopened: '#ef4444',   // red-500
+          closed: '#8D968B',     // MUTED
+          reopened: '#FF5C5C',   // ERROR
         },
         priority: {
-          p0: '#ef4444',         // red-500 (Critical)
-          p1: '#f97316',         // orange-500 (High)
-          p2: '#eab308',         // yellow-500 (Medium)
-          p3: '#3b82f6',         // blue-500 (Low)
+          p0: '#FF5C5C',         // ERROR (Critical)
+          p1: '#F2B84B',         // WARNING (High)
+          p2: '#65B9FF',         // INFO (Medium)
+          p3: '#8D968B',         // MUTED (Low)
         },
       },
       borderRadius: {

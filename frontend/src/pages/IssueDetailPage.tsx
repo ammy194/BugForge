@@ -257,11 +257,11 @@ export const IssueDetailPage: React.FC = () => {
       case 'TRANSITION':
         return <Play className="h-3.5 w-3.5 text-primary" />;
       case 'COMMENT':
-        return <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />;
+        return <MessageSquare className="h-3.5 w-3.5 text-primary" />;
       case 'GIT_COMMIT':
         return <GitCommit className="h-3.5 w-3.5 text-emerald-400" />;
       case 'GIT_PR':
-        return <GitPullRequest className="h-3.5 w-3.5 text-purple-400" />;
+        return <GitPullRequest className="h-3.5 w-3.5 text-primary" />;
       case 'CI_FAILURE':
         return <Flame className="h-3.5 w-3.5 text-red-400" />;
       default:
@@ -316,7 +316,7 @@ export const IssueDetailPage: React.FC = () => {
             <span>Issues</span>
           </Button>
           <span className="text-muted-foreground/40 font-mono">/</span>
-          <span className="font-mono text-xs font-bold text-primary">{issue.key}</span>
+          <span className="font-mono text-xs font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer">{issue.key}</span>
         </div>
 
         {/* Realtime Presence Viewers & Watchers */}
@@ -347,9 +347,9 @@ export const IssueDetailPage: React.FC = () => {
             size="sm"
             onClick={handleAnalyzeRootCause}
             disabled={analyzingRootCause}
-            className="gap-1.5 text-xs h-8 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 shadow-sm"
+            className="gap-1.5 text-xs h-8 border-primary/40 text-primary hover:bg-primary/10 shadow-sm"
           >
-            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
             <span>{analyzingRootCause ? 'Diagnosing...' : 'AI Root Cause'}</span>
           </Button>
         </div>
@@ -359,7 +359,7 @@ export const IssueDetailPage: React.FC = () => {
       <Card className="border-border/80 bg-card/90 shadow-lg">
         <CardContent className="p-6 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="purple" className="font-mono text-xs">
+            <Badge variant="default" className="font-mono text-xs">
               {issue.key}
             </Badge>
             <Badge variant="secondary" className="text-xs font-semibold">
@@ -452,15 +452,15 @@ export const IssueDetailPage: React.FC = () => {
 
           {/* AI Root Cause & Code Patch Diagnosis Card */}
           {rootCause && (
-            <Card className="border-purple-500/40 bg-purple-950/20 animate-in fade-in">
+            <Card className="border-primary/40 bg-primary/10 animate-in fade-in">
               <CardHeader className="pb-3 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Wand2 className="h-4 w-4 text-purple-400" />
-                  <CardTitle className="text-xs font-bold text-purple-300">
+                  <Wand2 className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-xs font-bold text-primary">
                     Grok AI Root Cause Analysis & Git Diff Patch
                   </CardTitle>
                 </div>
-                <Badge variant="purple" className="text-[10px] font-mono">
+                <Badge variant="default" className="text-[10px] font-mono">
                   {rootCause.ai_provider}
                 </Badge>
               </CardHeader>
@@ -487,7 +487,7 @@ export const IssueDetailPage: React.FC = () => {
                       size="sm"
                       variant="outline"
                       onClick={handleCopyPatch}
-                      className="text-[11px] h-6 px-2 gap-1 border-purple-500/30"
+                      className="text-[11px] h-6 px-2 gap-1 border-primary/30"
                     >
                       {copiedPatch ? <Check className="h-3 w-3 text-emerald-400" /> : <Code2 className="h-3 w-3" />}
                       <span>{copiedPatch ? 'Copied Diff!' : 'Copy Patch'}</span>
@@ -539,7 +539,7 @@ export const IssueDetailPage: React.FC = () => {
 
                 {/* Live Typing Indicator */}
                 {typingUsers.length > 0 && (
-                  <div className="text-[11px] text-indigo-400 font-mono flex items-center gap-2 animate-pulse pt-2 border-t border-border/40">
+                  <div className="text-[11px] text-primary font-mono flex items-center gap-2 animate-pulse pt-2 border-t border-border/40">
                     <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
                     <span>{typingUsers.join(', ')} is typing a comment...</span>
                   </div>

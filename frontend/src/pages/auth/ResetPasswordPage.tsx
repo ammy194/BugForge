@@ -45,7 +45,7 @@ export const ResetPasswordPage: React.FC = () => {
     <div className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
       <div className="w-full max-w-md space-y-6 z-10">
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-xl shadow-indigo-500/25 text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-xl shadow-primary/25 text-white">
             <Bug className="h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Set New Password</h1>

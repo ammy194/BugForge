@@ -406,13 +406,13 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
         {/* Modal Header */}
         <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-md shadow-indigo-500/25 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary shadow-md shadow-primary/25 text-white">
               <Bug className="h-5 w-5" />
             </div>
             <div>
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <span>Report Defect / Create Issue</span>
-                <Badge variant="purple" className="font-mono text-[10px]">
+                <Badge variant="default" className="font-mono text-[10px]">
                   {projects.find((p) => p.id === projectId)?.key || 'ISSUE'}
                 </Badge>
               </CardTitle>
@@ -429,9 +429,9 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
               size="sm"
               onClick={handleAnalyzeWithAI}
               disabled={analyzingTriage || !title.trim()}
-              className="gap-1 text-xs h-7 border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
+              className="gap-1 text-xs h-7 border-primary/40 text-primary hover:bg-primary/10"
             >
-              <Sparkles className="h-3 w-3 text-purple-400" />
+              <Sparkles className="h-3 w-3 text-primary" />
               <span>{analyzingTriage ? 'Triaging...' : 'Analyze with AI'}</span>
             </Button>
             <Button
@@ -460,9 +460,9 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
 
           {/* AI Log Synthesizer Expansion Drawer */}
           {showAiLogModal && (
-            <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-950/20 space-y-3 animate-in slide-in-from-top-3">
+            <div className="p-4 rounded-xl border border-primary/40 bg-primary/10 space-y-3 animate-in slide-in-from-top-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
+                <div className="flex items-center gap-2 text-xs font-bold text-primary">
                   <Wand2 className="h-4 w-4" />
                   <span>Paste Raw Stack Trace or Customer Ticket</span>
                 </div>
@@ -473,7 +473,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 value={rawLogText}
                 onChange={(e) => setRawLogText(e.target.value)}
                 rows={3}
-                className="w-full rounded-md border border-purple-500/30 bg-black/40 p-2.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-purple-400"
+                className="w-full rounded-md border border-primary/30 bg-black/40 p-2.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <div className="flex justify-end gap-2">
                 <Button
@@ -798,7 +798,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
         {!createdIssue && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-border/60 bg-secondary/20 shrink-0">
             <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
               <span>Smart Routing & AI Radar Active</span>
             </div>
 

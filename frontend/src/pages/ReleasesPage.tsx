@@ -405,7 +405,7 @@ export const ReleasesPage: React.FC = () => {
                       <div
                         className={`p-1.5 rounded-lg ${
                           healthData.unverified_fixes > 0
-                            ? 'bg-indigo-500/20 text-indigo-400'
+                            ? 'bg-primary/20 text-primary'
                             : 'bg-emerald-500/20 text-emerald-400'
                         }`}
                       >
@@ -495,7 +495,7 @@ export const ReleasesPage: React.FC = () => {
               <Card className="p-6 border-border/80 bg-card space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary">
                       <FileText className="h-4 w-4" />
                     </div>
                     <div>
@@ -583,7 +583,7 @@ export const ReleasesPage: React.FC = () => {
           <div className="space-y-4 pt-4 border-t border-border/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-400" />
+                <Calendar className="h-5 w-5 text-primary" />
                 <h2 className="text-base font-semibold text-foreground">Sprints & Quality Milestones</h2>
               </div>
               {isManagerOrAdmin && (

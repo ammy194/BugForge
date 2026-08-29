@@ -44,11 +44,11 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
-      <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
 
       <div className="w-full max-w-md space-y-6 z-10">
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-xl shadow-indigo-500/25 text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-xl shadow-primary/25 text-white">
             <Bug className="h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Create your account</h1>

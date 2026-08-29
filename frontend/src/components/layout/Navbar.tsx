@@ -16,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
   const { projects, activeProject, selectProject, userProjectRole } = useProject();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const getRoleBadgeVariant = (role?: string) => {
     switch (role) {
@@ -42,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
             onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
             className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/40 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors cursor-pointer select-none"
           >
-            <span className="flex h-2 w-2 rounded-full bg-indigo-500"></span>
+            <span className="flex h-2 w-2 rounded-full bg-primary"></span>
             <span className="font-semibold text-foreground max-w-[140px] truncate">
               {activeProject ? activeProject.name : 'Select Project'}
             </span>
@@ -117,23 +118,69 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
           <span>Report Bug</span>
         </Button>
 
-        <button
-          title="GitHub Integration Active"
+        <a
+          href="https://github.com/ammy194/BugForge"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="GitHub Repository"
           className="relative rounded-lg border border-border/60 bg-secondary/30 p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
         >
           <Github className="h-4 w-4" />
           <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-        </button>
+        </a>
 
-        <button
-          title="Notifications"
-          className="relative rounded-lg border border-border/60 bg-secondary/30 p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
-            3
-          </span>
-        </button>
+        <div className="relative">
+          <button
+            title="Notifications"
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            className="relative rounded-lg border border-border/60 bg-secondary/30 p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <Bell className="h-4 w-4" />
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-black">
+              3
+            </span>
+          </button>
+          
+          {notificationsOpen && (
+            <div 
+              className="absolute right-0 mt-2 w-72 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100"
+              onMouseLeave={() => setNotificationsOpen(false)}
+            >
+              <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-2">
+                <span className="text-xs font-semibold text-foreground">Notifications</span>
+                <button 
+                  onClick={() => setNotificationsOpen(false)}
+                  className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Mark all read
+                </button>
+              </div>
+              <div className="space-y-3">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
+                    <span className="text-xs font-medium text-foreground">New Issue Assigned</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground pl-4">Bob assigned ECOM-1042 to you.</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
+                    <span className="text-xs font-medium text-foreground">Build Failed</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground pl-4">CI pipeline failed on main branch.</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
+                    <span className="text-xs font-medium text-foreground">Mentioned in Comment</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground pl-4">Sarah mentioned you in ECOM-1039.</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="h-6 w-[1px] bg-border/60 mx-1"></div>
 
@@ -182,7 +229,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick }) => {
               {/* Fast Switch Persona */}
               <div className="py-2 px-1 border-b border-border/60">
                 <div className="px-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-purple-400" />
+                  <Sparkles className="h-3 w-3 text-primary" />
                   <span>Switch Role Persona</span>
                 </div>
                 {(['admin', 'pm', 'dev', 'reporter'] as const).map((key) => {

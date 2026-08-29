@@ -147,7 +147,7 @@ export const WorkflowActions: React.FC<WorkflowActionsProps> = ({ issue, onStatu
               <div>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   <span>{selectedTransition.label}</span>
-                  <Badge variant="purple" className="font-mono text-[10px]">
+                  <Badge variant="default" className="font-mono text-[10px]">
                     {issue.key}
                   </Badge>
                 </CardTitle>

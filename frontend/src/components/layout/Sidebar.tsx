@@ -43,12 +43,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
       {/* Brand Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-border/60">
         <NavLink to="/" className="flex items-center gap-3 overflow-hidden">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-md shadow-indigo-500/20 text-white font-bold">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary shadow-md shadow-primary/20 text-white font-bold">
             <Bug className="h-5 w-5" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-bold text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-200 bg-clip-text text-transparent">
+              <span className="font-bold text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-primary/50 bg-clip-text text-transparent">
                 BugForge
               </span>
               <span className="text-[10px] text-muted-foreground tracking-wider uppercase font-mono">
@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
               <Icon className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
               {!collapsed && <span className="flex-1 truncate">{item.name}</span>}
               {!collapsed && item.badge && (
-                <Badge variant="purple" className="px-1.5 py-0 text-[10px] font-mono">
+                <Badge variant="default" className="px-1.5 py-0 text-[10px] font-mono">
                   {item.badge}
                 </Badge>
               )}
@@ -94,9 +94,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
 
       {/* AI Assistant Banner (Bottom) */}
       {!collapsed && (
-        <div className="p-3 mx-3 mb-3 rounded-lg border border-purple-500/20 bg-purple-500/5 backdrop-blur-sm">
-          <div className="flex items-center gap-2 text-xs font-semibold text-purple-300 mb-1">
-            <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
+        <div className="p-3 mx-3 mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm">
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 mb-1">
+            <Sparkles className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
             <span>Grok AI Engine</span>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
