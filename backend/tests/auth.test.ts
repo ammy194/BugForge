@@ -51,6 +51,7 @@ describe('Auth & User Profile Endpoints', () => {
 
     const res = await request(app)
       .post('/api/v1/auth/sync-profile')
+      .set('Authorization', 'Bearer demo_dev')
       .send(newProfile);
 
     expect(res.status).toBe(200);

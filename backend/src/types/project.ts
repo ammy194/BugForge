@@ -63,3 +63,17 @@ export interface Milestone {
   total_issues_count?: number;
   resolved_issues_count?: number;
 }
+
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
+
+export interface ProjectInvitation {
+  id: string;
+  project_id: string;
+  inviter_id: string;
+  invitee_email: string;
+  role: ProjectRole;
+  status: InvitationStatus;
+  created_at: string;
+  inviter?: AuthenticatedUser;
+  project?: Project;
+}

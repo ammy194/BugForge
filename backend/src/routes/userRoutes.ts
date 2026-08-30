@@ -8,4 +8,5 @@ export const userRoutes = Router();
 // Protected user routes
 userRoutes.get('/me', requireAuth, asyncHandler(UserController.getMe));
 userRoutes.patch('/me', requireAuth, asyncHandler(UserController.updateMe));
+userRoutes.get('/me/invitations', requireAuth, asyncHandler(UserController.getMyInvitations));
 userRoutes.get('/', requireAuth, asyncHandler(UserController.listUsers));

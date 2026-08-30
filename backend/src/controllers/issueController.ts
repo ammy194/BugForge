@@ -34,6 +34,17 @@ export class IssueController {
   static async simulateRandomIssue(req: Request, res: Response) {
     if (!req.user) throw AppError.unauthorized();
 
+    const DEMO_PERSONA_IDS = [
+      '11111111-1111-4111-a111-111111111111',
+      '22222222-2222-4222-a222-222222222222',
+      '33333333-3333-4333-a333-333333333333',
+      '44444444-4444-4444-a444-444444444444'
+    ];
+
+    if (!DEMO_PERSONA_IDS.includes(req.user.id)) {
+      throw AppError.forbidden('Live simulations are only available for demo accounts.');
+    }
+
     const projects = [
       'ecom-proj-00000000-0000-0000-000000000001',
       'mob-proj-00000000-0000-0000-000000000002',

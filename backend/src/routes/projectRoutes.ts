@@ -30,6 +30,13 @@ projectRoutes.delete(
   asyncHandler(ProjectController.removeMember)
 );
 
+// 2.5 Invitations
+projectRoutes.get('/:id/invitations', requireProjectRole('REPORTER'), asyncHandler(ProjectController.getInvitations));
+projectRoutes.post('/:id/invitations', requireProjectRole('PROJECT_MANAGER'), asyncHandler(ProjectController.inviteMember));
+// Note: Accepting/Declining an invitation only requires authentication, but the service verifies the user is the invitee
+projectRoutes.post('/:id/invitations/:invitationId/accept', asyncHandler(ProjectController.acceptInvitation));
+projectRoutes.post('/:id/invitations/:invitationId/decline', asyncHandler(ProjectController.declineInvitation));
+
 // 3. Components Management
 projectRoutes.get('/:id/components', requireProjectRole('REPORTER'), asyncHandler(ProjectController.getComponents));
 projectRoutes.post(

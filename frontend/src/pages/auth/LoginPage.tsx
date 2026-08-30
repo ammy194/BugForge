@@ -25,6 +25,12 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    const strictEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!strictEmailRegex.test(email)) {
+      setError('Please enter a valid email format');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {

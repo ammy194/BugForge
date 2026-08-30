@@ -31,6 +31,24 @@ export class UserController {
   }
 
   /**
+   * GET /api/v1/users/me/invitations
+   * Retrieve pending invitations for the current user
+   */
+  static async getMyInvitations(req: Request, res: Response) {
+    if (!req.user) {
+      throw AppError.unauthorized('User session not found');
+    }
+
+    const { ProjectService } = await import('../services/projectService');
+    const invitations = await ProjectService.getInvitationsForUser(req.user.id);
+    return ApiResponse.success({
+      res,
+      data: invitations,
+      message: 'Pending invitations retrieved',
+    });
+  }
+
+  /**
    * PATCH /api/v1/users/me
    * Update profile for the current user
    */

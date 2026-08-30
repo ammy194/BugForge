@@ -25,6 +25,12 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
+    const strictEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!strictEmailRegex.test(email)) {
+      setError('Please enter a valid email format');
+      return;
+    }
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
       return;

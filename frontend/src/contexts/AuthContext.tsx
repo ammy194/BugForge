@@ -188,6 +188,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!data.session) {
       throw new Error('Registration successful! Please check your email to verify your account.');
     }
+
+    localStorage.setItem('bugforge_auth_token', data.session.access_token);
+    try {
+      const profile = await api.post<UserProfile>('/auth/sync-profile', {
+        email,
+        full_name: fullName,
+        global_role: role,
+      });
+      setUser(profile);
+    } catch (err) {
+      console.error('Failed to sync profile after registration:', err);
+      // Fallback to fetch from /users/me
+      const profile = await api.get<UserProfile>('/users/me');
+      setUser(profile);
+    }
   };
 
   const loginAsDemoPersona = (personaKey: 'admin' | 'pm' | 'dev' | 'reporter') => {

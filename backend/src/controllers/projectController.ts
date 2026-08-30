@@ -14,7 +14,7 @@ import {
 
 export class ProjectController {
   static async listProjects(req: Request, res: Response) {
-    const isGlobalAdmin = req.user?.global_role === 'ADMIN';
+    const isGlobalAdmin = req.user?.id === '11111111-1111-4111-a111-111111111111';
     const projects = await ProjectService.listProjects(req.user!.id, isGlobalAdmin);
 
     return ApiResponse.success({
@@ -112,6 +112,48 @@ export class ProjectController {
     return ApiResponse.success({
       res,
       message: 'Member removed from project',
+    });
+  }
+
+  // --- Invitations ---
+
+  static async getInvitations(req: Request, res: Response) {
+    const invitations = await ProjectService.getInvitations(req.params.id);
+    return ApiResponse.success({
+      res,
+      data: invitations,
+      message: 'Project invitations retrieved',
+    });
+  }
+
+  static async inviteMember(req: Request, res: Response) {
+    const { email, role } = req.body;
+    if (!email || !role) {
+      throw AppError.badRequest('Email and role are required');
+    }
+    const invitation = await ProjectService.inviteMember(req.params.id, req.user!.id, email, role);
+    return ApiResponse.success({
+      res,
+      statusCode: 201,
+      data: invitation,
+      message: 'Invitation sent',
+    });
+  }
+
+  static async acceptInvitation(req: Request, res: Response) {
+    const member = await ProjectService.acceptInvitation(req.params.id, req.params.invitationId, req.user!.id);
+    return ApiResponse.success({
+      res,
+      data: member,
+      message: 'Invitation accepted successfully',
+    });
+  }
+
+  static async declineInvitation(req: Request, res: Response) {
+    await ProjectService.declineInvitation(req.params.id, req.params.invitationId, req.user!.id);
+    return ApiResponse.success({
+      res,
+      message: 'Invitation declined',
     });
   }
 

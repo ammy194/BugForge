@@ -6,6 +6,7 @@ import {
   Version,
   Milestone,
   ProjectRole,
+  ProjectInvitation,
 } from '../types/project';
 import { UserService, DEMO_PERSONAS } from './userService';
 import { AppError } from '../utils/appError';
@@ -18,6 +19,7 @@ const projectMembersStore = new Map<string, ProjectMember[]>();
 const componentsStore = new Map<string, Component[]>();
 const versionsStore = new Map<string, Version[]>();
 const milestonesStore = new Map<string, Milestone[]>();
+const invitationsStore = new Map<string, ProjectInvitation[]>();
 
 // Initialize Seed Data
 function initSeedData() {
@@ -200,6 +202,31 @@ export class ProjectService {
     versionsStore.set(projectId, []);
     milestonesStore.set(projectId, []);
 
+    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
+    if (!isPlaceholder) {
+      try {
+        const client = getSupabaseAdminClient();
+        await client.from('projects').insert({
+          id: newProject.id,
+          key: newProject.key,
+          name: newProject.name,
+          description: newProject.description,
+          owner_id: newProject.owner_id,
+          issue_counter: newProject.issue_counter,
+          archived: newProject.archived,
+        });
+
+        await client.from('project_members').insert({
+          id: ownerMember.id,
+          project_id: ownerMember.project_id,
+          user_id: ownerMember.user_id,
+          role: ownerMember.role,
+        });
+      } catch (err: any) {
+        logger.warn('Failed to insert project into Supabase DB, kept in-memory fallback:', err?.message);
+      }
+    }
+
     return newProject;
   }
 
@@ -291,6 +318,140 @@ export class ProjectService {
     members = members.filter((m) => m.user_id !== userId);
     projectMembersStore.set(project.id, members);
     project.members_count = members.length;
+  }
+
+  // --- Invitations ---
+
+  static async getInvitations(projectId: string): Promise<ProjectInvitation[]> {
+    const project = await this.getProject(projectId);
+    if (!project) throw AppError.notFound('Project not found');
+    return invitationsStore.get(project.id) || [];
+  }
+
+  static async getInvitationsForUser(userId: string): Promise<ProjectInvitation[]> {
+    const profile = await UserService.getProfileById(userId);
+    if (!profile) return [];
+    
+    const email = profile.email.toLowerCase();
+    const results: ProjectInvitation[] = [];
+    for (const invites of invitationsStore.values()) {
+      results.push(...invites.filter(i => i.invitee_email === email && i.status === 'PENDING'));
+    }
+    return results;
+  }
+
+  static async inviteMember(projectId: string, inviterId: string, email: string, role: ProjectRole): Promise<ProjectInvitation> {
+    const project = await this.getProject(projectId);
+    if (!project) throw AppError.notFound('Project not found');
+
+    // Ensure the invitee actually has an account in BugForge
+    const allUsers = await UserService.listUsers();
+    const invitee = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!invitee) {
+      throw AppError.badRequest('No BugForge account found with that email. They must register first.');
+    }
+
+    const members = projectMembersStore.get(project.id) || [];
+    if (members.some(m => m.user_id === invitee.id)) {
+      throw AppError.conflict('User is already a member of this project');
+    }
+
+    const inviterProfile = await UserService.getProfileById(inviterId);
+    
+    const invitation: ProjectInvitation = {
+      id: `inv-${Date.now()}`,
+      project_id: project.id,
+      inviter_id: inviterId,
+      invitee_email: email.toLowerCase(),
+      role,
+      status: 'PENDING',
+      created_at: new Date().toISOString(),
+      inviter: inviterProfile || undefined,
+      project,
+    };
+
+    const currentInvites = invitationsStore.get(project.id) || [];
+    // Remove any previous pending invite for this email
+    const filtered = currentInvites.filter(inv => inv.invitee_email !== email.toLowerCase() || inv.status !== 'PENDING');
+    filtered.push(invitation);
+    invitationsStore.set(project.id, filtered);
+
+    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
+    if (!isPlaceholder) {
+      try {
+        const client = getSupabaseAdminClient();
+        await client.from('project_invitations').insert({
+          id: invitation.id,
+          project_id: invitation.project_id,
+          inviter_id: invitation.inviter_id,
+          invitee_email: invitation.invitee_email,
+          role: invitation.role,
+          status: invitation.status,
+        });
+      } catch (err: any) {
+        logger.warn('Failed to insert invitation into Supabase:', err?.message);
+      }
+    }
+
+    return invitation;
+  }
+
+  static async acceptInvitation(projectId: string, invitationId: string, userId: string): Promise<ProjectMember> {
+    const project = await this.getProject(projectId);
+    if (!project) throw AppError.notFound('Project not found');
+
+    const invites = invitationsStore.get(project.id) || [];
+    const invite = invites.find(i => i.id === invitationId);
+    if (!invite || invite.status !== 'PENDING') {
+      throw AppError.notFound('Pending invitation not found');
+    }
+
+    const userProfile = await UserService.getProfileById(userId);
+    if (!userProfile || userProfile.email.toLowerCase() !== invite.invitee_email) {
+      throw AppError.forbidden('You can only accept invitations sent to your email');
+    }
+
+    invite.status = 'ACCEPTED';
+
+    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
+    if (!isPlaceholder) {
+      try {
+        const client = getSupabaseAdminClient();
+        await client.from('project_invitations').update({ status: 'ACCEPTED' }).eq('id', invitationId);
+      } catch (err: any) {
+        logger.warn('Failed to update invitation in Supabase:', err?.message);
+      }
+    }
+
+    return this.addMember(project.id, userId, invite.role);
+  }
+
+  static async declineInvitation(projectId: string, invitationId: string, userId: string): Promise<void> {
+    const project = await this.getProject(projectId);
+    if (!project) throw AppError.notFound('Project not found');
+
+    const invites = invitationsStore.get(project.id) || [];
+    const invite = invites.find(i => i.id === invitationId);
+    if (!invite || invite.status !== 'PENDING') {
+      throw AppError.notFound('Pending invitation not found');
+    }
+
+    const userProfile = await UserService.getProfileById(userId);
+    if (!userProfile || userProfile.email.toLowerCase() !== invite.invitee_email) {
+      throw AppError.forbidden('You can only decline invitations sent to your email');
+    }
+
+    invite.status = 'DECLINED';
+
+    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
+    if (!isPlaceholder) {
+      try {
+        const client = getSupabaseAdminClient();
+        await client.from('project_invitations').update({ status: 'DECLINED' }).eq('id', invitationId);
+      } catch (err: any) {
+        logger.warn('Failed to decline invitation in Supabase:', err?.message);
+      }
+    }
   }
 
   // --- Components ---
