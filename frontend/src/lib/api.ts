@@ -18,7 +18,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(endpoint: string, options: RequestInit = {}, retries = 2): Promise<T> {
   const token = localStorage.getItem('bugforge_auth_token');
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -31,11 +31,18 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   try {
     const res = await fetch(url, { ...options, headers });
+    
+    // Auto-retry on 5xx server errors
+    if (!res.ok && res.status >= 500 && retries > 0) {
+      await new Promise(r => setTimeout(r, 1000));
+      return request<T>(endpoint, options, retries - 1);
+    }
+    
     const json = await res.json().catch(() => ({}));
 
     if (!res.ok) {
       throw new ApiError(
-        json.message || `API error: ${res.statusText}`,
+        json.message || `API error: ${res.statusText || res.status}`,
         res.status,
         json.error || json.details
       );
@@ -44,7 +51,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     return json.data !== undefined ? json.data : json;
   } catch (err: any) {
     if (err instanceof ApiError) throw err;
-    throw new ApiError(err.message || 'Network request failed', 0);
+    
+    // Auto-retry on network failures (e.g. timeout, DNS resolution)
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 1000));
+      return request<T>(endpoint, options, retries - 1);
+    }
+    
+    throw new ApiError(err.message || 'Network request failed (Server might be sleeping/down)', 0);
   }
 }
 

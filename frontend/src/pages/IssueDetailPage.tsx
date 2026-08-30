@@ -595,7 +595,7 @@ export const IssueDetailPage: React.FC = () => {
                 <select
                   value={issue.assignee_id || ''}
                   onChange={(e) => handleAttributeChange('assignee_id', e.target.value || null)}
-                  disabled={userProjectRole === 'REPORTER'}
+                  disabled={userProjectRole !== 'ADMIN' && userProjectRole !== 'PROJECT_MANAGER'}
                   className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">-- Unassigned --</option>
@@ -622,7 +622,7 @@ export const IssueDetailPage: React.FC = () => {
                 <select
                   value={issue.component_id || ''}
                   onChange={(e) => handleAttributeChange('component_id', e.target.value || null)}
-                  disabled={userProjectRole === 'REPORTER'}
+                  disabled={userProjectRole !== 'ADMIN' && userProjectRole !== 'PROJECT_MANAGER'}
                   className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">-- None --</option>
@@ -640,7 +640,7 @@ export const IssueDetailPage: React.FC = () => {
                 <select
                   value={issue.priority}
                   onChange={(e) => handleAttributeChange('priority', e.target.value)}
-                  disabled={userProjectRole === 'REPORTER'}
+                  disabled={userProjectRole !== 'ADMIN' && userProjectRole !== 'PROJECT_MANAGER'}
                   className="w-full h-8 rounded border border-input bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="P0_CRITICAL">Urgent</option>

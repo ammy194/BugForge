@@ -41,10 +41,10 @@ export const DashboardPage: React.FC = () => {
   const [health, setHealth] = useState<SystemHealthData | null>(null);
   const [allIssues, setAllIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionTab, setActionTab] = useState<'TRIAGE' | 'BLOCKERS' | 'VERIFY' | 'STALE' | 'CI' | 'MY_REPORTED'>('TRIAGE');
+  const [actionTab, setActionTab] = useState<'TRIAGE' | 'BLOCKERS' | 'VERIFY' | 'STALE' | 'CI' | 'MY_REPORTED' | 'MY_WORK'>('TRIAGE');
 
   useEffect(() => {
-    if (userProjectRole === 'DEVELOPER') setActionTab('BLOCKERS');
+    if (userProjectRole === 'DEVELOPER') setActionTab('MY_WORK');
     else if (userProjectRole === 'REPORTER') setActionTab('MY_REPORTED');
     else setActionTab('TRIAGE');
   }, [userProjectRole]);
@@ -96,6 +96,7 @@ export const DashboardPage: React.FC = () => {
   const resolvedCount = safeIssues.filter((i) => ['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)).length;
 
   const myReportedIssues = safeIssues.filter((i) => i.reporter_id === user?.id);
+  const myWorkIssues = safeIssues.filter((i) => i.assignee_id === user?.id && !['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status));
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
@@ -147,7 +148,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Feature 12: KEY METRICS ROW */}
-      {userProjectRole !== 'REPORTER' && (
+      {userProjectRole !== 'REPORTER' && userProjectRole !== 'DEVELOPER' && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="border-border/60 bg-card/60 hover:bg-card/90 transition-colors shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -257,19 +258,38 @@ export const DashboardPage: React.FC = () => {
               </button>
             ) : (
               <>
-                <button
-              onClick={() => setActionTab('TRIAGE')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
-                actionTab === 'TRIAGE'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
-              }`}
-            >
-              <span>Needs Triage</span>
-              <Badge variant="secondary" className="text-[10px] px-1 py-0 font-mono">
-                {needsTriageIssues.length}
-              </Badge>
-            </button>
+                {userProjectRole === 'DEVELOPER' && (
+                  <button
+                    onClick={() => setActionTab('MY_WORK')}
+                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+                      actionTab === 'MY_WORK'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+                    }`}
+                  >
+                    <span>My Assigned Work</span>
+                    <Badge variant="secondary" className="text-[10px] px-1 py-0 font-mono">
+                      {myWorkIssues.length}
+                    </Badge>
+                  </button>
+                )}
+
+                {userProjectRole !== 'DEVELOPER' && (
+                  <button
+                    onClick={() => setActionTab('TRIAGE')}
+                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+                      actionTab === 'TRIAGE'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+                    }`}
+                  >
+                    <span>Needs Triage</span>
+                    <Badge variant="secondary" className="text-[10px] px-1 py-0 font-mono">
+                      {needsTriageIssues.length}
+                    </Badge>
+                  </button>
+                )}
+
 
             <button
               onClick={() => setActionTab('BLOCKERS')}
@@ -299,26 +319,28 @@ export const DashboardPage: React.FC = () => {
               </Badge>
             </button>
 
-            <button
-              onClick={() => setActionTab('STALE')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
-                actionTab === 'STALE'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
-              }`}
-            >
-              <span>Stale Issues</span>
-              <Badge variant="warning" className="text-[10px] px-1 py-0 font-mono">
-                {staleIssues.length}
-              </Badge>
-            </button>
+            {userProjectRole !== 'DEVELOPER' && (
+              <button
+                onClick={() => setActionTab('STALE')}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+                  actionTab === 'STALE'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+                }`}
+              >
+                <span>Stale Issues</span>
+                <Badge variant="warning" className="text-[10px] px-1 py-0 font-mono">
+                  {staleIssues.length}
+                </Badge>
+              </button>
+            )}
 
             </>
             )}
           </div>
 
           {/* Extra Actions */}
-          {userProjectRole !== 'REPORTER' && (
+          {(userProjectRole === 'DEVELOPER' || userProjectRole === 'ADMIN') && (
             <div className="flex items-center ml-auto lg:ml-0">
               <button
                 onClick={() => navigate('/ci-failures')}

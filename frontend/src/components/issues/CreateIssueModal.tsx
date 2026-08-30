@@ -36,6 +36,7 @@ import {
   Flame,
   Wand2,
   Copy,
+  ChevronDown,
 } from 'lucide-react';
 
 interface CreateIssueModalProps {
@@ -75,6 +76,9 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   const [actualBehavior, setActualBehavior] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [tagsInput, setTagsInput] = useState('');
+  
+  // Progressive disclosure state
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // AI & Duplicate Radar State
   const [duplicates, setDuplicates] = useState<DuplicateCandidate[]>([]);
@@ -679,6 +683,37 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 </div>
               </div>
 
+              {/* Advanced / Optional Fields Toggle */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  aria-expanded={showAdvanced}
+                  aria-controls="advanced-issue-fields"
+                >
+                  <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                  <span>{showAdvanced ? 'Hide Additional Details' : 'Show Additional Details (Repro steps, Environment, etc)'}</span>
+                </button>
+              </div>
+
+              {/* Row 6: Description & Stack Trace */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  <span>Detailed Description & Technical Logs</span>
+                  <span className="text-red-400">*</span>
+                </label>
+                <textarea
+                  placeholder="Uploading an image above 20MB crashes the profile page."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-md border border-input bg-secondary/50 p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  required
+                />
+              </div>
+
+              <div id="advanced-issue-fields" className={`space-y-5 ${showAdvanced ? 'block' : 'hidden'}`}>
               {/* Row 4: Reproduction Steps & Detailed Context */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-foreground flex items-center justify-between">
@@ -719,21 +754,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 </div>
               </div>
 
-              {/* Row 6: Description & Stack Trace */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-foreground flex items-center gap-1">
-                  <span>Detailed Description & Technical Logs</span>
-                  <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  placeholder="Uploading an image above 20MB crashes the profile page."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-md border border-input bg-secondary/50 p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                  required
-                />
-              </div>
+
 
               {/* Row 7: Environment, Release, Milestone, Labels */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -789,6 +810,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   onChange={(e) => setTagsInput(e.target.value)}
                   className="text-xs"
                 />
+              </div>
               </div>
             </form>
           )}

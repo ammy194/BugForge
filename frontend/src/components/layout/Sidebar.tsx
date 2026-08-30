@@ -28,8 +28,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
   const allNavItems = [
     { name: 'Dashboard', to: '/', icon: LayoutDashboard, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'REPORTER'] },
     { name: 'Issues & Bugs', to: '/issues', icon: Bug, badge: (activeProject?.open_issues_count || 0) > 0 ? 'PULSE' : undefined, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'REPORTER'] },
-    { name: 'Projects', to: '/projects', icon: FolderGit2, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'] },
-    { name: 'Releases', to: '/releases', icon: GitPullRequest, roles: ['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER'] },
+    { name: 'Projects', to: '/projects', icon: FolderGit2, roles: ['ADMIN', 'PROJECT_MANAGER'] },
+    { name: 'Releases', to: '/releases', icon: GitPullRequest, roles: ['ADMIN', 'PROJECT_MANAGER'] },
     { name: 'CI Failures', to: '/ci-failures', icon: Zap, badge: 'NEW', roles: ['ADMIN', 'DEVELOPER'] },
     { name: 'Analytics', to: '/analytics', icon: BarChart3, roles: ['ADMIN', 'PROJECT_MANAGER'] },
     { name: 'Audit Center', to: '/audit', icon: ShieldCheck, roles: ['ADMIN'] },
@@ -84,6 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
                 )
               }
               title={collapsed ? item.name : undefined}
+              aria-label={item.name}
             >
               <Icon className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
               {!collapsed && <span className="flex-1 truncate">{item.name}</span>}

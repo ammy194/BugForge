@@ -425,19 +425,29 @@ export const IssuesPage: React.FC = () => {
         <Card className="border-border/80 bg-card/80">
           <CardContent className="p-0">
             {loading ? (
-              <div className="py-12 text-center text-xs text-muted-foreground animate-pulse font-mono">
-                Querying defect records from backend...
+              <div className="overflow-x-auto p-4 space-y-4">
+                <div className="h-4 bg-secondary/40 rounded w-1/4 animate-pulse"></div>
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-8 bg-secondary/20 rounded w-full animate-pulse"></div>
+                  ))}
+                </div>
+                <div className="text-center text-xs text-muted-foreground animate-pulse font-mono mt-4">
+                  Querying defect records from backend...
+                </div>
               </div>
             ) : issues.length === 0 ? (
-              <div className="py-16 text-center space-y-3">
-                <Bug className="h-10 w-10 text-muted-foreground/50 mx-auto" />
+              <div className="py-16 text-center space-y-4">
+                <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-secondary/30 ring-1 ring-border">
+                  <Bug className="h-8 w-8 text-muted-foreground/50" />
+                </div>
                 <div className="space-y-1">
                   <h3 className="text-sm font-semibold text-foreground">No matching issues found</h3>
                   <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                     Try adjusting your filters or search query to find relevant issues.
                   </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleClearFilters} className="text-xs">
+                <Button variant="outline" size="sm" onClick={handleClearFilters} className="text-xs mt-2">
                   Reset Filters
                 </Button>
               </div>

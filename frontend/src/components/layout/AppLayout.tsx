@@ -80,6 +80,14 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden font-sans">
+      {/* Skip to main content */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+      >
+        Skip to main content
+      </a>
+
       {/* Sidebar */}
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
@@ -89,7 +97,7 @@ export const AppLayout: React.FC = () => {
           onReportBugClick={() => setCreateModalOpen(true)}
           onSearchClick={() => setCommandPaletteOpen(true)} 
         />
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-gradient-to-b from-background via-background to-secondary/10">
+        <main id="main-content" className="flex-1 overflow-y-auto p-6 md:p-8 bg-gradient-to-b from-background via-background to-secondary/10">
           <Outlet />
         </main>
       </div>
