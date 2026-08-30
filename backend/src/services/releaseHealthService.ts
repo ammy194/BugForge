@@ -63,9 +63,9 @@ export class ReleaseHealthService {
     });
 
     // Match issues assigned to this version or all open project issues if unversioned
-    const versionIssues = issues.filter(
-      (i) => i.version_id === targetVersion!.id || !i.version_id
-    );
+    const versionIssues = targetVersion.id === 'v-latest' 
+      ? issues 
+      : issues.filter((i) => i.version_id === targetVersion!.id || !i.version_id);
 
     const resolvedIssues = versionIssues.filter((i) =>
       ['RESOLVED', 'VERIFIED', 'CLOSED'].includes(i.status)

@@ -112,8 +112,8 @@ export class IssueController {
       priority: bug.priority as any,
       severity: bug.severity as any,
       assignee_id: req.user.id, // Assign to whoever clicked the button
-      component_id: 'c1',
-      version_id: 'v1',
+      component_id: bug.project_id === projects[0] ? 'c1' : null,
+      version_id: bug.project_id === projects[0] ? 'v1' : null,
     };
 
     const createdIssue = await IssueService.createIssue(simulatedIssueData as any, req.user.id);
