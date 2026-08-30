@@ -1,6 +1,6 @@
 # BugForge
 
-**A modern, developer-first bug and issue tracking platform -- a ground-up reconstruction of legacy Bugzilla for high-velocity engineering teams.**
+**A modern, developer-first bug and issue tracking platform -- a ground-up reconstruction   of legacy Bugzilla for high-velocity engineering teams.**
 
 Built with Express + TypeScript, React 18 + Vite, Tailwind CSS, Supabase (PostgreSQL, Auth, Storage, Realtime, Row Level Security), Grok AI (xAI API), and bidirectional GitHub integration.
 
