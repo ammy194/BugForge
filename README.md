@@ -148,6 +148,56 @@ RELEASE HEALTH UPDATE (readiness score recalculated)
 
 ---
 
+## Product Showcase
+
+### 1. Engineering Dashboard
+The dashboard provides a project-level overview of open issues, critical defects, workload, recent activity, and release readiness.
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" width="900" alt="BugForge engineering dashboard showing project health, critical issues, team workload, and release readiness">
+</p>
+
+### 2. Issue Management
+A robust issue-management system with advanced filtering, status tracking, components, and severity indicators.
+<p align="center">
+  <img src="docs/screenshots/issues.png" width="900" alt="BugForge issue management list showing status, priority, severity, assignee, and components">
+</p>
+
+### 3. Issue Investigation
+Rich issue details supporting markdown, reproduction steps, comments, and realtime viewer presence.
+<p align="center">
+  <img src="docs/screenshots/issue-details.png" width="900" alt="BugForge issue details showing description, reproduction steps, activity, and development information">
+</p>
+
+### 4. Developer Workflow
+Deep integration with GitHub to seamlessly connect bugs to development branches, pull requests, and CI status.
+<p align="center">
+  <img src="docs/screenshots/developer-workflow.png" width="900" alt="BugForge developer workflow showing linked GitHub repository, branch, pull request, and CI status">
+</p>
+
+### 5. QA and Verification
+Integrated QA workflows for tracking test failures, verification states, and identifying regressions.
+<p align="center">
+  <img src="docs/screenshots/qa-verification.png" width="900" alt="BugForge QA verification dashboard showing issues ready for QA and test information">
+</p>
+
+### 6. Release Health and Analytics
+Quantitative release-readiness metrics, blocker alerts, and engineering analytics to ensure confident deployments.
+<p align="center">
+  <img src="docs/screenshots/release-health.png" width="900" alt="BugForge release health and analytics showing release readiness, blockers, and resolution trends">
+</p>
+
+### Feature Mapping
+| BugForge Capability | Demonstrated In |
+|---|---|
+| Project Dashboard | Dashboard |
+| Issue Management | Issues |
+| Bug Investigation | Issue Details |
+| Developer Workflow | GitHub/Development |
+| QA Verification | QA |
+| Release Health | Release Health |
+
+---
+
 ## Innovation and Differentiation
 
 | Capability | Legacy Bugzilla | BugForge |
