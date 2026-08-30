@@ -283,7 +283,25 @@ export const ReleaseHealthPage: React.FC = () => {
                 </div>
               </Card>
 
-              {/* Tile 4: Unverified Fixes */}
+              {/* Tile 4: Major Bugs */}
+              <Card className="p-4 border-border/70 bg-card/60 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground">Major Bugs</span>
+                  <div className={`p-1.5 rounded-lg ${healthData.open_major && healthData.open_major > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                    <Zap className="h-4 w-4" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="font-mono text-2xl font-bold text-foreground">
+                    {healthData.open_major || 0}
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    {(healthData.open_major || 0) === 0 ? 'No major functional defects' : 'Degraded core functionality'}
+                  </span>
+                </div>
+              </Card>
+
+              {/* Tile 5: Unverified Fixes */}
               <Card className="p-4 border-border/70 bg-card/60 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground">Unverified Fixes</span>

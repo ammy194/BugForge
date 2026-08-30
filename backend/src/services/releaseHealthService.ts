@@ -22,6 +22,8 @@ export interface ReleaseHealthData {
   completion_rate: number;
   open_blockers: number;
   open_critical: number;
+  open_major?: number;
+  open_minor?: number;
   regressions_count: number;
   unverified_fixes: number;
   ci_pass_rate: number;
@@ -136,6 +138,42 @@ export class ReleaseHealthService {
       });
     }
 
+    const majorIssues = openIssues.filter(
+      (i) =>
+        (i.priority === 'P2_MEDIUM' || i.severity === 'MAJOR') &&
+        !blockerIssues.includes(i) &&
+        !criticalIssues.includes(i) &&
+        !regressionIssues.includes(i)
+    );
+
+    const minorIssues = openIssues.filter(
+      (i) =>
+        !blockerIssues.includes(i) &&
+        !criticalIssues.includes(i) &&
+        !regressionIssues.includes(i) &&
+        !majorIssues.includes(i)
+    );
+
+    if (majorIssues.length > 0) {
+      deductions.push({
+        factor: 'Open Major Bugs',
+        count: majorIssues.length,
+        deduction_per_unit: 5,
+        total_deduction: majorIssues.length * 5,
+        explanation: 'Major defects degrade the user experience and should be prioritized.',
+      });
+    }
+
+    if (minorIssues.length > 0) {
+      deductions.push({
+        factor: 'Open Minor Bugs',
+        count: minorIssues.length,
+        deduction_per_unit: 2,
+        total_deduction: minorIssues.length * 2,
+        explanation: 'Minor defects and cosmetic issues.',
+      });
+    }
+
     const totalDeductions = deductions.reduce((sum, d) => sum + d.total_deduction, 0);
     const calculatedScore = Math.max(0, Math.min(100, 100 - totalDeductions));
 
@@ -195,6 +233,8 @@ export class ReleaseHealthService {
       completion_rate: completionRate,
       open_blockers: blockerIssues.length,
       open_critical: criticalIssues.length,
+      open_major: majorIssues.length,
+      open_minor: minorIssues.length,
       regressions_count: regressionIssues.length,
       unverified_fixes: unverifiedIssues.length,
       ci_pass_rate: versionIssues.length > 0
