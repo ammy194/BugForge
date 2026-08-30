@@ -80,13 +80,15 @@ export class ReleaseHealthService {
     );
 
     const criticalIssues = openIssues.filter(
-      (i) => i.priority === 'P1_HIGH' || i.severity === 'CRITICAL'
+      (i) => (i.priority === 'P1_HIGH' || i.severity === 'CRITICAL') && !blockerIssues.includes(i)
     );
 
     const regressionIssues = openIssues.filter(
       (i) =>
-        (i.labels && i.labels.some((l) => (typeof l === 'string' ? l : l.name).toLowerCase().includes('regression'))) ||
-        i.title.toLowerCase().includes('regression')
+        ((i.labels && i.labels.some((l) => (typeof l === 'string' ? l : l.name).toLowerCase().includes('regression'))) ||
+        i.title.toLowerCase().includes('regression')) &&
+        !blockerIssues.includes(i) &&
+        !criticalIssues.includes(i)
     );
 
     const unverifiedIssues = versionIssues.filter((i) => i.status === 'RESOLVED');

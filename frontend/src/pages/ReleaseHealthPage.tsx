@@ -227,8 +227,8 @@ export const ReleaseHealthPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Right: 4 Metrics Tiles */}
-            <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-2 gap-4">
+            {/* Right: Metrics Tiles */}
+            <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
               {/* Tile 1: Open Blockers */}
               <Card className="p-4 border-border/70 bg-card/60 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
@@ -265,7 +265,25 @@ export const ReleaseHealthPage: React.FC = () => {
                 </div>
               </Card>
 
-              {/* Tile 3: Unverified Fixes */}
+              {/* Tile 3: Critical Bugs */}
+              <Card className="p-4 border-border/70 bg-card/60 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground">Critical Bugs</span>
+                  <div className={`p-1.5 rounded-lg ${healthData.open_critical > 0 ? 'bg-orange-500/20 text-orange-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                    <AlertTriangle className="h-4 w-4" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="font-mono text-2xl font-bold text-foreground">
+                    {healthData.open_critical}
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    {healthData.open_critical === 0 ? 'No critical priority defects' : 'High risk issues open'}
+                  </span>
+                </div>
+              </Card>
+
+              {/* Tile 4: Unverified Fixes */}
               <Card className="p-4 border-border/70 bg-card/60 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground">Unverified Fixes</span>
