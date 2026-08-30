@@ -1,26 +1,19 @@
-<div align="center">
-  <h1>BugForge</h1>
-  <p><strong>A modern, developer-first bug and issue tracking platform — a ground-up reconstruction of legacy Bugzilla for high-velocity engineering teams.</strong></p>
+# BugForge
 
-  <p>
-    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
-    <img src="https://img.shields.io/badge/Express-404D59?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
-    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
-    <img src="https://img.shields.io/badge/GitHub_Integration-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
-  </p>
+**A modern, developer-first bug and issue tracking platform -- a ground-up reconstruction of legacy Bugzilla for high-velocity engineering teams.**
 
-  <p>
-    <a href="https://bug-forge-frontend.vercel.app"><strong>Live Application</strong></a> · 
-    <a href="https://bugforge-backend.onrender.com"><strong>API Server</strong></a> · 
-    <a href="https://github.com/ammy194/BugForge"><strong>Repository</strong></a>
-  </p>
-</div>
+Built with Express + TypeScript, React 18 + Vite, Tailwind CSS, Supabase (PostgreSQL, Auth, Storage, Realtime, Row Level Security), Grok AI (xAI API), and bidirectional GitHub integration.
+
+| | |
+|---|---|
+| **Live Application** | [bug-forge-frontend.vercel.app](https://bug-forge-frontend.vercel.app) |
+| **API Server** | [bugforge-backend.onrender.com](https://bugforge-backend.onrender.com) |
+| **Repository** | [github.com/ammy194/BugForge](https://github.com/ammy194/BugForge) |
+| **License** | MIT |
 
 ---
 
-## 📌 Quick Links & Navigation
+## Quick Links & Navigation
 
 1. [What is BugForge?](#what-is-bugforge)
 2. [The Problem](#the-problem)
@@ -109,31 +102,31 @@ BugForge accelerates engineering cycles through smart automation:
 
 ## Core Capabilities
 
-### 🧠 Intelligent Issue Management
+### Intelligent Issue Management
 - **Full issue lifecycle management** with a configurable finite-state machine (OPEN, TRIAGED, IN_PROGRESS, IN_REVIEW, RESOLVED, VERIFIED, REOPENED, CLOSED)
 - **AI-powered bug triage** via Grok (xAI) with deterministic heuristic fallback when the API is unavailable
 - **Two-tier duplicate detection** combining candidate narrowing with token-similarity scoring
 - **Deterministic Bug Quality Score** (0-100) evaluating title clarity, reproduction steps, expected/actual behavior, and environment metadata
 - **Smart assignment** using multi-factor heuristics: component ownership, historical resolution expertise, and workload balancing
 
-### 💻 Developer Workflow
+### Developer Workflow
 - **CI failure ingestion** from GitHub Actions with one-click bug creation and commit SHA linking
 - **GitHub Activity Panel** displaying PR status, review state, CI check results, and branch metadata
 - **Automatic issue resolution** via inbound webhook dispatch with configurable event subscriptions
 - **Global Command Palette (Cmd+K)** for rapid, keyboard-first navigation and realtime issue search across the workspace
 - **Rich Markdown Rendering** for technical context, crash logs, and reproduction steps in issue descriptions
 
-### 🚀 Release Intelligence & Analytics
+### Release Intelligence & Analytics
 - **Release Health Radar** with a mathematical readiness formula, blocker alerts, and automated release notes generation
 - **Engineering telemetry** including MTTD, MTTR, Bug Reopen Rate, Defect Escape Rate, and Component Health Index
 
-### 🤝 Collaboration
+### Collaboration
 - **Realtime collaboration** with live viewer presence indicators
 - **Live Defect Simulation Mode** featuring an active background loop that rapidly generates synthetic incoming bugs, broadcasting live notifications to demonstrate system activity
 - **Human-Readable Urgency Labels** translating internal technical priorities (e.g. `P0_CRITICAL`) into clean UI indicators (Urgent, High, Medium, Low)
 - **Contextual Onboarding Tooltips** applied across KPI dashboards, analytics, and complex administrative interfaces for immediate feature clarification
 
-### 🔒 Security & Governance
+### Security & Governance
 - **Project-scoped RBAC** with four roles (Admin, Project Manager, Developer, Reporter) and hierarchical permission enforcement
 - **Row Level Security** on all Supabase tables, matching user project membership at the database layer
 - **Immutable audit trail** tracking role changes, data exports, authentication events, and workflow overrides
