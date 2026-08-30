@@ -212,6 +212,14 @@ Quantitative release-readiness metrics, blocker alerts, and engineering analytic
 | Realtime Collaboration | Full page reloads | Live viewer presence pills and broadcast indicators |
 | Telemetry | Basic statistics | MTTD, MTTR, Bug Reopen Rate, Defect Escape Rate, Component Health Index |
 
+### Use Cases for Grok AI Engine
+
+BugForge leverages the **Grok AI engine (via the xAI API)** natively to automate some of the most time-consuming parts of the engineering lifecycle:
+- **Intelligent Bug Triage**: Grok analyzes the unstructured text of incoming bug reports to automatically recommend the correct `Severity` (e.g., Critical vs Minor) and `Priority` (P0-P4) based on context, drastically reducing manual PM workload.
+- **Component Routing**: By understanding the technical context, Grok suggests which system component (e.g., Frontend, Database, Auth) the issue belongs to, ensuring bugs are routed to the right team immediately.
+- **Missing Information Detection**: Grok scans the issue description and generates a checklist of missing context (e.g., "Missing browser version", "No reproduction steps provided"), guiding reporters to write better bugs before a developer even looks at them.
+- **Duplicate Detection Analysis**: Grok evaluates the semantic meaning of bug reports to identify potential duplicates even when different terminology is used.
+
 ### AI-Assisted Triage with Graceful Degradation
 
 Unlike tools that require constant API connectivity, BugForge's AI system degrades to deterministic heuristics when the Grok API is unavailable. The `AIService` orchestrates between `GrokProvider` (live xAI API) and `HeuristicAIProvider` (local keyword analysis). Both providers return the same response shape, making the fallback transparent to the frontend. This dual-mode design ensures the platform remains functional in air-gapped, rate-limited, or cost-constrained environments.
