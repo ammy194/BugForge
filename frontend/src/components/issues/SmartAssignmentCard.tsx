@@ -51,9 +51,9 @@ export const SmartAssignmentCard: React.FC<SmartAssignmentCardProps> = ({
             <UserCheck className="h-3.5 w-3.5" />
           </div>
           <div>
-            <span className="text-xs font-bold text-emerald-400">Suggested Assignee</span>
+            <span className="text-xs font-bold text-emerald-400">AI Recommended Assignee: {assignmentData.suggested_name}</span>
             <span className="text-[10px] text-muted-foreground block font-mono">
-              Component ownership & workload optimization
+              AI-driven analysis based on workload and expertise
             </span>
           </div>
         </div>

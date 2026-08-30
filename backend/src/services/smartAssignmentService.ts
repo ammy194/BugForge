@@ -131,6 +131,63 @@ export class SmartAssignmentService {
     // Sort by highest suitability score
     candidates.sort((a, b) => b.score - a.score);
 
+    // AI-powered Smart Assignment using Grok
+    if (candidates.length > 0) {
+      const { GrokProvider } = await import('./ai/grokProvider');
+      if (GrokProvider.isConfigured()) {
+        try {
+          const prompt = `Analyze this issue and select the most suitable developer from the candidates:
+Title: "${title}"
+Description: "${description}"
+Component: "${targetComponent?.name || 'None'}"
+Priority: "${priority || 'None'}"
+
+Candidates:
+${JSON.stringify(
+  candidates.map((c) => ({
+    user_id: c.user_id,
+    name: c.name,
+    role: c.role,
+    open_issues: c.open_issues,
+    open_critical_issues: c.open_critical_issues,
+    expertise: c.reasons.join(', '),
+  })),
+  null,
+  2
+)}
+
+Return JSON strictly matching this schema:
+{
+  "suggested_user_id": string,
+  "reasons": string[],
+  "confidence_score": number (0-100)
+}`;
+          const raw = await GrokProvider.complete(
+            prompt,
+            'You are an expert developer triage AI for BugForge issue tracking platform. Output strictly valid JSON.'
+          );
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const aiTop = candidates.find((c) => c.user_id === parsed.suggested_user_id);
+            if (aiTop) {
+              return {
+                suggested_user_id: aiTop.user_id,
+                suggested_name: aiTop.name,
+                suggested_email: aiTop.email,
+                avatar_url: aiTop.avatar_url,
+                confidence_score: parsed.confidence_score || 90,
+                reasons: parsed.reasons || aiTop.reasons,
+                candidates,
+              };
+            }
+          }
+        } catch (err: any) {
+          // Fallback to heuristic on error
+          console.warn(`Grok assignment failed, executing heuristic fallback: ${err.message}`);
+        }
+      }
+    }
+
     const top = candidates[0] || {
       user_id: members[0]?.user_id || 'unassigned',
       name: members[0]?.user?.full_name || 'Lead Engineer',
