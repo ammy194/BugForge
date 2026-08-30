@@ -42,6 +42,8 @@ interface ReleaseHealthData {
   completion_rate: number;
   open_blockers: number;
   open_critical: number;
+  open_major?: number;
+  open_minor?: number;
   regressions_count: number;
   unverified_fixes: number;
   ci_pass_rate: number;
