@@ -11,6 +11,7 @@ interface ProjectContextType {
   selectProject: (projectOrKey: string | Project) => void;
   refreshProjects: () => Promise<void>;
   createProject: (data: { key: string; name: string; description?: string }) => Promise<Project>;
+  archiveProject: (projectId: string) => Promise<void>;
   getProjectMembers: (projectId?: string) => Promise<ProjectMember[]>;
   addProjectMember: (projectId: string, userId: string, role: ProjectRole) => Promise<ProjectMember>;
   updateProjectMemberRole: (projectId: string, userId: string, role: ProjectRole) => Promise<ProjectMember>;
@@ -143,6 +144,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return created;
   };
 
+  const archiveProject = async (projectId: string): Promise<void> => {
+    // Persist the archive on the backend first - only update local state
+    // once we know the operation actually succeeded.
+    await api.delete(`/projects/${projectId}`);
+
+    // Refresh from the server so the list reflects the backend's filtering
+    // of archived projects (rather than trusting an optimistic local removal).
+    await refreshProjects();
+
+    // If the archived project was the active one, refreshProjects() will
+    // already have fallen back to the first remaining project (or null).
+    if (activeProject?.id === projectId) {
+      localStorage.removeItem('bugforge_active_project_key');
+    }
+  };
+
   const getProjectMembers = async (projectId?: string) => {
     const id = projectId || activeProject?.id;
     if (!id) return [];
@@ -210,6 +227,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         selectProject,
         refreshProjects,
         createProject,
+        archiveProject,
         getProjectMembers,
         addProjectMember,
         updateProjectMemberRole,

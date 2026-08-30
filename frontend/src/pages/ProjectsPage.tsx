@@ -45,6 +45,7 @@ export const ProjectsPage: React.FC = () => {
     createProjectVersion,
     getProjectMilestones,
     createProjectMilestone,
+    archiveProject,
   } = useProject();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'components' | 'releases' | 'milestones' | 'settings'>('overview');
@@ -196,6 +197,22 @@ export const ProjectsPage: React.FC = () => {
       loadTabData();
     } catch (err: any) {
       setActionError(err.message || 'Failed to create release');
+    }
+  };
+
+  const handleArchiveProject = async () => {
+    if (!activeProject) return;
+    if (
+      !confirm(
+        `Archive "${activeProject.name}"? It will be removed from the active projects list. This can only be undone by an administrator directly in the database.`
+      )
+    ) {
+      return;
+    }
+    try {
+      await archiveProject(activeProject.id);
+    } catch (err: any) {
+      alert(err.message || 'Failed to archive project');
     }
   };
 
@@ -600,7 +617,12 @@ export const ProjectsPage: React.FC = () => {
 
                   {isAdmin && (
                     <div className="pt-4 border-t border-border/60">
-                      <Button variant="destructive" size="sm" className="gap-1.5 text-xs">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="gap-1.5 text-xs"
+                        onClick={handleArchiveProject}
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                         <span>Archive Project</span>
                       </Button>
