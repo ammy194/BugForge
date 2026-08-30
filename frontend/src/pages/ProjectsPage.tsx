@@ -9,6 +9,7 @@ import { useProject } from '../contexts/ProjectContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Project, ProjectMember, Component, Version, Milestone, ProjectRole, UserProfile } from '../types';
 import { api } from '../lib/api';
+import { isValidEmail } from '../lib/utils';
 import {
   FolderGit2,
   Users,
@@ -25,6 +26,8 @@ import {
   X,
   AlertTriangle,
   Lock,
+  Mail,
+  Inbox,
 } from 'lucide-react';
 
 export const ProjectsPage: React.FC = () => {
@@ -36,7 +39,6 @@ export const ProjectsPage: React.FC = () => {
     userProjectRole,
     createProject,
     getProjectMembers,
-    addProjectMember,
     updateProjectMemberRole,
     removeProjectMember,
     getProjectComponents,
@@ -46,9 +48,14 @@ export const ProjectsPage: React.FC = () => {
     getProjectMilestones,
     createProjectMilestone,
     archiveProject,
+    myInvitations,
+    refreshMyInvitations,
+    inviteMember,
+    respondToInvitation,
   } = useProject();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'components' | 'releases' | 'milestones' | 'settings' | 'invitations'>('overview');
+  const [view, setView] = useState<'projects' | 'invitations'>('projects');
+  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'components' | 'releases' | 'milestones' | 'settings'>('overview');
   
   // Data for active project tabs
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -57,44 +64,10 @@ export const ProjectsPage: React.FC = () => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [loadingTab, setLoadingTab] = useState(false);
-  const [myInvitations, setMyInvitations] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchMyInvitations = async () => {
-      try {
-        const data = await api.get<any[]>('/users/me/invitations');
-        setMyInvitations(data);
-      } catch (err) {
-        console.error('Failed to fetch invitations', err);
-      }
-    };
-    if (user) {
-      fetchMyInvitations();
-    }
-  }, [user]);
-
-  const handleAcceptInvite = async (projectId: string, inviteId: string) => {
-    try {
-      await api.post(`/projects/${projectId}/invitations/${inviteId}/accept`);
-      setMyInvitations(prev => prev.filter(i => i.id !== inviteId));
-      window.location.reload();
-    } catch (err: any) {
-      alert(err.message || 'Failed to accept invitation');
-    }
-  };
-
-  const handleDeclineInvite = async (projectId: string, inviteId: string) => {
-    try {
-      await api.post(`/projects/${projectId}/invitations/${inviteId}/decline`);
-      setMyInvitations(prev => prev.filter(i => i.id !== inviteId));
-    } catch (err: any) {
-      alert(err.message || 'Failed to decline invitation');
-    }
-  };
 
   // Modals state
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showInviteMemberModal, setShowInviteMemberModal] = useState(false);
   const [showAddComponentModal, setShowAddComponentModal] = useState(false);
   const [showAddVersionModal, setShowAddVersionModal] = useState(false);
   const [showAddMilestoneModal, setShowAddMilestoneModal] = useState(false);
@@ -103,8 +76,9 @@ export const ProjectsPage: React.FC = () => {
   const [newProjKey, setNewProjKey] = useState('');
   const [newProjName, setNewProjName] = useState('');
   const [newProjDesc, setNewProjDesc] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
   const [selectedMemberRole, setSelectedMemberRole] = useState<ProjectRole>('DEVELOPER');
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [compName, setCompName] = useState('');
   const [compDesc, setCompDesc] = useState('');
   const [compAssignee, setCompAssignee] = useState('');
@@ -161,18 +135,19 @@ export const ProjectsPage: React.FC = () => {
     }
   };
 
-  const handleAddMember = async (e: React.FormEvent) => {
+  const handleInviteMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeProject || !selectedUserId) return; // selectedUserId holds email now
+    if (!activeProject || !inviteEmail) return;
     setActionError(null);
+    setInviteSuccess(null);
+    if (!isValidEmail(inviteEmail)) {
+      setActionError('Please enter a valid email address.');
+      return;
+    }
     try {
-      await api.post(`/projects/${activeProject.id}/invitations`, {
-        email: selectedUserId,
-        role: selectedMemberRole,
-      });
-      setShowAddMemberModal(false);
-      setSelectedUserId('');
-      alert('Invitation sent successfully!');
+      await inviteMember(activeProject.id, inviteEmail, selectedMemberRole);
+      setInviteSuccess(`Invitation sent to ${inviteEmail}. They'll see it under Invitations once they accept.`);
+      setInviteEmail('');
     } catch (err: any) {
       setActionError(err.message || 'Failed to send invitation');
     }
@@ -281,54 +256,118 @@ export const ProjectsPage: React.FC = () => {
         title="Project Workspaces & RBAC Governance"
         description="Organize issues by project, enforce role-based access, and configure components & releases."
       >
-        <Button
-          variant="glow"
-          size="sm"
-          onClick={() => {
-            setActionError(null);
-            setShowNewProjectModal(true);
-          }}
-          className="gap-1.5 text-xs font-semibold"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span>New Project</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {view === 'projects' && (
+            <Button
+              variant="glow"
+              size="sm"
+              onClick={() => {
+                setActionError(null);
+                setShowNewProjectModal(true);
+              }}
+              className="gap-1.5 text-xs font-semibold"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>New Project</span>
+            </Button>
+          )}
+        </div>
       </PageHeader>
 
-      {/* Pending Invitations */}
-      {myInvitations.length > 0 && (
-        <Card className="border-primary/50 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2 text-primary">
-              <AlertTriangle className="h-4 w-4" />
-              Pending Project Invitations ({myInvitations.length})
-            </CardTitle>
-            <CardDescription>
-              You have been invited to join the following projects.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {myInvitations.map((inv) => (
-                <div key={inv.id} className="flex items-center justify-between p-3 rounded-md bg-background border border-border/50">
-                  <div>
-                    <div className="font-medium text-sm">{inv.project?.name || 'Unknown Project'}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      Invited by {inv.inviter?.full_name || 'Someone'} as <Badge variant="outline" className="ml-1 uppercase text-[10px]">{inv.role}</Badge>
+      {/* Projects / Invitations Switcher (Requirement 10) */}
+      <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-secondary/30 p-1 w-fit">
+        <button
+          onClick={() => setView('projects')}
+          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            view === 'projects' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <FolderGit2 className="h-3.5 w-3.5" />
+          <span>My Projects</span>
+        </button>
+        <button
+          onClick={() => setView('invitations')}
+          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            view === 'invitations' ? 'bg-primary text-white shadow' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Inbox className="h-3.5 w-3.5" />
+          <span>Invitations</span>
+          {myInvitations.length > 0 && (
+            <Badge variant="warning" className="ml-1 h-4 px-1.5 text-[10px]">
+              {myInvitations.length}
+            </Badge>
+          )}
+        </button>
+      </div>
+
+      {/* Invitations View */}
+      {view === 'invitations' && (
+        <div className="space-y-3">
+          {myInvitations.length === 0 ? (
+            <Card className="border-border/60 bg-card/60">
+              <CardContent className="p-8 text-center text-xs text-muted-foreground">
+                <Inbox className="h-8 w-8 mx-auto mb-2 text-muted-foreground/60" />
+                No pending invitations right now.
+              </CardContent>
+            </Card>
+          ) : (
+            myInvitations.map((inv) => (
+              <Card key={inv.id} className="border-border/60 bg-card/80">
+                <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="purple" className="font-mono text-xs">
+                        {inv.project?.key || '—'}
+                      </Badge>
+                      <span className="text-sm font-semibold text-foreground">
+                        {inv.project?.name || 'BugForge Project'}
+                      </span>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Invited by <strong className="text-foreground">{inv.inviter?.full_name || 'a project member'}</strong>
+                      {' '}as <Badge variant="default" className="text-[10px] font-mono ml-1">{inv.role}</Badge>
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleDeclineInvite(inv.project_id, inv.id)}>Decline</Button>
-                    <Button size="sm" onClick={() => handleAcceptInvite(inv.project_id, inv.id)}>Accept</Button>
+                    <Button
+                      size="sm"
+                      variant="glow"
+                      className="text-xs"
+                      onClick={async () => {
+                        try {
+                          await respondToInvitation(inv.id, 'ACCEPT');
+                        } catch (err: any) {
+                          alert(err.message || 'Failed to accept invitation');
+                        }
+                      }}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={async () => {
+                        try {
+                          await respondToInvitation(inv.id, 'DECLINE');
+                        } catch (err: any) {
+                          alert(err.message || 'Failed to decline invitation');
+                        }
+                      }}
+                    >
+                      Decline
+                    </Button>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       )}
 
       {/* Projects Grid Selector */}
+      {view === 'projects' && (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {projects.map((p) => {
           const isSelected = activeProject?.id === p.id;
@@ -380,9 +419,10 @@ export const ProjectsPage: React.FC = () => {
           );
         })}
       </div>
+      )}
 
       {/* Active Project Management Deep-Dive Workspace */}
-      {activeProject && (
+      {view === 'projects' && activeProject && (
         <Card className="border-border/80 bg-card/80">
           {/* Workspace Tabs Header */}
           <div className="flex items-center justify-between border-b border-border/60 px-6 pt-4 overflow-x-auto">
@@ -470,12 +510,13 @@ export const ProjectsPage: React.FC = () => {
                       size="sm"
                       onClick={() => {
                         setActionError(null);
-                        setShowAddMemberModal(true);
+                        setInviteSuccess(null);
+                        setShowInviteMemberModal(true);
                       }}
                       className="gap-1 text-xs"
                     >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span>Add Member</span>
+                      <Mail className="h-3.5 w-3.5" />
+                      <span>Invite Member</span>
                     </Button>
                   )}
                 </div>
@@ -764,32 +805,40 @@ export const ProjectsPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Add Member Modal */}
-      {showAddMemberModal && (
+      {/* 2. Invite Member Modal (Requirement 7/9/12) */}
+      {showInviteMemberModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
           <Card className="w-full max-w-md bg-card border-border/80 shadow-2xl">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-base">Invite Project Member</CardTitle>
-                <CardDescription className="text-xs">Send an email invitation to collaborate.</CardDescription>
+                <CardDescription className="text-xs">
+                  Enter their BugForge account email. They'll get an invitation to accept or decline --
+                  they won't be added until they accept.
+                </CardDescription>
               </div>
-              <button onClick={() => setShowAddMemberModal(false)} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => setShowInviteMemberModal(false)} className="text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>
             </CardHeader>
             <CardContent>
               {actionError && <div className="rounded border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-400 mb-3">{actionError}</div>}
-              <form onSubmit={handleAddMember} className="space-y-3">
+              {inviteSuccess && <div className="rounded border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-400 mb-3">{inviteSuccess}</div>}
+              <form onSubmit={handleInviteMember} className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">User Email</label>
+                  <label className="text-xs font-medium text-foreground">Account Email</label>
                   <Input
                     type="email"
-                    placeholder="user@bugforge.dev"
-                    value={selectedUserId} // Using this state for email to avoid adding new state
-                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    placeholder="teammate@company.com"
+                    icon={<Mail className="h-4 w-4 text-muted-foreground" />}
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
                     className="text-xs"
                     required
                   />
+                  <p className="text-[10px] text-muted-foreground">
+                    Must already have a BugForge account -- we'll tell you if we can't find one.
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-foreground">Project Role</label>
@@ -805,7 +854,7 @@ export const ProjectsPage: React.FC = () => {
                   </select>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setShowAddMemberModal(false)}>Cancel</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setShowInviteMemberModal(false)}>Close</Button>
                   <Button type="submit" variant="glow" size="sm">Send Invitation</Button>
                 </div>
               </form>

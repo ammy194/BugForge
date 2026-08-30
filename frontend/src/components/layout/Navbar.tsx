@@ -254,7 +254,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onReportBugClick, onSearchClick 
             className="flex items-center gap-2.5 pl-1 cursor-pointer group"
           >
             <Avatar
-              fallback={user?.full_name || 'Guest User'}
+              fallback={user?.full_name || 'Alex Martin'}
               src={user?.avatar_url}
               size="sm"
               className="ring-primary/40 group-hover:ring-primary transition-all"

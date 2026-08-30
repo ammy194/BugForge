@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { UserProfile, GlobalRole } from '../types';
 import { api } from '../lib/api';
+import { isValidEmail } from '../lib/utils';
 
 export interface DemoPersona {
   id: string;
@@ -9,6 +10,7 @@ export interface DemoPersona {
   full_name: string;
   avatar_url?: string;
   global_role: GlobalRole;
+  is_demo: true;
 }
 
 export const DEMO_PERSONAS: Record<string, DemoPersona> = {
@@ -18,6 +20,7 @@ export const DEMO_PERSONAS: Record<string, DemoPersona> = {
     full_name: 'Alex Martin (Admin)',
     avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face',
     global_role: 'ADMIN',
+    is_demo: true,
   },
   pm: {
     id: '22222222-2222-4222-a222-222222222222',
@@ -25,6 +28,7 @@ export const DEMO_PERSONAS: Record<string, DemoPersona> = {
     full_name: 'Sarah Connor (Project Manager)',
     avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face',
     global_role: 'PROJECT_MANAGER',
+    is_demo: true,
   },
   dev: {
     id: '33333333-3333-4333-a333-333333333333',
@@ -32,6 +36,7 @@ export const DEMO_PERSONAS: Record<string, DemoPersona> = {
     full_name: 'Bob Chen (Senior Developer)',
     avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
     global_role: 'DEVELOPER',
+    is_demo: true,
   },
   reporter: {
     id: '44444444-4444-4444-a444-444444444444',
@@ -39,6 +44,7 @@ export const DEMO_PERSONAS: Record<string, DemoPersona> = {
     full_name: 'Elena Rostova (QA Reporter)',
     avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
     global_role: 'REPORTER',
+    is_demo: true,
   },
 };
 
@@ -46,7 +52,7 @@ interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
   loginWithPassword: (email: string, pass: string) => Promise<void>;
-  registerWithPassword: (email: string, pass: string, fullName: string, role?: GlobalRole) => Promise<void>;
+  registerWithPassword: (email: string, pass: string, fullName: string, primaryRole?: GlobalRole) => Promise<void>;
   loginAsDemoPersona: (personaKey: 'admin' | 'pm' | 'dev' | 'reporter') => void;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -64,36 +70,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const token = localStorage.getItem('bugforge_auth_token');
 
-      // 1. If demo persona or local user active
-      if (token) {
-        if (token.startsWith('demo_')) {
-          const key = token.replace('demo_', '');
-          const persona = DEMO_PERSONAS[key] || DEMO_PERSONAS.admin;
-          setUser({
-            ...persona,
-            created_at: new Date().toISOString(),
-          });
-          setLoading(false);
-          return;
+      // 1. If demo persona active
+      if (token && token.startsWith('demo_')) {
+        const key = token.replace('demo_', '');
+        const persona = DEMO_PERSONAS[key];
+        if (persona) {
+          setUser({ ...persona, created_at: new Date().toISOString() });
+        } else {
+          // Unrecognized demo token -- don't silently fall back to admin.
+          localStorage.removeItem('bugforge_auth_token');
+          setUser(null);
         }
-
-        if (token.startsWith('local_')) {
-          const stored = localStorage.getItem('bugforge_user_profile');
-          if (stored) {
-            setUser(JSON.parse(stored));
-            setLoading(false);
-            return;
-          }
-        }
+        setLoading(false);
+        return;
       }
 
-      // 2. If Supabase configured
+      // 2. If Supabase configured, the real session (and the profile it
+      //    resolves to, via the backend) is the only source of truth.
       if (isSupabaseConfigured()) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
             localStorage.setItem('bugforge_auth_token', session.access_token);
-            // Fetch profile from backend
             const profile = await api.get<UserProfile>('/users/me');
             setUser(profile);
           } else {
@@ -103,13 +101,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
         }
       } else {
-        // Default to admin persona if not authenticated yet to ensure smooth judging preview
-        const stored = localStorage.getItem('bugforge_user_profile');
-        if (stored && token === 'local_user') {
-          setUser(JSON.parse(stored));
-        } else {
-          loginAsDemoPersona('admin');
-        }
+        // Offline/local preview mode without Supabase configured: only
+        // demo personas are available. We deliberately do NOT reconstruct
+        // a "custom" account from localStorage here -- that would just be
+        // simulated persistence, which Requirement 1 explicitly forbids.
+        setUser(null);
       }
       setLoading(false);
     };
@@ -141,29 +137,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginWithPassword = async (email: string, pass: string) => {
+    if (!isValidEmail(email)) {
+      throw new Error('Please enter a valid email address.');
+    }
+
     if (!isSupabaseConfigured()) {
-      // Mock login for offline dev
-      const matched = Object.values(DEMO_PERSONAS).find(p => p.email === email);
-      if (matched) {
-        const key = Object.keys(DEMO_PERSONAS).find(k => DEMO_PERSONAS[k].email === email) as any;
-        loginAsDemoPersona(key || 'admin');
+      // Offline/local preview mode: only the 4 demo personas can "log in".
+      const key = Object.keys(DEMO_PERSONAS).find((k) => DEMO_PERSONAS[k].email === email);
+      if (key) {
+        loginAsDemoPersona(key as any);
         return;
       }
-
-      // Allow login for offline registered custom user
-      const stored = localStorage.getItem('bugforge_user_profile');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.email === email) {
-          localStorage.setItem('bugforge_auth_token', 'local_user');
-          setUser(parsed);
-          return;
-        }
-      }
-
-      // Force them to be admin for the hackathon demo if no match
-      loginAsDemoPersona('admin');
-      return;
+      throw new Error(
+        'This environment is running without Supabase configured, so only demo persona logins are available.'
+      );
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
@@ -179,29 +166,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     pass: string,
     fullName: string,
-    role: GlobalRole = 'DEVELOPER'
+    primaryRole: GlobalRole = 'DEVELOPER'
   ) => {
-    if (!isSupabaseConfigured()) {
-      const newUser: UserProfile = {
-        id: `user-${Date.now()}`,
-        email,
-        full_name: fullName,
-        global_role: role,
-        created_at: new Date().toISOString(),
-      };
-      localStorage.setItem('bugforge_auth_token', 'local_user');
-      localStorage.setItem('bugforge_user_profile', JSON.stringify(newUser));
-      setUser(newUser);
-      return;
+    if (!fullName.trim()) {
+      throw new Error('Full name is required.');
+    }
+    if (!isValidEmail(email)) {
+      throw new Error('Please enter a valid email address.');
+    }
+    if (pass.length < 6) {
+      throw new Error('Password must be at least 6 characters.');
     }
 
+    if (!isSupabaseConfigured()) {
+      // Requirement 1 explicitly forbids faking persistence in
+      // localStorage/React state. Rather than pretend to create an account,
+      // tell the developer/judge exactly what's missing.
+      throw new Error(
+        'Account registration requires Supabase to be configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). ' +
+          'Use one of the demo personas on the login page in the meantime.'
+      );
+    }
+
+    // NOTE: we intentionally send `primary_role`, not `global_role`. The
+    // backend's signup trigger never grants platform privilege from this
+    // metadata (see migration 20260830000001) -- it only records the
+    // user's cosmetic preferred role.
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
       options: {
         data: {
           full_name: fullName,
-          global_role: role,
+          primary_role: primaryRole,
         },
       },
     });
@@ -213,16 +210,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     localStorage.setItem('bugforge_auth_token', data.session.access_token);
+    // Make sure the profile (and the chosen primary role) is persisted even
+    // if the DB trigger hasn't finished, and pick it up via the secured
+    // sync-profile endpoint (identity always derived from the JWT).
     try {
       const profile = await api.post<UserProfile>('/auth/sync-profile', {
-        email,
         full_name: fullName,
-        global_role: role,
+        primary_role: primaryRole,
       });
       setUser(profile);
-    } catch (err) {
-      console.error('Failed to sync profile after registration:', err);
-      // Fallback to fetch from /users/me
+    } catch {
       const profile = await api.get<UserProfile>('/users/me');
       setUser(profile);
     }
@@ -235,7 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...persona,
       created_at: new Date().toISOString(),
     };
-    localStorage.setItem('bugforge_user_profile', JSON.stringify(profile));
+    localStorage.removeItem('bugforge_user_profile');
     setUser(profile);
   };
 

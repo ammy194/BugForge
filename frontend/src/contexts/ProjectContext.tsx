@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Project, ProjectMember, Component, Version, Milestone, ProjectRole } from '../types';
+import { Project, ProjectMember, Component, Version, Milestone, ProjectRole, ProjectInvitation } from '../types';
 import { api } from '../lib/api';
 import { useAuth } from './AuthContext';
 
@@ -24,6 +24,11 @@ interface ProjectContextType {
   createProjectMilestone: (projectId: string, data: { name: string; description?: string; status?: any; due_date?: string | null }) => Promise<Milestone>;
   isAutoSimulating: boolean;
   setAutoSimulating: (value: boolean) => void;
+  // Invitations (Requirement 7/8/9/10)
+  myInvitations: ProjectInvitation[];
+  refreshMyInvitations: () => Promise<void>;
+  inviteMember: (projectId: string, email: string, role: ProjectRole) => Promise<ProjectInvitation>;
+  respondToInvitation: (invitationId: string, action: 'ACCEPT' | 'DECLINE') => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -63,13 +68,47 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [myInvitations, setMyInvitations] = useState<ProjectInvitation[]>([]);
+
+  const refreshMyInvitations = async () => {
+    if (!user) {
+      setMyInvitations([]);
+      return;
+    }
+    try {
+      const list = await api.get<ProjectInvitation[]>('/invitations/mine?status=PENDING');
+      setMyInvitations(Array.isArray(list) ? list : []);
+    } catch {
+      setMyInvitations([]);
+    }
+  };
+
+  const inviteMember = async (projectId: string, email: string, role: ProjectRole) => {
+    const invitation = await api.post<ProjectInvitation>(`/projects/${projectId}/invitations`, { email, role });
+    return invitation;
+  };
+
+  const respondToInvitation = async (invitationId: string, action: 'ACCEPT' | 'DECLINE') => {
+    await api.post(`/invitations/${invitationId}/respond`, { action });
+    await refreshMyInvitations();
+    if (action === 'ACCEPT') {
+      await refreshProjects();
+    }
+  };
+
+  useEffect(() => {
+    refreshMyInvitations();
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('bugforge_auto_simulate', String(isAutoSimulating));
     let timerId: number;
     let isCancelled = false;
 
-    if (isAutoSimulating && user) {
+    // Requirement 15: automatic/live bug simulation is a demo-only feature.
+    // Custom accounts never get an auto-simulation loop, even if the
+    // localStorage flag from a previous demo session is still set to true.
+    if (isAutoSimulating && user?.is_demo) {
       const delays = [60000]; // 1 minute
       let currentIndex = 0;
 
@@ -240,6 +279,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         createProjectMilestone,
         isAutoSimulating,
         setAutoSimulating,
+        myInvitations,
+        refreshMyInvitations,
+        inviteMember,
+        respondToInvitation,
       }}
     >
       {children}

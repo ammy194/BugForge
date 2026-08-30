@@ -5,6 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Same strict pattern enforced by the backend (see
+ * backend/src/utils/validation.ts). Frontend validation gives immediate
+ * feedback; the backend re-validates because client-side checks are never a
+ * security boundary (Requirement 13).
+ */
+export const EMAIL_REGEX =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+
+export function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email.trim());
+}
+
 export function formatDate(dateString?: string | null): string {
   if (!dateString) return '—';
   const date = new Date(dateString);

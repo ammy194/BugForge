@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { isValidEmail } from '../../lib/utils';
 import { Bug, Mail, Lock, Sparkles, ArrowRight, Shield, Check } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
@@ -25,9 +26,8 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    const strictEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!strictEmailRegex.test(email)) {
-      setError('Please enter a valid email format');
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address.');
       return;
     }
 

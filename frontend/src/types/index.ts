@@ -26,6 +26,10 @@ export interface UserProfile {
   full_name: string;
   avatar_url?: string;
   global_role: GlobalRole;
+  /** Cosmetic "preferred role" chosen at signup. Carries no privilege. */
+  primary_role?: GlobalRole;
+  /** True only for the four built-in demo personas. Server-derived. */
+  is_demo?: boolean;
   created_at: string;
 }
 
@@ -42,6 +46,7 @@ export interface Project {
   members_count?: number;
   open_issues_count?: number;
   resolved_issues_count?: number;
+  is_demo?: boolean;
 }
 
 export interface ProjectMember {
@@ -208,4 +213,22 @@ export interface Comment {
   created_at: string;
   updated_at?: string;
   user?: UserProfile;
+}
+
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+
+export interface ProjectInvitation {
+  id: string;
+  project_id: string;
+  inviter_id: string;
+  invitee_id: string;
+  invitee_email: string;
+  role: ProjectRole;
+  status: InvitationStatus;
+  created_at: string;
+  updated_at: string;
+  responded_at?: string | null;
+  expires_at: string;
+  project?: { id: string; key: string; name: string };
+  inviter?: { id: string; full_name: string; email: string };
 }

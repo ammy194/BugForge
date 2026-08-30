@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { GlobalRole } from '../../types';
+import { isValidEmail } from '../../lib/utils';
 import { Bug, Mail, Lock, User, Shield } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
@@ -17,6 +18,9 @@ export const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<GlobalRole>('DEVELOPER');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const emailIsValid = email.length === 0 || isValidEmail(email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +29,9 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
-    const strictEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!strictEmailRegex.test(email)) {
-      setError('Please enter a valid email format');
+    if (!isValidEmail(email)) {
+      setEmailTouched(true);
+      setError('Please enter a valid email address (e.g. name@example.com).');
       return;
     }
 
@@ -99,8 +103,12 @@ export const RegisterPage: React.FC = () => {
                   icon={<Mail className="h-4 w-4 text-muted-foreground" />}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setEmailTouched(true)}
                   className="text-xs"
                 />
+                {emailTouched && !emailIsValid && (
+                  <p className="text-[11px] text-red-400">Please enter a valid email address.</p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -127,6 +135,11 @@ export const RegisterPage: React.FC = () => {
                   <option value="REPORTER">QA Engineer / Reporter (Testing, Bug Reports)</option>
                   <option value="ADMIN">System Administrator</option>
                 </select>
+                <p className="text-[10px] text-muted-foreground">
+                  This is just your preferred role for display -- it doesn't grant any access by
+                  itself. What you can actually do in each project depends on the project-level
+                  role you're given there.
+                </p>
               </div>
 
               <Button
