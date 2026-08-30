@@ -15,6 +15,29 @@ export interface Project {
   members_count?: number;
   open_issues_count?: number;
   resolved_issues_count?: number;
+  /**
+   * True only for the platform's built-in demo/showcase projects. Always
+   * server-derived; custom accounts never see or create demo projects.
+   */
+  is_demo?: boolean;
+}
+
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+
+export interface ProjectInvitation {
+  id: string;
+  project_id: string;
+  inviter_id: string;
+  invitee_id: string;
+  invitee_email: string;
+  role: ProjectRole;
+  status: InvitationStatus;
+  created_at: string;
+  updated_at: string;
+  responded_at?: string | null;
+  expires_at: string;
+  project?: Pick<Project, 'id' | 'key' | 'name'>;
+  inviter?: { id: string; full_name: string; email: string };
 }
 
 export interface ProjectMember {
@@ -62,18 +85,4 @@ export interface Milestone {
   created_at: string;
   total_issues_count?: number;
   resolved_issues_count?: number;
-}
-
-export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
-
-export interface ProjectInvitation {
-  id: string;
-  project_id: string;
-  inviter_id: string;
-  invitee_email: string;
-  role: ProjectRole;
-  status: InvitationStatus;
-  created_at: string;
-  inviter?: AuthenticatedUser;
-  project?: Project;
 }

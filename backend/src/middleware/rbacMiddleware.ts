@@ -17,8 +17,8 @@ export const requireProjectRole = (minimumRole: ProjectRole) => {
         return next(AppError.unauthorized('Authentication required'));
       }
 
-      // Global ADMIN bypasses project checks (Only the exact Demo Admin UUID)
-      if (req.user.id === '11111111-1111-4111-a111-111111111111') {
+      // Global ADMIN bypasses project checks
+      if (req.user.global_role === 'ADMIN') {
         return next();
       }
 

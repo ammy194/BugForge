@@ -590,6 +590,7 @@ export class IssueService {
     component_id?: string;
     limit?: number;
     offset?: number;
+    accessible_project_ids?: string[];
   }): Promise<{ issues: Issue[]; total: number }> {
     let list = Array.from(issuesStore.values());
 
@@ -598,6 +599,11 @@ export class IssueService {
     } else if (query.project_key) {
       const p = await ProjectService.getProject(query.project_key);
       if (p) list = list.filter((i) => i.project_id === p.id);
+    } else if (query.accessible_project_ids) {
+      // Requirement 4: when no specific project was requested, never leak
+      // issues belonging to projects the caller cannot access.
+      const allowed = new Set(query.accessible_project_ids);
+      list = list.filter((i) => allowed.has(i.project_id));
     }
 
     if (query.status) {

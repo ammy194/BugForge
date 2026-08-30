@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { strictEmailSchema } from '../utils/validation';
 
 export const createProjectSchema = z.object({
   key: z
@@ -43,4 +44,13 @@ export const createMilestoneSchema = z.object({
   description: z.string().max(500).optional(),
   status: z.enum(['OPEN', 'CLOSED']).default('OPEN'),
   due_date: z.string().optional().nullable(),
+});
+
+export const createInvitationSchema = z.object({
+  email: strictEmailSchema,
+  role: z.enum(['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'REPORTER']).default('DEVELOPER'),
+});
+
+export const respondInvitationSchema = z.object({
+  action: z.enum(['ACCEPT', 'DECLINE']),
 });

@@ -6,27 +6,42 @@ import {
   Version,
   Milestone,
   ProjectRole,
-  ProjectInvitation,
 } from '../types/project';
 import { UserService, DEMO_PERSONAS } from './userService';
 import { AppError } from '../utils/appError';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
 
-// In-Memory Data Stores for Development/Testing Resilience
-const projectsStore = new Map<string, Project>();
-const projectMembersStore = new Map<string, ProjectMember[]>();
-const componentsStore = new Map<string, Component[]>();
-const versionsStore = new Map<string, Version[]>();
-const milestonesStore = new Map<string, Milestone[]>();
-const invitationsStore = new Map<string, ProjectInvitation[]>();
+// ==============================================================================
+// Demo workspace (in-memory, read mostly-static)
+// ------------------------------------------------------------------------------
+// The 4 built-in demo personas and their 3 showcase projects are NOT real
+// Supabase Auth users, so they can never be written into `public.projects`
+// (owner_id has a FK to public.profiles(id) -> auth.users(id)). They remain a
+// hardcoded, in-memory-only workspace, exactly as before. The important fix
+// here is that this workspace is now *only* ever reachable by demo personas
+// (Requirement 5) -- custom/self-registered accounts are routed exclusively
+// to the Supabase-backed "custom workspace" below and can never see or touch
+// demo projects, even via a direct API call with a guessed ID.
+// ==============================================================================
 
-// Initialize Seed Data
-function initSeedData() {
-  if (projectsStore.size > 0) return;
+const demoProjectsStore = new Map<string, Project>();
+const demoMembersStore = new Map<string, ProjectMember[]>();
+const demoComponentsStore = new Map<string, Component[]>();
+const demoVersionsStore = new Map<string, Version[]>();
+const demoMilestonesStore = new Map<string, Milestone[]>();
+
+export const DEMO_PROJECT_IDS = [
+  'ecom-proj-00000000-0000-0000-000000000001',
+  'mob-proj-00000000-0000-0000-000000000002',
+  'api-proj-00000000-0000-0000-000000000003',
+];
+
+function initDemoSeedData() {
+  if (demoProjectsStore.size > 0) return;
 
   const p1: Project = {
-    id: 'ecom-proj-00000000-0000-0000-000000000001',
+    id: DEMO_PROJECT_IDS[0],
     key: 'ECOM',
     name: 'E-Commerce Platform',
     description: 'Core storefront, payment gateways, checkout flows, and user inventory systems.',
@@ -38,10 +53,11 @@ function initSeedData() {
     members_count: 4,
     open_issues_count: 4,
     resolved_issues_count: 2,
+    is_demo: true,
   };
 
   const p2: Project = {
-    id: 'mob-proj-00000000-0000-0000-000000000002',
+    id: DEMO_PROJECT_IDS[1],
     key: 'MOB',
     name: 'Mobile Banking App',
     description: 'iOS & Android native client applications with biometric authentication.',
@@ -53,10 +69,11 @@ function initSeedData() {
     members_count: 3,
     open_issues_count: 0,
     resolved_issues_count: 0,
+    is_demo: true,
   };
 
   const p3: Project = {
-    id: 'api-proj-00000000-0000-0000-000000000003',
+    id: DEMO_PROJECT_IDS[2],
     key: 'API',
     name: 'Developer Public API',
     description: 'High-throughput GraphQL & REST gateway with rate limiting and OAuth2.',
@@ -68,191 +85,359 @@ function initSeedData() {
     members_count: 3,
     open_issues_count: 0,
     resolved_issues_count: 0,
+    is_demo: true,
   };
 
-  [p1, p2, p3].forEach((p) => projectsStore.set(p.id, p));
+  [p1, p2, p3].forEach((p) => demoProjectsStore.set(p.id, p));
 
-  // Seed Members with Multi-Project Role Differentiation
-  projectMembersStore.set(p1.id, [
+  demoMembersStore.set(p1.id, [
     { id: 'm1', project_id: p1.id, user_id: DEMO_PERSONAS.admin.id, role: 'ADMIN', created_at: p1.created_at, user: DEMO_PERSONAS.admin },
     { id: 'm2', project_id: p1.id, user_id: DEMO_PERSONAS.pm.id, role: 'PROJECT_MANAGER', created_at: p1.created_at, user: DEMO_PERSONAS.pm },
     { id: 'm3', project_id: p1.id, user_id: DEMO_PERSONAS.dev.id, role: 'DEVELOPER', created_at: p1.created_at, user: DEMO_PERSONAS.dev },
     { id: 'm4', project_id: p1.id, user_id: DEMO_PERSONAS.reporter.id, role: 'REPORTER', created_at: p1.created_at, user: DEMO_PERSONAS.reporter },
   ]);
 
-  projectMembersStore.set(p2.id, [
+  demoMembersStore.set(p2.id, [
     { id: 'm5', project_id: p2.id, user_id: DEMO_PERSONAS.admin.id, role: 'ADMIN', created_at: p2.created_at, user: DEMO_PERSONAS.admin },
     { id: 'm6', project_id: p2.id, user_id: DEMO_PERSONAS.pm.id, role: 'ADMIN', created_at: p2.created_at, user: DEMO_PERSONAS.pm },
     { id: 'm7', project_id: p2.id, user_id: DEMO_PERSONAS.reporter.id, role: 'REPORTER', created_at: p2.created_at, user: DEMO_PERSONAS.reporter },
   ]);
 
-  projectMembersStore.set(p3.id, [
+  demoMembersStore.set(p3.id, [
     { id: 'm8', project_id: p3.id, user_id: DEMO_PERSONAS.admin.id, role: 'ADMIN', created_at: p3.created_at, user: DEMO_PERSONAS.admin },
     { id: 'm9', project_id: p3.id, user_id: DEMO_PERSONAS.dev.id, role: 'DEVELOPER', created_at: p3.created_at, user: DEMO_PERSONAS.dev },
     { id: 'm10', project_id: p3.id, user_id: DEMO_PERSONAS.pm.id, role: 'PROJECT_MANAGER', created_at: p3.created_at, user: DEMO_PERSONAS.pm },
   ]);
 
-  // Seed Components for ECOM
-  componentsStore.set(p1.id, [
+  demoComponentsStore.set(p1.id, [
     { id: 'c1', project_id: p1.id, name: 'Checkout & Payments', description: 'Stripe integration, cart discount calculation, apple pay', default_assignee_id: DEMO_PERSONAS.dev.id, created_at: p1.created_at, default_assignee: DEMO_PERSONAS.dev },
     { id: 'c2', project_id: p1.id, name: 'User Authentication', description: 'OAuth2, JWT tokens, session lifecycle', default_assignee_id: DEMO_PERSONAS.dev.id, created_at: p1.created_at, default_assignee: DEMO_PERSONAS.dev },
     { id: 'c3', project_id: p1.id, name: 'Product Catalog', description: 'Search indexing, product variations, inventory stock', created_at: p1.created_at },
   ]);
 
-  // Seed Versions for ECOM
-  versionsStore.set(p1.id, [
+  demoVersionsStore.set(p1.id, [
     { id: 'v1', project_id: p1.id, name: 'v2.4.0', description: 'Q3 Major Release with coupon engine rewrite', status: 'UNRELEASED', release_date: '2026-10-15', created_at: p1.created_at, total_issues_count: 28, resolved_issues_count: 19 },
     { id: 'v2', project_id: p1.id, name: 'v2.3.2', description: 'Patch release for auth cookie security', status: 'RELEASED', release_date: '2026-09-28', created_at: p1.created_at, total_issues_count: 14, resolved_issues_count: 14 },
   ]);
 
-  // Seed Milestones for ECOM
-  milestonesStore.set(p1.id, [
+  demoMilestonesStore.set(p1.id, [
     { id: 'ms1', project_id: p1.id, name: 'Sprint 14', description: 'Bi-weekly sprint focusing on high-priority defect triage', status: 'OPEN', due_date: '2026-09-15T23:59:59Z', created_at: p1.created_at, total_issues_count: 12, resolved_issues_count: 9 },
     { id: 'ms2', project_id: p1.id, name: 'Q3 Security Audit', description: 'OWASP top 10 compliance and rate limiting fixes', status: 'OPEN', due_date: '2026-10-01T23:59:59Z', created_at: p1.created_at, total_issues_count: 8, resolved_issues_count: 5 },
   ]);
 }
 
-initSeedData();
+initDemoSeedData();
+
+const isDemoProjectId = (id: string) => demoProjectsStore.has(id);
+const findDemoProjectByKey = (key: string) =>
+  Array.from(demoProjectsStore.values()).find((p) => p.key.toUpperCase() === key.toUpperCase());
+
+// ==============================================================================
+// Custom (real) workspace -- Supabase-backed
+// ------------------------------------------------------------------------------
+// Every project a real/custom account creates is persisted in the actual
+// Postgres `projects` / `project_members` tables via the service-role client,
+// so it survives refresh, logout/login, and server restarts (Requirement 1,
+// 6, 18). When Supabase credentials are not configured at all (pure local
+// dev preview), an in-memory fallback is used so the app still runs -- this
+// mirrors the same fallback pattern used in UserService.
+// ==============================================================================
+
+const isSupabasePlaceholder = () =>
+  !env.SUPABASE_URL ||
+  env.SUPABASE_URL.includes('placeholder') ||
+  !env.SUPABASE_SERVICE_ROLE_KEY ||
+  env.SUPABASE_SERVICE_ROLE_KEY.includes('placeholder');
+
+const offlineProjects = new Map<string, Project>();
+const offlineMembers = new Map<string, ProjectMember[]>();
+// Components/versions/milestones are secondary metadata; kept in a single
+// shared in-memory store for both offline and Supabase-configured modes to
+// keep this change targeted (see final report "remaining issues"). They are
+// still fully isolated per-project and never touch the demo workspace.
+const customComponentsStore = new Map<string, Component[]>();
+const customVersionsStore = new Map<string, Version[]>();
+const customMilestonesStore = new Map<string, Milestone[]>();
+
+const rowToProject = (row: any): Project => ({
+  id: row.id,
+  key: row.key,
+  name: row.name,
+  description: row.description || undefined,
+  owner_id: row.owner_id,
+  issue_counter: row.issue_counter,
+  archived: row.archived,
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+  is_demo: false,
+});
+
+const rowToMember = (row: any, user?: any): ProjectMember => ({
+  id: row.id,
+  project_id: row.project_id,
+  user_id: row.user_id,
+  role: row.role,
+  created_at: row.created_at,
+  user,
+});
 
 export class ProjectService {
   /**
-   * List projects accessible to user (or all if global admin)
+   * List projects visible to the requesting user.
+   *
+   * - Global platform admins (the demo admin persona, or a manually
+   *   promoted DB account) see everything, matching the app's existing
+   *   RBAC model.
+   * - Demo personas see the demo workspace plus any custom projects they
+   *   happen to belong to.
+   * - Custom accounts see ONLY custom projects they are members of. Demo
+   *   projects are never included (Requirement 5).
    */
-  static async listProjects(userId?: string, isGlobalAdmin: boolean = false): Promise<Project[]> {
-    const allProjects = Array.from(projectsStore.values()).filter((p) => !p.archived);
+  static async listProjects(
+    userId: string,
+    isGlobalAdmin: boolean,
+    isDemoUser: boolean
+  ): Promise<Project[]> {
+    const customProjects = await this.listCustomProjects(userId, isGlobalAdmin);
 
-    if (!userId || isGlobalAdmin) {
-      return allProjects;
+    if (isGlobalAdmin) {
+      const allDemo = Array.from(demoProjectsStore.values()).filter((p) => !p.archived);
+      return [...allDemo, ...customProjects];
     }
 
-    return allProjects.filter((p) => {
-      const members = projectMembersStore.get(p.id) || [];
-      return members.some((m) => m.user_id === userId);
-    });
+    if (isDemoUser) {
+      const demoOwned = Array.from(demoProjectsStore.values()).filter((p) => {
+        if (p.archived) return false;
+        const members = demoMembersStore.get(p.id) || [];
+        return members.some((m) => m.user_id === userId);
+      });
+      return [...demoOwned, ...customProjects];
+    }
+
+    // Custom account: demo workspace is never visible, even implicitly.
+    return customProjects;
+  }
+
+  private static async listCustomProjects(userId: string, isGlobalAdmin: boolean): Promise<Project[]> {
+    if (isSupabasePlaceholder()) {
+      const all = Array.from(offlineProjects.values()).filter((p) => !p.archived);
+      if (isGlobalAdmin) return all;
+      return all.filter((p) => (offlineMembers.get(p.id) || []).some((m) => m.user_id === userId));
+    }
+
+    try {
+      const client = getSupabaseAdminClient();
+      if (isGlobalAdmin) {
+        const { data, error } = await client.from('projects').select('*').eq('archived', false);
+        if (error) throw error;
+        return (data || []).map(rowToProject);
+      }
+
+      // Only projects the user is an explicit member of -- this is the
+      // core backend enforcement for Requirement 4 (project isolation).
+      const { data: memberRows, error: memberErr } = await client
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', userId);
+      if (memberErr) throw memberErr;
+
+      const projectIds = (memberRows || []).map((r: any) => r.project_id);
+      if (projectIds.length === 0) return [];
+
+      const { data, error } = await client
+        .from('projects')
+        .select('*')
+        .in('id', projectIds)
+        .eq('archived', false);
+      if (error) throw error;
+      return (data || []).map(rowToProject);
+    } catch (err: any) {
+      logger.warn('Error listing custom projects from Supabase:', err?.message);
+      return [];
+    }
   }
 
   /**
-   * Get project detail by ID or Key
+   * Get project detail by ID or Key. Demo projects are ONLY resolvable for
+   * demo users -- a custom account requesting a demo project id/key (even by
+   * guessing) gets `null`, which the controller/middleware turn into a 404.
    */
-  static async getProject(identifier: string): Promise<Project | null> {
-    // Lookup by ID
-    if (projectsStore.has(identifier)) {
-      return projectsStore.get(identifier)!;
+  static async getProject(identifier: string, requestingUser?: { is_demo: boolean }): Promise<Project | null> {
+    const demoMatch = demoProjectsStore.get(identifier) || findDemoProjectByKey(identifier);
+    if (demoMatch) {
+      if (requestingUser && !requestingUser.is_demo) return null;
+      return demoMatch;
     }
 
-    // Lookup by Key
-    const byKey = Array.from(projectsStore.values()).find(
-      (p) => p.key.toUpperCase() === identifier.toUpperCase()
-    );
-    return byKey || null;
+    return this.getCustomProject(identifier);
+  }
+
+  private static async getCustomProject(identifier: string): Promise<Project | null> {
+    if (isSupabasePlaceholder()) {
+      if (offlineProjects.has(identifier)) return offlineProjects.get(identifier)!;
+      return (
+        Array.from(offlineProjects.values()).find((p) => p.key.toUpperCase() === identifier.toUpperCase()) ||
+        null
+      );
+    }
+
+    try {
+      const client = getSupabaseAdminClient();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      const { data, error } = await client
+        .from('projects')
+        .select('*')
+        .or(isUuid ? `id.eq.${identifier}` : `key.eq.${identifier.toUpperCase()}`)
+        .maybeSingle();
+      if (error || !data) return null;
+      return rowToProject(data);
+    } catch (err: any) {
+      logger.warn('Error fetching custom project from Supabase:', err?.message);
+      return null;
+    }
   }
 
   /**
-   * Create a new project with owner as ADMIN
+   * Create a new project owned by a custom user. Always lands in the
+   * Supabase-backed custom workspace -- a custom user can never create (or
+   * be auto-added to) a demo project.
    */
   static async createProject(
     data: { key: string; name: string; description?: string },
     ownerId: string
   ): Promise<Project> {
     const keyUpper = data.key.toUpperCase();
-    const existing = Array.from(projectsStore.values()).find((p) => p.key === keyUpper);
-    if (existing) {
-      throw AppError.conflict(`Project with key '${keyUpper}' already exists.`);
+
+    if (demoProjectsStore.has(keyUpper) || findDemoProjectByKey(keyUpper)) {
+      throw AppError.conflict(`Project key '${keyUpper}' is reserved.`);
     }
 
-    const projectId = `proj-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date().toISOString();
 
-    const newProject: Project = {
-      id: projectId,
-      key: keyUpper,
-      name: data.name,
-      description: data.description || '',
-      owner_id: ownerId,
-      issue_counter: 0,
-      archived: false,
-      created_at: now,
-      updated_at: now,
-      members_count: 1,
-      open_issues_count: 0,
-      resolved_issues_count: 0,
-    };
+    if (isSupabasePlaceholder()) {
+      const existing = Array.from(offlineProjects.values()).find((p) => p.key === keyUpper);
+      if (existing) throw AppError.conflict(`Project with key '${keyUpper}' already exists.`);
 
-    projectsStore.set(projectId, newProject);
+      const projectId = `proj-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      const newProject: Project = {
+        id: projectId,
+        key: keyUpper,
+        name: data.name,
+        description: data.description || '',
+        owner_id: ownerId,
+        issue_counter: 0,
+        archived: false,
+        created_at: now,
+        updated_at: now,
+        members_count: 1,
+        open_issues_count: 0,
+        resolved_issues_count: 0,
+        is_demo: false,
+      };
+      offlineProjects.set(projectId, newProject);
 
-    // Add owner as ADMIN member
-    const ownerProfile = await UserService.getProfileById(ownerId);
-    const ownerMember: ProjectMember = {
-      id: `pm-${Date.now()}`,
-      project_id: projectId,
-      user_id: ownerId,
-      role: 'ADMIN',
-      created_at: now,
-      user: ownerProfile || undefined,
-    };
-    projectMembersStore.set(projectId, [ownerMember]);
+      const ownerProfile = await UserService.getProfileById(ownerId);
+      offlineMembers.set(projectId, [
+        {
+          id: `pm-${Date.now()}`,
+          project_id: projectId,
+          user_id: ownerId,
+          role: 'ADMIN',
+          created_at: now,
+          user: ownerProfile || undefined,
+        },
+      ]);
+      this.seedStarterMetadata(projectId, now);
+      return newProject;
+    }
 
-    // Create default starter components
-    componentsStore.set(projectId, [
+    try {
+      const client = getSupabaseAdminClient();
+      const { data: existing } = await client.from('projects').select('id').eq('key', keyUpper).maybeSingle();
+      if (existing) throw AppError.conflict(`Project with key '${keyUpper}' already exists.`);
+
+      const { data: row, error } = await client
+        .from('projects')
+        .insert({
+          key: keyUpper,
+          name: data.name,
+          description: data.description || '',
+          owner_id: ownerId,
+          issue_counter: 0,
+          archived: false,
+        })
+        .select('*')
+        .single();
+
+      if (error || !row) {
+        throw AppError.internal(`Failed to create project: ${error?.message || 'unknown error'}`);
+      }
+
+      const project = rowToProject(row);
+
+      const { error: memberErr } = await client.from('project_members').insert({
+        project_id: project.id,
+        user_id: ownerId,
+        role: 'ADMIN',
+      });
+      if (memberErr) {
+        logger.warn('Failed to add project owner as member:', memberErr.message);
+      }
+
+      this.seedStarterMetadata(project.id, now);
+      return { ...project, members_count: 1 };
+    } catch (err: any) {
+      if (err instanceof AppError) throw err;
+      throw AppError.internal(`Failed to create project: ${err?.message || 'unknown error'}`);
+    }
+  }
+
+  private static seedStarterMetadata(projectId: string, now: string) {
+    customComponentsStore.set(projectId, [
       { id: `c-${Date.now()}-1`, project_id: projectId, name: 'General', description: 'General issues and tasks', created_at: now },
       { id: `c-${Date.now()}-2`, project_id: projectId, name: 'Backend API', description: 'Server and database logic', created_at: now },
       { id: `c-${Date.now()}-3`, project_id: projectId, name: 'Frontend UI', description: 'Web client user interface', created_at: now },
     ]);
-
-    versionsStore.set(projectId, []);
-    milestonesStore.set(projectId, []);
-
-    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
-    if (!isPlaceholder) {
-      try {
-        const client = getSupabaseAdminClient();
-        await client.from('projects').insert({
-          id: newProject.id,
-          key: newProject.key,
-          name: newProject.name,
-          description: newProject.description,
-          owner_id: newProject.owner_id,
-          issue_counter: newProject.issue_counter,
-          archived: newProject.archived,
-        });
-
-        await client.from('project_members').insert({
-          id: ownerMember.id,
-          project_id: ownerMember.project_id,
-          user_id: ownerMember.user_id,
-          role: ownerMember.role,
-        });
-      } catch (err: any) {
-        logger.warn('Failed to insert project into Supabase DB, kept in-memory fallback:', err?.message);
-      }
-    }
-
-    return newProject;
+    customVersionsStore.set(projectId, []);
+    customMilestonesStore.set(projectId, []);
   }
 
-  /**
-   * Update project settings
-   */
   static async updateProject(
     projectId: string,
     updates: { name?: string; description?: string; archived?: boolean }
   ): Promise<Project> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound(`Project ${projectId} not found`);
+    if (isDemoProjectId(projectId)) {
+      const project = demoProjectsStore.get(projectId);
+      if (!project) throw AppError.notFound(`Project ${projectId} not found`);
+      const updated = { ...project, ...updates, updated_at: new Date().toISOString() };
+      demoProjectsStore.set(projectId, updated);
+      return updated;
+    }
 
-    const updated: Project = {
-      ...project,
-      ...updates,
-      updated_at: new Date().toISOString(),
-    };
+    if (isSupabasePlaceholder()) {
+      const project = offlineProjects.get(projectId);
+      if (!project) throw AppError.notFound(`Project ${projectId} not found`);
+      const updated = { ...project, ...updates, updated_at: new Date().toISOString() };
+      offlineProjects.set(projectId, updated);
+      return updated;
+    }
 
-    projectsStore.set(project.id, updated);
-    return updated;
+    try {
+      const client = getSupabaseAdminClient();
+      const { data, error } = await client
+        .from('projects')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', projectId)
+        .select('*')
+        .single();
+      if (error || !data) throw AppError.notFound(`Project ${projectId} not found`);
+      return rowToProject(data);
+    } catch (err: any) {
+      if (err instanceof AppError) throw err;
+      throw AppError.internal(`Failed to update project: ${err?.message || 'unknown error'}`);
+    }
   }
 
-  /**
-   * Archive project
-   */
   static async archiveProject(projectId: string): Promise<Project> {
     return this.updateProject(projectId, { archived: true });
   }
@@ -260,216 +445,185 @@ export class ProjectService {
   // --- Project Members ---
 
   static async getMembers(projectId: string): Promise<ProjectMember[]> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-    return projectMembersStore.get(project.id) || [];
+    if (isDemoProjectId(projectId)) {
+      return demoMembersStore.get(projectId) || [];
+    }
+
+    if (isSupabasePlaceholder()) {
+      return offlineMembers.get(projectId) || [];
+    }
+
+    try {
+      const client = getSupabaseAdminClient();
+      const { data, error } = await client.from('project_members').select('*').eq('project_id', projectId);
+      if (error || !data) return [];
+
+      const members = await Promise.all(
+        data.map(async (row: any) => {
+          const user = await UserService.getProfileById(row.user_id);
+          return rowToMember(row, user || undefined);
+        })
+      );
+      return members;
+    } catch (err: any) {
+      logger.warn('Error fetching project members from Supabase:', err?.message);
+      return [];
+    }
   }
 
   static async getMember(projectId: string, userId: string): Promise<ProjectMember | null> {
-    const project = await this.getProject(projectId);
-    if (!project) return null;
-    const members = projectMembersStore.get(project.id) || [];
-    return members.find((m) => m.user_id === userId) || null;
+    if (isDemoProjectId(projectId)) {
+      const members = demoMembersStore.get(projectId) || [];
+      return members.find((m) => m.user_id === userId) || null;
+    }
+
+    if (isSupabasePlaceholder()) {
+      const members = offlineMembers.get(projectId) || [];
+      return members.find((m) => m.user_id === userId) || null;
+    }
+
+    try {
+      const client = getSupabaseAdminClient();
+      const { data, error } = await client
+        .from('project_members')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error || !data) return null;
+      return rowToMember(data);
+    } catch (err: any) {
+      logger.warn('Error fetching project member from Supabase:', err?.message);
+      return null;
+    }
   }
 
   static async addMember(projectId: string, userId: string, role: ProjectRole): Promise<ProjectMember> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    const members = projectMembersStore.get(project.id) || [];
-    if (members.some((m) => m.user_id === userId)) {
-      throw AppError.conflict('User is already a member of this project');
+    if (isDemoProjectId(projectId)) {
+      const members = demoMembersStore.get(projectId) || [];
+      if (members.some((m) => m.user_id === userId)) {
+        throw AppError.conflict('User is already a member of this project');
+      }
+      const userProfile = await UserService.getProfileById(userId);
+      const newMember: ProjectMember = {
+        id: `pm-${Date.now()}`,
+        project_id: projectId,
+        user_id: userId,
+        role,
+        created_at: new Date().toISOString(),
+        user: userProfile || undefined,
+      };
+      members.push(newMember);
+      demoMembersStore.set(projectId, members);
+      return newMember;
     }
 
+    const existing = await this.getMember(projectId, userId);
+    if (existing) throw AppError.conflict('User is already a member of this project');
+
     const userProfile = await UserService.getProfileById(userId);
-    const newMember: ProjectMember = {
-      id: `pm-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      project_id: project.id,
-      user_id: userId,
-      role,
-      created_at: new Date().toISOString(),
-      user: userProfile || undefined,
-    };
 
-    members.push(newMember);
-    projectMembersStore.set(project.id, members);
-    project.members_count = members.length;
+    if (isSupabasePlaceholder()) {
+      const members = offlineMembers.get(projectId) || [];
+      const newMember: ProjectMember = {
+        id: `pm-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        project_id: projectId,
+        user_id: userId,
+        role,
+        created_at: new Date().toISOString(),
+        user: userProfile || undefined,
+      };
+      members.push(newMember);
+      offlineMembers.set(projectId, members);
+      return newMember;
+    }
 
-    return newMember;
+    try {
+      const client = getSupabaseAdminClient();
+      const { data, error } = await client
+        .from('project_members')
+        .insert({ project_id: projectId, user_id: userId, role })
+        .select('*')
+        .single();
+      if (error || !data) throw AppError.internal(`Failed to add member: ${error?.message}`);
+      return rowToMember(data, userProfile || undefined);
+    } catch (err: any) {
+      if (err instanceof AppError) throw err;
+      throw AppError.internal(`Failed to add member: ${err?.message || 'unknown error'}`);
+    }
   }
 
   static async updateMemberRole(projectId: string, userId: string, role: ProjectRole): Promise<ProjectMember> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
+    if (isDemoProjectId(projectId)) {
+      const members = demoMembersStore.get(projectId) || [];
+      const member = members.find((m) => m.user_id === userId);
+      if (!member) throw AppError.notFound('User is not a member of this project');
+      member.role = role;
+      return member;
+    }
 
-    const members = projectMembersStore.get(project.id) || [];
-    const member = members.find((m) => m.user_id === userId);
-    if (!member) throw AppError.notFound('User is not a member of this project');
+    if (isSupabasePlaceholder()) {
+      const members = offlineMembers.get(projectId) || [];
+      const member = members.find((m) => m.user_id === userId);
+      if (!member) throw AppError.notFound('User is not a member of this project');
+      member.role = role;
+      return member;
+    }
 
-    member.role = role;
-    return member;
+    try {
+      const client = getSupabaseAdminClient();
+      const { data, error } = await client
+        .from('project_members')
+        .update({ role })
+        .eq('project_id', projectId)
+        .eq('user_id', userId)
+        .select('*')
+        .single();
+      if (error || !data) throw AppError.notFound('User is not a member of this project');
+      const userProfile = await UserService.getProfileById(userId);
+      return rowToMember(data, userProfile || undefined);
+    } catch (err: any) {
+      if (err instanceof AppError) throw err;
+      throw AppError.internal(`Failed to update member role: ${err?.message || 'unknown error'}`);
+    }
   }
 
   static async removeMember(projectId: string, userId: string): Promise<void> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    let members = projectMembersStore.get(project.id) || [];
-    members = members.filter((m) => m.user_id !== userId);
-    projectMembersStore.set(project.id, members);
-    project.members_count = members.length;
-  }
-
-  // --- Invitations ---
-
-  static async getInvitations(projectId: string): Promise<ProjectInvitation[]> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-    return invitationsStore.get(project.id) || [];
-  }
-
-  static async getInvitationsForUser(userId: string): Promise<ProjectInvitation[]> {
-    const profile = await UserService.getProfileById(userId);
-    if (!profile) return [];
-    
-    const email = profile.email.toLowerCase();
-    const results: ProjectInvitation[] = [];
-    for (const invites of invitationsStore.values()) {
-      results.push(...invites.filter(i => i.invitee_email === email && i.status === 'PENDING'));
-    }
-    return results;
-  }
-
-  static async inviteMember(projectId: string, inviterId: string, email: string, role: ProjectRole): Promise<ProjectInvitation> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    // Ensure the invitee actually has an account in BugForge
-    const allUsers = await UserService.listUsers();
-    const invitee = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!invitee) {
-      throw AppError.badRequest('No BugForge account found with that email. They must register first.');
+    if (isDemoProjectId(projectId)) {
+      let members = demoMembersStore.get(projectId) || [];
+      members = members.filter((m) => m.user_id !== userId);
+      demoMembersStore.set(projectId, members);
+      return;
     }
 
-    const members = projectMembersStore.get(project.id) || [];
-    if (members.some(m => m.user_id === invitee.id)) {
-      throw AppError.conflict('User is already a member of this project');
+    if (isSupabasePlaceholder()) {
+      let members = offlineMembers.get(projectId) || [];
+      members = members.filter((m) => m.user_id !== userId);
+      offlineMembers.set(projectId, members);
+      return;
     }
 
-    const inviterProfile = await UserService.getProfileById(inviterId);
-    
-    const invitation: ProjectInvitation = {
-      id: `inv-${Date.now()}`,
-      project_id: project.id,
-      inviter_id: inviterId,
-      invitee_email: email.toLowerCase(),
-      role,
-      status: 'PENDING',
-      created_at: new Date().toISOString(),
-      inviter: inviterProfile || undefined,
-      project,
-    };
-
-    const currentInvites = invitationsStore.get(project.id) || [];
-    // Remove any previous pending invite for this email
-    const filtered = currentInvites.filter(inv => inv.invitee_email !== email.toLowerCase() || inv.status !== 'PENDING');
-    filtered.push(invitation);
-    invitationsStore.set(project.id, filtered);
-
-    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
-    if (!isPlaceholder) {
-      try {
-        const client = getSupabaseAdminClient();
-        await client.from('project_invitations').insert({
-          id: invitation.id,
-          project_id: invitation.project_id,
-          inviter_id: invitation.inviter_id,
-          invitee_email: invitation.invitee_email,
-          role: invitation.role,
-          status: invitation.status,
-        });
-      } catch (err: any) {
-        logger.warn('Failed to insert invitation into Supabase:', err?.message);
-      }
-    }
-
-    return invitation;
-  }
-
-  static async acceptInvitation(projectId: string, invitationId: string, userId: string): Promise<ProjectMember> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    const invites = invitationsStore.get(project.id) || [];
-    const invite = invites.find(i => i.id === invitationId);
-    if (!invite || invite.status !== 'PENDING') {
-      throw AppError.notFound('Pending invitation not found');
-    }
-
-    const userProfile = await UserService.getProfileById(userId);
-    if (!userProfile || userProfile.email.toLowerCase() !== invite.invitee_email) {
-      throw AppError.forbidden('You can only accept invitations sent to your email');
-    }
-
-    invite.status = 'ACCEPTED';
-
-    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
-    if (!isPlaceholder) {
-      try {
-        const client = getSupabaseAdminClient();
-        await client.from('project_invitations').update({ status: 'ACCEPTED' }).eq('id', invitationId);
-      } catch (err: any) {
-        logger.warn('Failed to update invitation in Supabase:', err?.message);
-      }
-    }
-
-    return this.addMember(project.id, userId, invite.role);
-  }
-
-  static async declineInvitation(projectId: string, invitationId: string, userId: string): Promise<void> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    const invites = invitationsStore.get(project.id) || [];
-    const invite = invites.find(i => i.id === invitationId);
-    if (!invite || invite.status !== 'PENDING') {
-      throw AppError.notFound('Pending invitation not found');
-    }
-
-    const userProfile = await UserService.getProfileById(userId);
-    if (!userProfile || userProfile.email.toLowerCase() !== invite.invitee_email) {
-      throw AppError.forbidden('You can only decline invitations sent to your email');
-    }
-
-    invite.status = 'DECLINED';
-
-    const isPlaceholder = !env.SUPABASE_URL || env.SUPABASE_URL.includes('placeholder');
-    if (!isPlaceholder) {
-      try {
-        const client = getSupabaseAdminClient();
-        await client.from('project_invitations').update({ status: 'DECLINED' }).eq('id', invitationId);
-      } catch (err: any) {
-        logger.warn('Failed to decline invitation in Supabase:', err?.message);
-      }
+    try {
+      const client = getSupabaseAdminClient();
+      await client.from('project_members').delete().eq('project_id', projectId).eq('user_id', userId);
+    } catch (err: any) {
+      logger.warn('Error removing project member from Supabase:', err?.message);
     }
   }
 
   // --- Components ---
 
   static async getComponents(projectId: string): Promise<Component[]> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-    return componentsStore.get(project.id) || [];
+    if (isDemoProjectId(projectId)) return demoComponentsStore.get(projectId) || [];
+    return customComponentsStore.get(projectId) || [];
   }
 
   static async createComponent(
     projectId: string,
     data: { name: string; description?: string; default_assignee_id?: string | null }
   ): Promise<Component> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    const comps = componentsStore.get(project.id) || [];
+    const store = isDemoProjectId(projectId) ? demoComponentsStore : customComponentsStore;
+    const comps = store.get(projectId) || [];
     if (comps.some((c) => c.name.toLowerCase() === data.name.toLowerCase())) {
       throw AppError.conflict(`Component '${data.name}' already exists in this project`);
     }
@@ -480,7 +634,7 @@ export class ProjectService {
 
     const newComp: Component = {
       id: `c-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      project_id: project.id,
+      project_id: projectId,
       name: data.name,
       description: data.description || '',
       default_assignee_id: data.default_assignee_id || undefined,
@@ -489,33 +643,30 @@ export class ProjectService {
     };
 
     comps.push(newComp);
-    componentsStore.set(project.id, comps);
+    store.set(projectId, comps);
     return newComp;
   }
 
   // --- Versions / Releases ---
 
   static async getVersions(projectId: string): Promise<Version[]> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-    return versionsStore.get(project.id) || [];
+    if (isDemoProjectId(projectId)) return demoVersionsStore.get(projectId) || [];
+    return customVersionsStore.get(projectId) || [];
   }
 
   static async createVersion(
     projectId: string,
     data: { name: string; description?: string; status?: any; release_date?: string | null }
   ): Promise<Version> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    const versions = versionsStore.get(project.id) || [];
+    const store = isDemoProjectId(projectId) ? demoVersionsStore : customVersionsStore;
+    const versions = store.get(projectId) || [];
     if (versions.some((v) => v.name.toLowerCase() === data.name.toLowerCase())) {
       throw AppError.conflict(`Version '${data.name}' already exists in this project`);
     }
 
     const newVersion: Version = {
       id: `v-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      project_id: project.id,
+      project_id: projectId,
       name: data.name,
       description: data.description || '',
       status: data.status || 'UNRELEASED',
@@ -526,33 +677,30 @@ export class ProjectService {
     };
 
     versions.push(newVersion);
-    versionsStore.set(project.id, versions);
+    store.set(projectId, versions);
     return newVersion;
   }
 
   // --- Milestones ---
 
   static async getMilestones(projectId: string): Promise<Milestone[]> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-    return milestonesStore.get(project.id) || [];
+    if (isDemoProjectId(projectId)) return demoMilestonesStore.get(projectId) || [];
+    return customMilestonesStore.get(projectId) || [];
   }
 
   static async createMilestone(
     projectId: string,
     data: { name: string; description?: string; status?: any; due_date?: string | null }
   ): Promise<Milestone> {
-    const project = await this.getProject(projectId);
-    if (!project) throw AppError.notFound('Project not found');
-
-    const milestones = milestonesStore.get(project.id) || [];
+    const store = isDemoProjectId(projectId) ? demoMilestonesStore : customMilestonesStore;
+    const milestones = store.get(projectId) || [];
     if (milestones.some((m) => m.name.toLowerCase() === data.name.toLowerCase())) {
       throw AppError.conflict(`Milestone '${data.name}' already exists in this project`);
     }
 
     const newMs: Milestone = {
       id: `ms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      project_id: project.id,
+      project_id: projectId,
       name: data.name,
       description: data.description || '',
       status: data.status || 'OPEN',
@@ -563,7 +711,9 @@ export class ProjectService {
     };
 
     milestones.push(newMs);
-    milestonesStore.set(project.id, milestones);
+    store.set(projectId, milestones);
     return newMs;
   }
 }
+
+export { isDemoProjectId };

@@ -3,6 +3,7 @@ import { healthRoutes } from './healthRoutes';
 import { authRoutes } from './authRoutes';
 import { userRoutes } from './userRoutes';
 import { projectRoutes } from './projectRoutes';
+import { invitationRoutes } from './invitationRoutes';
 import { issueRoutes } from './issueRoutes';
 import { notificationRoutes } from './notificationRoutes';
 import { viewRoutes } from './viewRoutes';

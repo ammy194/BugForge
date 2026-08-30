@@ -5,6 +5,7 @@ import { IssueService } from '../services/issueService';
 import { createIssueSchema, queryIssuesSchema } from '../validators/issueValidators';
 import { transitionIssueSchema, updateIssueAttributesSchema } from '../validators/workflowValidators';
 import { NotificationService } from '../services/notificationService';
+import { assertProjectAccess, accessibleProjectIds } from '../utils/projectAccess';
 
 export class IssueController {
   /**
@@ -17,6 +18,7 @@ export class IssueController {
     }
 
     const validated = createIssueSchema.parse(req.body);
+    await assertProjectAccess(req.user, validated.project_id);
     const createdIssue = await IssueService.createIssue(validated, req.user.id);
 
     return ApiResponse.success({
@@ -34,15 +36,12 @@ export class IssueController {
   static async simulateRandomIssue(req: Request, res: Response) {
     if (!req.user) throw AppError.unauthorized();
 
-    const DEMO_PERSONA_IDS = [
-      '11111111-1111-4111-a111-111111111111',
-      '22222222-2222-4222-a222-222222222222',
-      '33333333-3333-4333-a333-333333333333',
-      '44444444-4444-4444-a444-444444444444'
-    ];
-
-    if (!DEMO_PERSONA_IDS.includes(req.user.id)) {
-      throw AppError.forbidden('Live simulations are only available for demo accounts.');
+    // Requirement 15: live/automatic bug simulation is a demo-only feature.
+    // A custom account must never be able to inject issues into (or
+    // trigger simulation for) the demo workspace, even by calling this
+    // endpoint directly.
+    if (!req.user.is_demo) {
+      throw AppError.forbidden('Automatic issue simulation is only available for demo accounts.');
     }
 
     const projects = [
@@ -156,6 +155,7 @@ export class IssueController {
     if (!issue) {
       throw AppError.notFound(`Issue '${req.params.id}' not found`);
     }
+    await assertProjectAccess(req.user, issue.project_id);
 
     return ApiResponse.success({
       res,
@@ -169,7 +169,28 @@ export class IssueController {
    * Search and filter issues with pagination
    */
   static async listIssues(req: Request, res: Response) {
+    if (!req.user) throw AppError.unauthorized();
+
     const query = queryIssuesSchema.parse(req.query);
+
+    if (query.project_id) {
+      await assertProjectAccess(req.user, query.project_id);
+    } else {
+      // No specific project requested: restrict results to whatever this
+      // user can actually access instead of returning every issue in the
+      // system (Requirement 4).
+      const allowed = await accessibleProjectIds(req.user);
+      if (allowed && allowed.size === 0) {
+        return ApiResponse.success({
+          res,
+          data: [],
+          meta: { total: 0, limit: query.limit, offset: query.offset },
+          message: 'Issues retrieved',
+        });
+      }
+      (query as any).accessible_project_ids = allowed ? Array.from(allowed) : undefined;
+    }
+
     const result = await IssueService.listIssues(query as any);
 
     return ApiResponse.success({
@@ -190,6 +211,10 @@ export class IssueController {
    */
   static async transitionStatus(req: Request, res: Response) {
     if (!req.user) throw AppError.unauthorized();
+
+    const existing = await IssueService.getIssue(req.params.id);
+    if (!existing) throw AppError.notFound(`Issue '${req.params.id}' not found`);
+    await assertProjectAccess(req.user, existing.project_id);
 
     const validated = transitionIssueSchema.parse(req.body);
     const updatedIssue = await IssueService.transitionStatus(
@@ -217,6 +242,10 @@ export class IssueController {
   static async getTransitions(req: Request, res: Response) {
     if (!req.user) throw AppError.unauthorized();
 
+    const existing = await IssueService.getIssue(req.params.id);
+    if (!existing) throw AppError.notFound(`Issue '${req.params.id}' not found`);
+    await assertProjectAccess(req.user, existing.project_id);
+
     const transitions = await IssueService.getAvailableTransitions(req.params.id, req.user.id);
 
     return ApiResponse.success({
@@ -233,6 +262,10 @@ export class IssueController {
   static async updateAttributes(req: Request, res: Response) {
     if (!req.user) throw AppError.unauthorized();
 
+    const existing = await IssueService.getIssue(req.params.id);
+    if (!existing) throw AppError.notFound(`Issue '${req.params.id}' not found`);
+    await assertProjectAccess(req.user, existing.project_id);
+
     const validated = updateIssueAttributesSchema.parse(req.body);
     const updatedIssue = await IssueService.updateAttributes(req.params.id, validated, req.user.id);
 
@@ -248,6 +281,10 @@ export class IssueController {
    * Retrieve immutable audit history for an issue
    */
   static async getIssueHistory(req: Request, res: Response) {
+    const issue = await IssueService.getIssue(req.params.id);
+    if (!issue) throw AppError.notFound(`Issue '${req.params.id}' not found`);
+    await assertProjectAccess(req.user, issue.project_id);
+
     const history = await IssueService.getIssueHistory(req.params.id);
     return ApiResponse.success({
       res,
@@ -287,6 +324,11 @@ export class IssueController {
    */
   static async markDuplicate(req: Request, res: Response) {
     if (!req.user) throw AppError.unauthorized('Authentication required');
+
+    const existing = await IssueService.getIssue(req.params.id);
+    if (!existing) throw AppError.notFound(`Issue '${req.params.id}' not found`);
+    await assertProjectAccess(req.user, existing.project_id);
+
     const { duplicate_of_key } = req.body;
     if (!duplicate_of_key) {
       return res.status(400).json({ success: false, error: 'duplicate_of_key is required' });

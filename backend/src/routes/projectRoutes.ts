@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ProjectController } from '../controllers/projectController';
+import { InvitationController } from '../controllers/invitationController';
 import { requireAuth } from '../middleware/authMiddleware';
 import { requireProjectRole } from '../middleware/rbacMiddleware';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -30,12 +31,20 @@ projectRoutes.delete(
   asyncHandler(ProjectController.removeMember)
 );
 
-// 2.5 Invitations
-projectRoutes.get('/:id/invitations', requireProjectRole('REPORTER'), asyncHandler(ProjectController.getInvitations));
-projectRoutes.post('/:id/invitations', requireProjectRole('PROJECT_MANAGER'), asyncHandler(ProjectController.inviteMember));
-// Note: Accepting/Declining an invitation only requires authentication, but the service verifies the user is the invitee
-projectRoutes.post('/:id/invitations/:invitationId/accept', asyncHandler(ProjectController.acceptInvitation));
-projectRoutes.post('/:id/invitations/:invitationId/decline', asyncHandler(ProjectController.declineInvitation));
+// 2b. Invitations (Requirement 7/8/9/10/11/12) -- replaces direct member
+//     addition as the primary way to bring a new user into a project.
+//     Only PROJECT_MANAGER/ADMIN can invite; enforced server-side, not just
+//     by hiding the button in the UI.
+projectRoutes.post(
+  '/:id/invitations',
+  requireProjectRole('PROJECT_MANAGER'),
+  asyncHandler(InvitationController.createInvitation)
+);
+projectRoutes.get(
+  '/:id/invitations',
+  requireProjectRole('PROJECT_MANAGER'),
+  asyncHandler(InvitationController.listProjectInvitations)
+);
 
 // 3. Components Management
 projectRoutes.get('/:id/components', requireProjectRole('REPORTER'), asyncHandler(ProjectController.getComponents));

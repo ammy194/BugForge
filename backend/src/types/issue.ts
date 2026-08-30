@@ -106,7 +106,8 @@ export type NotificationType =
   | 'COMMENTED'
   | 'RESOLVED'
   | 'REOPENED'
-  | 'CI_FAILURE';
+  | 'CI_FAILURE'
+  | 'PROJECT_INVITE';
 
 export interface Notification {
   id: string;
