@@ -64,16 +64,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const token = localStorage.getItem('bugforge_auth_token');
 
-      // 1. If demo persona active
-      if (token && token.startsWith('demo_')) {
-        const key = token.replace('demo_', '');
-        const persona = DEMO_PERSONAS[key] || DEMO_PERSONAS.admin;
-        setUser({
-          ...persona,
-          created_at: new Date().toISOString(),
-        });
-        setLoading(false);
-        return;
+      // 1. If demo persona or local user active
+      if (token) {
+        if (token.startsWith('demo_')) {
+          const key = token.replace('demo_', '');
+          const persona = DEMO_PERSONAS[key] || DEMO_PERSONAS.admin;
+          setUser({
+            ...persona,
+            created_at: new Date().toISOString(),
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (token.startsWith('local_')) {
+          const stored = localStorage.getItem('bugforge_user_profile');
+          if (stored) {
+            setUser(JSON.parse(stored));
+            setLoading(false);
+            return;
+          }
+        }
       }
 
       // 2. If Supabase configured
@@ -94,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // Default to admin persona if not authenticated yet to ensure smooth judging preview
         const stored = localStorage.getItem('bugforge_user_profile');
-        if (stored) {
+        if (stored && token === 'local_user') {
           setUser(JSON.parse(stored));
         } else {
           loginAsDemoPersona('admin');
@@ -138,7 +149,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginAsDemoPersona(key || 'admin');
         return;
       }
-      // Force them to be admin for the hackathon demo
+
+      // Allow login for offline registered custom user
+      const stored = localStorage.getItem('bugforge_user_profile');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.email === email) {
+          localStorage.setItem('bugforge_auth_token', 'local_user');
+          setUser(parsed);
+          return;
+        }
+      }
+
+      // Force them to be admin for the hackathon demo if no match
       loginAsDemoPersona('admin');
       return;
     }
@@ -166,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         global_role: role,
         created_at: new Date().toISOString(),
       };
-      localStorage.setItem('bugforge_auth_token', `demo_${role.toLowerCase().replace('_', '')}`);
+      localStorage.setItem('bugforge_auth_token', 'local_user');
       localStorage.setItem('bugforge_user_profile', JSON.stringify(newUser));
       setUser(newUser);
       return;
