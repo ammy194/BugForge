@@ -20,6 +20,14 @@ const issuesStore = new Map<string, Issue>();
 const issueHistoryStore = new Map<string, IssueHistoryItem[]>();
 const labelsStore = new Map<string, Label[]>();
 
+// Statuses that count toward a project's "resolved" bucket in dashboard/summary
+// statistics (as opposed to its "open" bucket). Keeping this list in one place
+// means every code path that changes issue status - manual transitions, the
+// GitHub webhook integration, etc. - derives the same open/resolved bucketing
+// from the single `issue.status` source of truth.
+const RESOLVED_LIKE_STATUSES: IssueStatus[] = ['RESOLVED', 'VERIFIED', 'CLOSED'];
+const isResolvedLikeStatus = (status: IssueStatus): boolean => RESOLVED_LIKE_STATUSES.includes(status);
+
 // Initialize Seed Issues
 function initSeedIssues() {
   if (issuesStore.size > 0) return;
@@ -336,6 +344,26 @@ export class IssueService {
 
     if (payload.assignee_id !== undefined) {
       rawIssue.assignee_id = payload.assignee_id;
+    }
+
+    // Keep the project's cached open/resolved issue counts in sync with the
+    // status change. This is the single place status changes are applied
+    // (manual transitions and the GitHub webhook integration both call this
+    // method), so both paths stay consistent with the Projects dashboard.
+    const wasResolvedLike = isResolvedLikeStatus(prevStatus);
+    const isResolvedLike = isResolvedLikeStatus(nextStatus);
+    if (wasResolvedLike !== isResolvedLike) {
+      const project = await ProjectService.getProject(rawIssue.project_id);
+      if (project) {
+        if (isResolvedLike) {
+          project.open_issues_count = Math.max(0, (project.open_issues_count || 0) - 1);
+          project.resolved_issues_count = (project.resolved_issues_count || 0) + 1;
+        } else {
+          project.resolved_issues_count = Math.max(0, (project.resolved_issues_count || 0) - 1);
+          project.open_issues_count = (project.open_issues_count || 0) + 1;
+        }
+        project.updated_at = now;
+      }
     }
 
     // Log History
