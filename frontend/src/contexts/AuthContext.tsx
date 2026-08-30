@@ -113,15 +113,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             const profile = await api.get<UserProfile>('/users/me');
             setUser(profile);
-          } catch {
-            // Sync fallback
-            const synced = await api.post<UserProfile>('/auth/sync-profile', {
-              id: session.user.id,
-              email: session.user.email,
-              full_name: session.user.user_metadata?.full_name || 'User',
-              global_role: session.user.user_metadata?.global_role || 'DEVELOPER',
-            });
-            setUser(synced);
+          } catch (err) {
+            console.error('Failed to fetch user profile:', err);
+            setUser(null);
           }
         } else if (!localStorage.getItem('bugforge_auth_token')?.startsWith('demo_')) {
           setUser(null);
@@ -191,14 +185,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) throw error;
 
-    if (data.user) {
-      const synced = await api.post<UserProfile>('/auth/sync-profile', {
-        id: data.user.id,
-        email: data.user.email,
-        full_name: fullName,
-        global_role: role,
-      });
-      setUser(synced);
+    if (!data.session) {
+      throw new Error('Registration successful! Please check your email to verify your account.');
     }
   };
 
