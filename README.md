@@ -1,252 +1,336 @@
-# BugForge
+<div align="center">
+  <h1>BugForge</h1>
+  <p><strong>A modern, developer-first bug and issue tracking platform — a ground-up reconstruction of legacy Bugzilla for high-velocity engineering teams.</strong></p>
 
-**A modern, developer-first bug and issue tracking platform -- a ground-up reconstruction   of legacy Bugzilla for high-velocity engineering teams.**
+  <p>
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+    <img src="https://img.shields.io/badge/Express-404D59?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+    <img src="https://img.shields.io/badge/GitHub_Integration-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
+  </p>
 
-Built with Express + TypeScript, React 18 + Vite, Tailwind CSS, Supabase (PostgreSQL, Auth, Storage, Realtime, Row Level Security), Grok AI (xAI API), and bidirectional GitHub integration.
-
-| | |
-|---|---|
-| **Live Application** | [bug-forge-frontend.vercel.app](https://bug-forge-frontend.vercel.app) |
-| **API Server** | [bugforge-backend.onrender.com](https://bugforge-backend.onrender.com) |
-| **Repository** | [github.com/ammy194/BugForge](https://github.com/ammy194/BugForge) |
-| **License** | MIT |
-
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [What BugForge Provides](#what-bugforge-provides)
-3. [Target Audience](#target-audience)
-4. [Core Workflow](#core-workflow)
-5. [Innovation and Differentiation](#innovation-and-differentiation)
-6. [Architecture](#architecture)
-7. [Detailed System Architecture](#detailed-system-architecture)
-8. [Data Flow](#data-flow)
-9. [Authentication Flow](#authentication-flow)
-10. [AI Architecture](#ai-architecture)
-11. [GitHub Integration](#github-integration)
-12. [Roles and Permissions](#roles-and-permissions)
-13. [Security Architecture](#security-architecture)
-14. [Threat Model](#threat-model)
-15. [Tech Stack](#tech-stack)
-16. [Project Structure](#project-structure)
-17. [Setup and Installation](#setup-and-installation)
-18. [Environment Variables](#environment-variables)
-19. [Testing](#testing)
-20. [Deployment](#deployment)
-21. [Demo Personas](#demo-personas)
-22. [Limitations](#limitations)
-23. [Future Improvements](#future-improvements)
-24. [License](#license)
+  <p>
+    <a href="https://bug-forge-frontend.vercel.app"><strong>Live Application</strong></a> · 
+    <a href="https://bugforge-backend.onrender.com"><strong>API Server</strong></a> · 
+    <a href="https://github.com/ammy194/BugForge"><strong>Repository</strong></a>
+  </p>
+</div>
 
 ---
 
-## Overview
+## 📌 Quick Links & Navigation
 
-### Problem
-
-Legacy bug trackers like Bugzilla were designed for an era of infrequent releases, manual triage, and isolated development workflows. Modern engineering teams operate with continuous delivery, automated CI/CD pipelines, and cross-functional collaboration -- yet their issue tracking tools have not kept pace.
-
-Common pain points include:
-
-1. **Poor bug reports** -- Insufficient reproduction steps, missing environment details, vague descriptions.
-2. **Duplicate bugs** -- Multiple engineers filing identical issues wastes triage time.
-3. **Manual triage** -- Human classification of severity, priority, and component assignment is slow and inconsistent.
-4. **Disconnect between CI and issue tracking** -- Test failures in CI pipelines are not automatically linked to issue backlogs.
-5. **Disconnect between issues and development** -- Pull requests, commits, and branches exist in a separate system with no bidirectional linkage.
-6. **Difficult release visibility** -- Teams cannot quantify release readiness or identify blocking defects.
-7. **Lack of team visibility** -- No realtime awareness of who is working on what.
-
-### Solution
-
-BugForge is a developer-first platform that replaces passive bug-filing with an active, AI-assisted issue lifecycle. It ingests CI test failures directly into the issue backlog, applies AI-powered triage and duplicate detection, enforces role-based access through a finite-state workflow engine, and surfaces quantitative release-readiness metrics.
+1. [What is BugForge?](#what-is-bugforge)
+2. [The Problem](#the-problem)
+3. [The Solution](#the-solution)
+4. [Why BugForge?](#why-bugforge)
+5. [Core Capabilities](#core-capabilities)
+6. [End-to-End Defect Lifecycle](#end-to-end-defect-lifecycle)
+7. [Product Showcase](#product-showcase)
+8. [AI-Powered Engineering Intelligence](#ai-powered-engineering-intelligence)
+9. [CI → Issue Automation](#ci--issue-automation)
+10. [GitHub Integration](#github-integration)
+11. [Release Health & Engineering Analytics](#release-health--engineering-analytics)
+12. [Realtime Collaboration](#realtime-collaboration)
+13. [Roles & Permissions](#roles--permissions)
+14. [Security Architecture](#security-architecture)
+15. [System Architecture](#system-architecture)
+16. [Data Flow](#data-flow)
+17. [Authentication Flow](#authentication-flow)
+18. [AI Architecture](#ai-architecture)
+19. [Technology Stack](#technology-stack)
+20. [Project Structure](#project-structure)
+21. [Setup & Installation](#setup--installation)
+22. [Environment Variables](#environment-variables)
+23. [Testing](#testing)
+24. [Deployment](#deployment)
+25. [Demo Personas](#demo-personas)
+26. [Limitations](#limitations)
+27. [Future Improvements](#future-improvements)
+28. [License](#license)
 
 ---
 
-## What BugForge Provides
+## What is BugForge?
 
+**BugForge** is a modern, developer-first platform that replaces passive bug-filing with an active, AI-assisted issue lifecycle. Built to bridge the gap between engineering workflows, CI/CD pipelines, and traditional issue management, it empowers software teams to capture, triage, and resolve defects with unprecedented velocity and clarity. 
+
+---
+
+## The Problem
+
+Legacy bug trackers like Bugzilla were designed for an era of infrequent releases, manual triage, and isolated development workflows. Modern engineering teams operate with continuous delivery, automated CI/CD pipelines, and cross-functional collaboration — yet their issue tracking tools have not kept pace.
+
+Common engineering pain points include:
+- **Poor bug reports** — Insufficient reproduction steps, missing environment details, vague descriptions.
+- **Duplicate bugs** — Multiple engineers filing identical issues wastes triage time.
+- **Manual triage** — Human classification of severity, priority, and component assignment is slow and inconsistent.
+- **Disconnect between CI and issue tracking** — Test failures in CI pipelines are not automatically linked to issue backlogs.
+- **Disconnect between issues and development** — Pull requests, commits, and branches exist in a separate system with no bidirectional linkage.
+- **Difficult release visibility** — Teams cannot quantify release readiness or identify blocking defects.
+- **Lack of team visibility** — No realtime awareness of who is working on what.
+
+---
+
+## The Solution
+
+BugForge transforms bug tracking into an intelligent, connected workflow. It automatically ingests CI test failures directly into the issue backlog, applies AI-powered triage and duplicate detection, enforces role-based access through a finite-state workflow engine, and surfaces quantitative release-readiness metrics.
+
+---
+
+## Why BugForge?
+
+| Capability | Legacy Bugzilla | BugForge |
+| ---------- | --------------- | -------- |
+| **CI Failure Ingestion** | Manual filing | Automated test failure ingestion with one-click bug creation and git SHA linking |
+| **AI Bug Triage** | None | Severity, priority, component suggestions with missing-info checklist via Grok; deterministic heuristic fallback |
+| **Duplicate Detection** | Dense table search | Two-tier candidate narrowing with token overlap scoring and four resolution actions |
+| **Bug Quality Score** | None | Deterministic 0-100 quality meter with transparent per-criterion checklist |
+| **Smart Assignment** | Manual dropdown | Multi-factor routing: component ownership, domain expertise, workload balance |
+| **Release Health** | Manual reports | Mathematical 0-100 readiness formula with explicit deductions per blocker, critical issue, and unverified fix |
+| **GitHub Integration** | Manual text links | PR status badges, review state, CI checks, diff stats, linked commits |
+| **Realtime Collaboration**| Full page reloads | Live viewer presence pills and broadcast indicators |
+| **Telemetry** | Basic statistics | MTTD, MTTR, Bug Reopen Rate, Defect Escape Rate, Component Health Index |
+
+### Differentiators
+
+BugForge accelerates engineering cycles through smart automation:
+- **CI Failure → Issue automation**: Seamlessly bridge the gap between testing and triage.
+- **AI-assisted triage**: Automate the most tedious parts of bug management with Grok AI (xAI).
+- **Two-tier duplicate detection**: Instantly surface identical issues before they clutter the backlog.
+- **Deterministic Bug Quality Score**: Gamify and enforce high-quality bug reporting.
+- **Smart assignment**: Let data, not guesswork, route issues to the right developer.
+- **Mathematical Release Health**: Know exactly when you're ready to ship with an objective readiness score.
+- **GitHub integration**: Connect issues directly to the code that fixes them.
+
+---
+
+## Core Capabilities
+
+### 🧠 Intelligent Issue Management
 - **Full issue lifecycle management** with a configurable finite-state machine (OPEN, TRIAGED, IN_PROGRESS, IN_REVIEW, RESOLVED, VERIFIED, REOPENED, CLOSED)
 - **AI-powered bug triage** via Grok (xAI) with deterministic heuristic fallback when the API is unavailable
 - **Two-tier duplicate detection** combining candidate narrowing with token-similarity scoring
-- **CI failure ingestion** from GitHub Actions with one-click bug creation and commit SHA linking
 - **Deterministic Bug Quality Score** (0-100) evaluating title clarity, reproduction steps, expected/actual behavior, and environment metadata
 - **Smart assignment** using multi-factor heuristics: component ownership, historical resolution expertise, and workload balancing
-- **Release Health Radar** with a mathematical readiness formula, blocker alerts, and automated release notes generation
+
+### 💻 Developer Workflow
+- **CI failure ingestion** from GitHub Actions with one-click bug creation and commit SHA linking
 - **GitHub Activity Panel** displaying PR status, review state, CI check results, and branch metadata
-- **Realtime collaboration** with live viewer presence indicators
+- **Automatic issue resolution** via inbound webhook dispatch with configurable event subscriptions
+- **Global Command Palette (Cmd+K)** for rapid, keyboard-first navigation and realtime issue search across the workspace
+- **Rich Markdown Rendering** for technical context, crash logs, and reproduction steps in issue descriptions
+
+### 🚀 Release Intelligence & Analytics
+- **Release Health Radar** with a mathematical readiness formula, blocker alerts, and automated release notes generation
 - **Engineering telemetry** including MTTD, MTTR, Bug Reopen Rate, Defect Escape Rate, and Component Health Index
-- **Immutable audit trail** tracking role changes, data exports, authentication events, and workflow overrides
-- **Outbound webhook dispatch** with configurable event subscriptions
+
+### 🤝 Collaboration
+- **Realtime collaboration** with live viewer presence indicators
+- **Live Defect Simulation Mode** featuring an active background loop that rapidly generates synthetic incoming bugs, broadcasting live notifications to demonstrate system activity
+- **Human-Readable Urgency Labels** translating internal technical priorities (e.g. `P0_CRITICAL`) into clean UI indicators (Urgent, High, Medium, Low)
+- **Contextual Onboarding Tooltips** applied across KPI dashboards, analytics, and complex administrative interfaces for immediate feature clarification
+
+### 🔒 Security & Governance
 - **Project-scoped RBAC** with four roles (Admin, Project Manager, Developer, Reporter) and hierarchical permission enforcement
 - **Row Level Security** on all Supabase tables, matching user project membership at the database layer
-- **Rich Markdown Rendering** for technical context, crash logs, and reproduction steps in issue descriptions
-- **Live Defect Simulation Mode** featuring an active background loop that rapidly generates synthetic incoming bugs, broadcasting **Live Notifications** to demonstrate system activity.
-- **Human-Readable Urgency Labels** translating internal technical priorities (e.g. `P0_CRITICAL`) into clean UI indicators (Urgent, High, Medium, Low)
-- **Global Command Palette (Cmd+K)** for rapid, keyboard-first navigation and realtime issue search across the workspace
-- **Contextual Onboarding Tooltips** applied across KPI dashboards, analytics, and complex administrative interfaces for immediate feature clarification
+- **Immutable audit trail** tracking role changes, data exports, authentication events, and workflow overrides
 - **Secure Data Exports (CSV/JSON)** for audits and telemetry powered by backend API streams to preserve authentication context and bypass popup blockers
 
 ---
 
-## Target Audience
-
-| Audience | Relevance |
-|---|---|
-| **Software Developers** | Keyboard-first navigation, AI triage, CI failure ingestion, GitHub integration |
-| **QA Engineers** | Bug Quality Score feedback, structured reproduction fields, verification workflow |
-| **Project Managers** | Release Health Radar, analytics dashboards, workload visibility |
-| **Engineering Managers** | MTTD/MTTR telemetry, Component Health Index, defect escape metrics |
-| **DevOps / SRE** | CI pipeline integration, webhook dispatch, audit trail |
-
----
-
-## Core Workflow
+## End-to-End Defect Lifecycle
 
 The primary workflow BugForge optimizes is the complete defect lifecycle from discovery to release:
 
-```
-BUG DISCOVERED (CI failure, manual report, or log ingest)
-      |
-      v
-REPORT BUG (structured form with progressive disclosure)
-      |
-      v
-AI-ASSISTED TRIAGE (Grok or heuristic fallback)
-      |   - Suggested severity, priority, component
-      |   - Missing information checklist
-      |   - Bug Quality Score (0-100)
-      |
-      v
-DUPLICATE DETECTION (token-similarity against existing issues)
-      |   - Top 3 candidates with similarity scores
-      |   - Mark as duplicate, link, or proceed
-      |
-      v
-SMART ASSIGNMENT (multi-factor recommendation)
-      |   - Component ownership
-      |   - Domain expertise history
-      |   - Workload balancing
-      |
-      v
-DEVELOPMENT (IN_PROGRESS -> IN_REVIEW)
-      |   - GitHub PR linked
-      |   - CI checks displayed inline
-      |
-      v
-RESOLUTION (developer marks RESOLVED with resolution type)
-      |
-      v
-QA VERIFICATION (reporter/QA verifies fix)
-      |
-      v
-CLOSURE (PM/Admin closes ticket)
-      |
-      v
-RELEASE HEALTH UPDATE (readiness score recalculated)
-```
+<div align="center">
+
+**BUG DISCOVERED**  
+*(CI failure, manual report, or log ingest)*  
+↓  
+**REPORT BUG**  
+*(Structured form with progressive disclosure)*  
+↓  
+**AI-ASSISTED TRIAGE**  
+*(Suggested severity, priority, component, and missing info checklist)*  
+↓  
+**DUPLICATE DETECTION**  
+*(Top 3 candidates with token-similarity scores)*  
+↓  
+**SMART ASSIGNMENT**  
+*(Multi-factor recommendation based on domain expertise and workload)*  
+↓  
+**DEVELOPMENT**  
+*(GitHub PR linked, CI checks displayed inline)*  
+↓  
+**RESOLUTION**  
+*(Developer marks RESOLVED with resolution type)*  
+↓  
+**QA VERIFICATION**  
+*(Reporter/QA verifies fix)*  
+↓  
+**CLOSURE**  
+*(PM/Admin closes ticket)*  
+↓  
+**RELEASE HEALTH UPDATE**  
+*(Readiness score recalculated)*  
+
+</div>
 
 ---
 
 ## Product Showcase
 
-### 1. Engineering Dashboard
-The dashboard provides a project-level overview of open issues, critical defects, workload, recent activity, and release readiness.
+### 01 — Engineering Dashboard
+> **Project-level engineering visibility**
+
 <p align="center">
   <img src="docs/screenshots/dashboard.png" width="900" alt="BugForge engineering dashboard showing project health, critical issues, team workload, and release readiness">
 </p>
 
-### 2. Issue Management
-A robust issue-management system with advanced filtering, status tracking, components, and severity indicators.
+The dashboard provides a project-level overview of open issues, critical defects, workload, recent activity, and release readiness.
+
+### 02 — Issue Management
+> **Structured defect tracking and triage**
+
 <p align="center">
   <img src="docs/screenshots/issues.png" width="900" alt="BugForge issue management list showing status, priority, severity, assignee, and components">
 </p>
 
-### 3. Issue Investigation
-Rich issue details supporting markdown, reproduction steps, comments, and realtime viewer presence.
+A robust issue-management system with advanced filtering, status tracking, components, and severity indicators.
+
+### 03 — Issue Investigation
+> **Rich technical context for debugging**
+
 <p align="center">
   <img src="docs/screenshots/issue-details.png" width="900" alt="BugForge issue details showing description, reproduction steps, activity, and development information">
 </p>
 
-### 4. Developer Workflow
-Deep integration with GitHub to seamlessly connect bugs to development branches, pull requests, and CI status.
+Rich issue details supporting markdown, reproduction steps, comments, and realtime viewer presence.
+
+### 04 — Developer Workflow
+> **Connecting issues with development**
+
 <p align="center">
   <img src="docs/screenshots/developer-workflow.png" width="900" alt="BugForge developer workflow showing linked GitHub repository, branch, pull request, and CI status">
 </p>
 
-### 5. QA and Verification
-Integrated QA workflows for tracking test failures, verification states, and identifying regressions.
+Deep integration with GitHub seamlessly connects bugs to development branches, pull requests, and CI status inline.
+
+### 05 — QA & Verification
+> **Closing the loop from fix to verification**
+
 <p align="center">
   <img src="docs/screenshots/qa-verification.png" width="900" alt="BugForge QA verification dashboard showing issues ready for QA and test information">
 </p>
 
-### 6. Release Health and Analytics
-Quantitative release-readiness metrics, blocker alerts, and engineering analytics to ensure confident deployments.
+Integrated QA workflows for tracking test failures, verification states, and identifying regressions.
+
+### 06 — Release Health & Analytics
+> **Release readiness backed by engineering signals**
+
 <p align="center">
   <img src="docs/screenshots/release-health.png" width="900" alt="BugForge release health and analytics showing release readiness, blockers, and resolution trends">
 </p>
 
-### Feature Mapping
-| BugForge Capability | Demonstrated In |
-|---|---|
-| Project Dashboard | Dashboard |
-| Issue Management | Issues |
-| Bug Investigation | Issue Details |
-| Developer Workflow | GitHub/Development |
-| QA Verification | QA |
-| Release Health | Release Health |
+Quantitative release-readiness metrics, blocker alerts, and engineering analytics to ensure confident deployments.
 
 ---
 
-## Innovation and Differentiation
+## AI-Powered Engineering Intelligence
 
-| Capability | Legacy Bugzilla | BugForge |
-|---|---|---|
-| CI Failure Ingestion | Manual filing | Automated test failure ingestion with one-click bug creation and git SHA linking |
-| AI Bug Triage | None | Severity, priority, component suggestions with missing-information checklist via Grok; deterministic heuristic fallback |
-| Duplicate Detection | Dense table search | Two-tier candidate narrowing with token overlap scoring and four resolution actions |
-| Bug Quality Score | None | Deterministic 0-100 quality meter with transparent per-criterion checklist |
-| Smart Assignment | Manual dropdown | Multi-factor routing: component ownership, domain expertise, workload balance |
-| Release Health | Manual reports | Mathematical 0-100 readiness formula with explicit deductions per blocker, critical issue, and unverified fix |
-| GitHub Integration | Manual text links | PR status badges, review state, CI checks, diff stats, linked commits |
-| Realtime Collaboration | Full page reloads | Live viewer presence pills and broadcast indicators |
-| Telemetry | Basic statistics | MTTD, MTTR, Bug Reopen Rate, Defect Escape Rate, Component Health Index |
+BugForge leverages the **Grok AI engine (via the xAI API)** natively to automate the most time-consuming parts of the engineering lifecycle:
 
-### Use Cases for Grok AI Engine
-
-BugForge leverages the **Grok AI engine (via the xAI API)** natively to automate some of the most time-consuming parts of the engineering lifecycle:
-- **Intelligent Bug Triage**: Grok analyzes the unstructured text of incoming bug reports to automatically recommend the correct `Severity` (e.g., Critical vs Minor) and `Priority` (P0-P4) based on context, drastically reducing manual PM workload.
-- **Component Routing**: By understanding the technical context, Grok suggests which system component (e.g., Frontend, Database, Auth) the issue belongs to, ensuring bugs are routed to the right team immediately.
-- **Missing Information Detection**: Grok scans the issue description and generates a checklist of missing context (e.g., "Missing browser version", "No reproduction steps provided"), guiding reporters to write better bugs before a developer even looks at them.
+- **Intelligent Bug Triage**: Grok analyzes the unstructured text of incoming bug reports to automatically recommend the correct `Severity` (e.g., Critical vs Minor) and `Priority` (P0-P4) based on context.
+- **Component Routing**: By understanding technical context, Grok suggests which system component (e.g., Frontend, Database, Auth) the issue belongs to.
+- **Missing Information Detection**: Grok scans the issue description and generates a checklist of missing context (e.g., "Missing browser version", "No reproduction steps provided").
 - **Duplicate Detection Analysis**: Grok evaluates the semantic meaning of bug reports to identify potential duplicates even when different terminology is used.
 
 ### AI-Assisted Triage with Graceful Degradation
-
-Unlike tools that require constant API connectivity, BugForge's AI system degrades to deterministic heuristics when the Grok API is unavailable. The `AIService` orchestrates between `GrokProvider` (live xAI API) and `HeuristicAIProvider` (local keyword analysis). Both providers return the same response shape, making the fallback transparent to the frontend. This dual-mode design ensures the platform remains functional in air-gapped, rate-limited, or cost-constrained environments.
-
-### CI-to-Issue Pipeline
-
-BugForge eliminates the manual step of copying test failure output into a bug report. CI failures are ingested with full stack traces, expected/actual results, build URLs, and commit SHAs. A single click converts any failure into a fully-linked issue with pre-populated fields.
-
-### Deterministic Quality Scoring
-
-The Bug Quality Score provides immediate, actionable feedback to reporters. Each scoring criterion (title clarity, description depth, reproduction steps, expected/actual behavior, environment info, component assignment, version tag) is transparently weighted and displayed as a checklist. The score is fully deterministic -- no AI randomness.
-
-### Mathematical Release Readiness
-
-The Release Health Radar uses a published formula: start at 100, deduct 30 per open blocker, 15 per critical issue, 20 per regression, and 5 per unverified fix. Teams can see exactly why a release scored 72 instead of 85, and which issues to resolve to improve the score.
-
-### Workflow Integrity via FSM
-
-The finite-state machine enforces 17 transition rules at the API layer, preventing invalid state changes regardless of how the API is called. Every transition rule specifies which roles are permitted and whether a resolution value is required. Direct transitions from CLOSED to IN_PROGRESS are explicitly forbidden -- the issue must be REOPENED first.
+Unlike tools that require constant API connectivity, BugForge's AI system gracefully degrades to deterministic heuristics when the Grok API is unavailable. The `AIService` orchestrates between `GrokProvider` (live xAI API) and `HeuristicAIProvider` (local keyword analysis). Both providers return the exact same response shape, making the fallback transparent to the frontend and keeping the system functional in air-gapped or rate-limited environments.
 
 ---
 
-## Architecture
+## CI → Issue Automation
 
-### High-Level System Diagram
+BugForge eliminates the manual step of copying test failure output into a bug report. The CI Integration Service uses a provider registry pattern to ingest CI failure payloads.
 
-```
+**Workflow:**
+1. GitHub Actions failure occurs.
+2. Failure payload is ingested and normalized to a common `CIFailureRecord` schema.
+3. One-click bug conversion creates a fully-linked issue.
+4. Pre-populated technical context includes full stack traces, expected/actual results, the build URL, and the commit SHA.
+
+---
+
+## GitHub Integration
+
+BugForge features deep, bidirectional integration with GitHub:
+
+### BugForge → GitHub (Outbound)
+Fetches repository metadata, pull request status, review state, merge status, CI check run results, commit history with diff stats, and branch metadata to be displayed natively within the BugForge Issue UI.
+
+### GitHub → BugForge (Inbound)
+Incoming push event webhooks are processed by `GitIntegrationService.processCommits()`. It performs regex parsing of commit messages for `Fixes|Closes|Resolves|Refs <KEY>` patterns, automatically creating git links, adding comments documenting the linked commit, and auto-transitioning the issue to RESOLVED.
+
+---
+
+## Release Health & Engineering Analytics
+
+The **Release Health Radar** provides a mathematical, objective evaluation of a project's release readiness using a deterministic formula:
+
+- **Start at 100**
+- Deduct **30** per open blocker
+- Deduct **15** per critical issue
+- Deduct **20** per regression
+- Deduct **5** per unverified fix
+
+Teams can see exactly why a release scored 72 instead of 85, and which explicit issues to resolve to improve the score.
+
+---
+
+## Realtime Collaboration
+
+BugForge utilizes **Supabase Realtime** to offer live collaboration capabilities directly on the issue investigation view. Users can see live viewer presence indicators (pills) displaying who is actively looking at the same issue, as well as live notifications and broadcast updates.
+
+---
+
+## Roles & Permissions
+
+BugForge implements a strict, hierarchical Role-Based Access Control (RBAC) system. Permissions are enforced at the API layer (backend middleware) and dynamically tailored at the UI layer to reduce clutter.
+
+| Role | Primary Responsibilities | UI Access & Restrictions |
+|---|---|---|
+| **Admin** | Full workspace oversight, security audits, global settings. | Has access to all navigation tabs (including Audit Center and Settings). Can perform any state transition or delete operations. |
+| **Project Manager** | Triage incoming bugs, assign workloads, track release readiness, monitor metrics. | Dashboard defaults to the "Needs Triage" queue. Has access to Analytics and Releases. Cannot access the Audit Center or CI Failures. |
+| **Developer** | Fix bugs, resolve blockers, review CI failures, and link GitHub PRs. | Dashboard defaults to the "Blockers" queue. Has access to CI Failures. Cannot access Analytics, Audit Center, or Workspace Settings. |
+| **Reporter / QA** | Discover and report bugs, verify fixes, and track the status of reported issues. | Dashboard uses a custom "My Reported Issues" view. Navigation is strictly limited. Cannot transition issues to "In Progress" or "Resolved", and cannot edit issue metadata after creation. |
+
+---
+
+## Security Architecture
+
+| Layer | Control | Implementation |
+|---|---|---|
+| **Auth** | JWT verification | Supabase `auth.getUser()` validates every token server-side |
+| **Auth** | Demo isolation | Demo tokens are recognized by prefix and never reach Supabase auth |
+| **AuthZ** | Global roles | `requireGlobalRole` middleware checks `req.user.global_role` |
+| **AuthZ** | Project RBAC | `requireProjectRole` middleware enforces hierarchical role requirements |
+| **AuthZ** | Workflow guards | `WorkflowEngine` validates state transitions against the caller's role |
+| **Data** | Row Level Security | Seven Supabase migrations define RLS policies matching `auth.uid()` to projects |
+| **Data** | Input validation | Zod schemas validate all request bodies, query, and path parameters |
+| **Data** | Secret isolation | Grok, GitHub, and Supabase service role keys exist only in server env vars |
+| **Network**| Security headers | Helmet applies CSP, `X-Frame-Options`, `X-Content-Type-Options`, `HSTS` |
+| **Network**| CORS | Dynamic origin validation allows verified domains and rejects unknown origins |
+| **Audit** | Immutable logging | `AuditService` records role changes, exports, logins, and transition overrides |
+
+---
+
+## System Architecture
+
+```text
                     PUBLIC USERS
                          |
                          v
@@ -273,57 +357,6 @@ The finite-state machine enforces 17 transition rules at the API layer, preventi
      Realtime          Duplicates     PRs
      RLS Policies      Fallback       CI Status
 ```
-
-### Component Descriptions
-
-**Frontend (React 18 + Vite + Tailwind CSS)** -- Single-page application deployed to Vercel. Uses React Query for server state management, React Router for client-side routing, and Lucide for iconography. The frontend communicates exclusively with the backend REST API; no direct database or third-party API calls are made from the browser.
-
-**Backend (Express + TypeScript)** -- RESTful API server deployed to Render. Structured in a layered architecture: routes define HTTP endpoints, controllers handle request/response formatting, services encapsulate business logic, middleware enforces authentication and authorization, and validators (Zod schemas) ensure input integrity. The server applies Helmet for security headers and dynamic CORS for origin validation.
-
-**Supabase (PostgreSQL + Auth + Storage + Realtime + RLS)** -- Managed PostgreSQL database with seven applied migrations defining the schema for profiles, projects, RBAC membership, issues, issue history, comments, collaboration state, saved views, webhooks, integrations, and CI failures. Row Level Security policies enforce data isolation at the database layer.
-
-**Grok AI (xAI API)** -- The backend integrates with Grok via the xAI chat completions API (`grok-beta` model). AI features are called exclusively from the server side. When the Grok API is unavailable or unconfigured, all AI features degrade gracefully to deterministic heuristic fallback.
-
-**GitHub Integration** -- Bidirectional integration via the GitHub REST API and incoming webhooks. Outbound: fetches repository activity, pull request metadata, review status, and CI check results. Inbound: receives webhook payloads for push events, enabling automatic issue resolution when commit messages reference issue keys (e.g., `Fixes ECOM-1042`).
-
----
-
-## Detailed System Architecture
-
-The backend follows a strict layered architecture with clear separation of concerns:
-
-```
-HTTP Request
-    |
-    v
-Routes (endpoint definition)
-    |
-    v
-Auth Middleware (JWT verification, demo personas)
-    |
-    v
-RBAC Middleware (project-scoped role enforcement)
-    |
-    v
-Zod Validators (input schema validation)
-    |
-    v
-Controllers (request/response formatting)
-    |
-    v
-Services (business logic, orchestration)
-    |
-    +---> Data Stores (in-memory for demo, Supabase for production)
-    +---> AI Providers (GrokProvider -> HeuristicAIProvider fallback)
-    +---> CI Providers (GitHubActionsProvider via registry pattern)
-    +---> External APIs (GitHub REST, xAI chat completions)
-```
-
-Integrations are behind service abstractions:
-
-- `AIService` orchestrates `GrokProvider` and `HeuristicAIProvider`
-- `CIIntegrationService` uses `CIProviderRegistry` with `GitHubActionsProvider`
-- `GitIntegrationService` processes inbound webhooks and manages git links
 
 ---
 
@@ -373,19 +406,17 @@ flowchart LR
 ## Authentication Flow
 
 1. Client sends `Authorization: Bearer <token>` header with every API request.
-2. The `requireAuth` middleware checks for demo persona tokens (prefix `demo_`), Supabase JWT tokens, or local development tokens.
+2. The `requireAuth` middleware checks for demo persona tokens, Supabase JWT tokens, or local development tokens.
 3. For Supabase JWTs, the middleware calls `supabase.auth.getUser(token)` to validate the session, then fetches or creates the user profile via `UserService`.
-4. The authenticated user object is attached to `req.user` for downstream middleware and controllers.
-5. `requireGlobalRole` middleware enforces global role restrictions (e.g., ADMIN-only endpoints).
-6. `requireProjectRole` middleware checks project-scoped membership and enforces hierarchical role requirements (ADMIN > PROJECT_MANAGER > DEVELOPER > REPORTER).
+4. The authenticated user object is attached to `req.user` for downstream middleware.
+5. `requireGlobalRole` middleware enforces global role restrictions.
+6. `requireProjectRole` middleware checks project-scoped membership and enforces hierarchical rank.
 
 ---
 
 ## AI Architecture
 
-### Provider Abstraction
-
-```
+```text
 Controller
     |
     v
@@ -406,135 +437,30 @@ AIService (orchestrator)
               +--> Missing information detection (browser, OS, repro steps)
 ```
 
-The `GrokProvider` class encapsulates all xAI API communication:
-- Checks `isConfigured()` before making requests (requires API key with length > 5)
-- Applies `temperature: 0.1` for deterministic output
-- Requests `response_format: { type: 'json_object' }` for structured responses
-- Returns `null` on any failure (network timeout, HTTP error, invalid credentials)
-
-The `HeuristicAIProvider` provides the same response shape using:
-- Keyword matching for severity classification (crash/data loss -> CRITICAL, cannot/blocked -> MAJOR, typo/alignment -> TRIVIAL)
-- Component name word matching against issue text
-- Domain keyword extraction for suggested labels
-- Missing information detection (browser, OS, file size, numbered reproduction steps)
-
-Both providers return `AITriageResult` with identical fields, making the fallback transparent to consumers.
-
 ---
 
-## GitHub Integration
+## Technology Stack
 
-### Outbound (BugForge -> GitHub)
-
-The `GitIntegrationService` and `GitService` fetch:
-- Repository metadata (owner, name, default branch, visibility)
-- Pull request status, review state, merge status
-- CI check run results (passing, failing, pending)
-- Commit history with diff stats
-- Branch metadata
-
-### Inbound (GitHub -> BugForge)
-
-Incoming push event webhooks are processed by `GitIntegrationService.processCommits()`:
-1. Regex parsing of commit messages for `Fixes|Closes|Resolves|Refs <KEY>` patterns
-2. Automatic git link creation (COMMIT type) on matching issues
-3. Automated comment creation documenting the linked commit
-4. Auto-transition to RESOLVED status for `Fixes`, `Closes`, and `Resolves` keywords
-
-### CI Failure Ingestion
-
-The `CIIntegrationService` uses a provider registry pattern:
-1. `CIProviderRegistry` registers provider implementations (currently `GitHubActionsProvider`)
-2. CI failure payloads are normalized to a common `CIFailureRecord` schema
-3. One-click conversion creates a fully-linked issue with pre-populated fields, commit SHA, and build URL
-
----
-
-## Roles and Permissions
-
-BugForge implements a strict, hierarchical Role-Based Access Control (RBAC) system. Permissions are enforced at the API layer (backend middleware) and dynamically tailored at the UI layer to reduce clutter and focus on relevant workflows.
-
-| Role | Primary Responsibilities | UI Access & Restrictions |
-|---|---|---|
-| **Admin** | Full workspace oversight, security audits, global settings. | Has access to all navigation tabs (including Audit Center and Settings). Can perform any state transition or delete operations. |
-| **Project Manager** | Triage incoming bugs, assign workloads, track release readiness, and monitor metrics. | Dashboard defaults to the "Needs Triage" queue. Has access to Analytics and Releases. Cannot access the Audit Center or CI Failures. |
-| **Developer** | Fix bugs, resolve blockers, review CI failures, and link GitHub PRs. | Dashboard defaults to the "Blockers" queue. Has access to CI Failures. Cannot access Analytics, Audit Center, or Workspace Settings. |
-| **Reporter / QA** | Discover and report bugs, verify fixes, and track the status of their reported issues. | Dashboard uses a custom "My Reported Issues" view instead of global metrics. Navigation is strictly limited to Dashboard and Issues. Cannot transition issues to "In Progress" or "Resolved", and cannot edit issue metadata (Priority, Component, Assignee) after creation. |
-
----
-
-## Security Architecture
-
-### Security Controls Detail
-
-| Layer | Control | Implementation |
-|---|---|---|
-| **Authentication** | JWT verification | Supabase `auth.getUser()` validates every token server-side |
-| **Authentication** | Demo isolation | Demo tokens are recognized by prefix and never reach Supabase auth |
-| **Authorization** | Global roles | `requireGlobalRole` middleware checks `req.user.global_role` against allowed roles |
-| **Authorization** | Project RBAC | `requireProjectRole` middleware queries project membership and compares role rank |
-| **Authorization** | Workflow guards | `WorkflowEngine` validates state transitions against the caller's role before execution |
-| **Data** | Row Level Security | Seven Supabase migrations define RLS policies matching `auth.uid()` to project membership |
-| **Data** | Input validation | Zod schemas validate all request bodies, query parameters, and path parameters |
-| **Data** | Secret isolation | Grok API keys, GitHub tokens, and Supabase service role keys exist only in server environment variables |
-| **Network** | Security headers | Helmet applies `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, and CSP |
-| **Network** | CORS | Dynamic origin validation allows production Vercel domains, preview URLs, and localhost; unknown origins are rejected |
-| **Audit** | Immutable logging | `AuditService` records role changes, exports, logins, settings updates, and transition overrides with timestamps, IP addresses, and user agents |
-
----
-
-## Threat Model
-
-| Threat | Attack Surface | Risk | Mitigation |
-|---|---|---|---|
-| JWT Forgery | Auth header | HIGH | Server-side verification via Supabase `auth.getUser()`; tokens validated on every request |
-| Privilege Escalation | Role assignment | HIGH | RBAC middleware enforces role rank hierarchy; global ADMIN bypass is explicit and audited |
-| SQL Injection | Query parameters | MEDIUM | Parameterized queries via Supabase client SDK; Zod validates all input shapes |
-| Cross-Site Scripting | User-generated content | MEDIUM | React escapes output by default; Helmet sets CSP and `X-Content-Type-Options` |
-| API Key Exposure | Browser network tab | HIGH | All third-party API keys (Grok, GitHub, Supabase service role) are server-side only; never included in frontend bundle |
-| CSRF | State-changing endpoints | MEDIUM | Token-based auth (not cookies); CORS restricts and rejects unknown origins |
-| Unauthorized Data Access | Direct database queries | HIGH | Row Level Security policies on all tables enforce project membership at the PostgreSQL level |
-| Denial of Service | API endpoints | MEDIUM | Render platform provides infrastructure-level rate limiting; application-level rate limiting is not yet implemented |
-| Webhook Replay | Inbound webhook endpoint | LOW | GitHub webhook secret validation (when configured); idempotent event processing |
-| AI Prompt Injection | AI triage input | LOW | Grok calls use low temperature (0.1) and structured JSON response format; AI output is advisory only, never automatically applied |
-| Malicious File Uploads | Supabase Storage | LOW | File upload on issues is not yet implemented in the UI; Supabase Storage policies restrict access |
-| GitHub Token Compromise | Server environment | HIGH | Token stored in server environment variables only; never transmitted to the frontend |
-
-**Honest limitations**: Application-level rate limiting is not implemented (relies on Render infrastructure). Demo persona tokens bypass authentication and should be disabled in production. The Supabase service role key has full database access and must be kept strictly server-side.
-
----
-
-## Tech Stack
-
-| Layer | Technology | Version | Purpose |
-|---|---|---|---|
-| **Frontend** | React | 18.3 | UI component framework |
-| **Frontend** | Vite | 6.1 | Build tool and dev server |
-| **Frontend** | TypeScript | 5.7 | Type safety |
-| **Frontend** | Tailwind CSS | 3.4 | Utility-first styling |
-| **Frontend** | React Router | 6.29 | Client-side routing |
-| **Frontend** | React Query | 5.66 | Server state management and caching |
-| **Frontend** | Lucide React | 0.475 | Icon library |
-| **Backend** | Node.js | 18+ | Runtime environment |
-| **Backend** | Express | 4.21 | HTTP server framework |
-| **Backend** | TypeScript | 5.7 | Type safety |
-| **Backend** | Zod | 3.24 | Schema validation |
-| **Backend** | Helmet | 8.0 | Security headers |
-| **Backend** | Morgan | 1.10 | HTTP request logging |
-| **Database** | Supabase | 2.49 | Managed PostgreSQL, Auth, Storage, Realtime, RLS |
-| **AI** | Grok (xAI) | grok-beta | AI triage and analysis |
-| **CI/CD** | GitHub Actions | - | CI failure ingestion source |
-| **Testing** | Vitest | 3.0 | Unit and integration testing |
-| **Testing** | Supertest | 7.0 | HTTP assertion library |
-| **Infra** | Vercel | - | Frontend hosting with SPA routing |
-| **Infra** | Render | - | Backend hosting with health checks |
-| **Infra** | Docker Compose | 3.8 | Local development containerization |
+| Layer          | Technology          | Purpose |
+| -------------- | ------------------- | ------- |
+| **Frontend**       | React 18, Vite      | SPA framework and build tooling |
+| **Styling**        | Tailwind CSS        | Utility-first styling architecture |
+| **State Management**| React Query        | Server state and API caching |
+| **Backend**        | Express, TypeScript | RESTful API and core business logic |
+| **Validation**     | Zod                 | End-to-end type-safe schema validation |
+| **Database**       | Supabase PostgreSQL | Relational data persistence with RLS |
+| **Authentication** | Supabase Auth       | Secure session and user management |
+| **Realtime**       | Supabase Realtime   | Websocket subscriptions for presence |
+| **AI**             | Grok (xAI API)      | Natural language processing and triage |
+| **Source Control** | GitHub REST API     | CI status and pull request synchronization |
+| **Testing**        | Vitest, Supertest   | Backend unit and integration test suites |
+| **Deployment**     | Vercel, Render      | Infrastructure hosting |
 
 ---
 
 ## Project Structure
 
-```
+```text
 BugForge/
 +-- package.json                    # npm workspaces root (backend, frontend)
 +-- docker-compose.yml              # Local development containers
@@ -544,235 +470,77 @@ BugForge/
 +-- LICENSE                         # MIT License
 |
 +-- backend/
-|   +-- package.json
-|   +-- tsconfig.json
-|   +-- Dockerfile
 |   +-- src/
 |   |   +-- index.ts                # Server entry point with graceful shutdown
 |   |   +-- app.ts                  # Express app factory (middleware, routes, CORS)
-|   |   +-- config/
-|   |   |   +-- env.ts              # Zod-validated environment configuration
-|   |   +-- controllers/
-|   |   |   +-- aiController.ts     # AI triage, duplicates, quality, assignment
-|   |   |   +-- analyticsController.ts
-|   |   |   +-- auditController.ts
-|   |   |   +-- authController.ts
-|   |   |   +-- collaborationController.ts
-|   |   |   +-- healthController.ts
-|   |   |   +-- integrationController.ts  # CI failure and GitHub webhook handling
-|   |   |   +-- issueController.ts
-|   |   |   +-- notificationController.ts
-|   |   |   +-- projectController.ts
-|   |   |   +-- releaseController.ts
-|   |   |   +-- userController.ts
-|   |   |   +-- viewController.ts
-|   |   +-- middleware/
-|   |   |   +-- authMiddleware.ts    # JWT verification, demo personas, role guards
-|   |   |   +-- errorHandler.ts     # Centralized error handling (Zod, AppError, generic)
-|   |   |   +-- notFoundHandler.ts  # 404 route handler
-|   |   |   +-- rbacMiddleware.ts   # Project-scoped role enforcement
-|   |   |   +-- requestLogger.ts    # HTTP request logging
-|   |   +-- routes/
-|   |   |   +-- index.ts            # Route aggregator mounting 14 sub-routers
-|   |   |   +-- aiRoutes.ts
-|   |   |   +-- analyticsRoutes.ts
-|   |   |   +-- auditRoutes.ts
-|   |   |   +-- authRoutes.ts
-|   |   |   +-- ciRoutes.ts
-|   |   |   +-- githubRoutes.ts
-|   |   |   +-- healthRoutes.ts
-|   |   |   +-- issueRoutes.ts
-|   |   |   +-- notificationRoutes.ts
-|   |   |   +-- projectRoutes.ts
-|   |   |   +-- releaseRoutes.ts
-|   |   |   +-- userRoutes.ts
-|   |   |   +-- viewRoutes.ts
-|   |   |   +-- webhookRoutes.ts
-|   |   +-- services/
-|   |   |   +-- aiService.ts         # AI orchestrator with Grok/heuristic fallback
-|   |   |   +-- ai/
-|   |   |   |   +-- grokProvider.ts  # xAI API client (chat completions)
-|   |   |   |   +-- heuristicAIProvider.ts  # Deterministic keyword-based fallback
-|   |   |   +-- analyticsService.ts  # MTTD, MTTR, reopen rate, defect escape
-|   |   |   +-- auditService.ts      # Immutable audit trail
-|   |   |   +-- ci/
-|   |   |   |   +-- ciProvider.ts            # CI provider interface
-|   |   |   |   +-- ciProviderRegistry.ts    # Provider registry pattern
-|   |   |   |   +-- githubActionsProvider.ts # GitHub Actions CI implementation
-|   |   |   +-- ciIntegrationService.ts      # CI failure ingestion and conversion
-|   |   |   +-- commentService.ts
-|   |   |   +-- duplicateDetectionService.ts
-|   |   |   +-- gitIntegrationService.ts     # GitHub webhook processing, auto-resolve
-|   |   |   +-- gitService.ts               # Git link CRUD
-|   |   |   +-- issueService.ts             # Core issue CRUD and seed data
-|   |   |   +-- notificationService.ts
-|   |   |   +-- projectService.ts
-|   |   |   +-- qualityScoreService.ts       # Deterministic Bug Quality Score (0-100)
-|   |   |   +-- releaseHealthService.ts      # Release readiness formula
-|   |   |   +-- smartAssignmentService.ts    # Multi-factor assignee recommendation
-|   |   |   +-- supabase.ts                 # Supabase client initialization
-|   |   |   +-- timelineService.ts
-|   |   |   +-- userService.ts              # Profile CRUD and demo persona definitions
-|   |   |   +-- viewService.ts
-|   |   |   +-- webhookDispatcherService.ts
-|   |   |   +-- workflowEngine.ts           # Finite-state machine with role guards
-|   |   +-- types/                   # TypeScript interfaces and enums
-|   |   |   +-- ai.ts
-|   |   |   +-- analytics.ts
-|   |   |   +-- auth.ts
-|   |   |   +-- ci.ts
-|   |   |   +-- collaboration.ts
-|   |   |   +-- integration.ts
-|   |   |   +-- issue.ts
-|   |   |   +-- project.ts
-|   |   |   +-- view.ts
-|   |   +-- utils/
-|   |   |   +-- apiResponse.ts       # Standardized API response formatting
-|   |   |   +-- appError.ts          # Typed error classes (400, 401, 403, 404, 409, 500)
-|   |   |   +-- asyncHandler.ts      # Async route wrapper
-|   |   |   +-- logger.ts            # Structured logging utility
-|   |   +-- validators/              # Zod request schemas
-|   |       +-- authValidators.ts
-|   |       +-- collaborationValidators.ts
-|   |       +-- integrationValidators.ts
-|   |       +-- issueValidators.ts
-|   |       +-- projectValidators.ts
-|   |       +-- viewValidators.ts
-|   |       +-- workflowValidators.ts
-|   +-- tests/
-|       +-- ai.test.ts
-|       +-- aiTriage.test.ts
-|       +-- analytics.test.ts
-|       +-- auth.test.ts
-|       +-- ciProvider.test.ts
-|       +-- collaboration.test.ts
-|       +-- githubActivity.test.ts
-|       +-- health.test.ts
-|       +-- integrations.test.ts
-|       +-- issues.test.ts
-|       +-- metricsAndAudit.test.ts
-|       +-- projects.test.ts
-|       +-- qualityAndDuplicates.test.ts
-|       +-- releaseHealth.test.ts
-|       +-- smartAssignment.test.ts
-|       +-- views.test.ts
-|       +-- workflow.test.ts
+|   |   +-- controllers/            # Request/response formatters
+|   |   +-- middleware/             # Auth, RBAC, logging, error handling
+|   |   +-- routes/                 # API endpoint definitions
+|   |   +-- services/               # Core business logic and providers (AI, CI, Git)
+|   |   +-- types/                  # TypeScript interfaces and enums
+|   |   +-- utils/                  # AppError, apiResponse, logger
+|   |   +-- validators/             # Zod request schemas
+|   +-- tests/                      # 17 test suites (71 tests)
 |
 +-- frontend/
-|   +-- package.json
-|   +-- tsconfig.json
-|   +-- vite.config.ts
-|   +-- tailwind.config.js
-|   +-- postcss.config.js
-|   +-- index.html
-|   +-- Dockerfile
-|   +-- nginx.conf
-|   +-- vercel.json
 |   +-- src/
-|       +-- main.tsx                 # Application entry point
-|       +-- App.tsx                  # Root component with routing and providers
-|       +-- index.css                # Global styles and Tailwind imports
-|       +-- components/
-|       |   +-- auth/                # ProtectedRoute guard
-|       |   +-- common/              # CommandPalette, shared UI
-|       |   +-- issues/              # AITriageInspector, BugQualityMeter,
-|       |   |                        # CreateIssueModal, DuplicateResolutionCard,
-|       |   |                        # GitHubActivityPanel, SmartAssignmentCard,
-|       |   |                        # WorkflowActionBar
-|       |   +-- layout/              # AppLayout, Navbar, Sidebar, PageHeader
-|       |   +-- ui/                  # Design primitives (avatar, badge, button, card, input)
-|       |   +-- views/               # KanbanBoard
-|       +-- contexts/
-|       |   +-- AuthContext.tsx       # Authentication state and demo persona selection
-|       |   +-- ProjectContext.tsx    # Active project state
-|       +-- hooks/
-|       |   +-- useRealtimeIssue.ts   # Supabase realtime subscription hook
-|       +-- lib/
-|       |   +-- api.ts               # Fetch-based API client with token injection
-|       |   +-- supabase.ts          # Supabase browser client
-|       |   +-- utils.ts             # Utility functions
-|       +-- pages/
-|       |   +-- DashboardPage.tsx
-|       |   +-- IssuesPage.tsx
-|       |   +-- IssueDetailPage.tsx
-|       |   +-- ProjectsPage.tsx
-|       |   +-- ReleasesPage.tsx
-|       |   +-- ReleaseHealthPage.tsx
-|       |   +-- CIFailuresPage.tsx
-|       |   +-- AnalyticsPage.tsx
-|       |   +-- AuditPage.tsx
-|       |   +-- SettingsPage.tsx
-|       |   +-- NotFoundPage.tsx
-|       |   +-- auth/
-|       |       +-- LoginPage.tsx
-|       |       +-- RegisterPage.tsx
-|       |       +-- ForgotPasswordPage.tsx
-|       |       +-- ResetPasswordPage.tsx
-|       +-- types/
-|           +-- index.ts             # Frontend TypeScript type definitions
+|       +-- main.tsx                # Application entry point
+|       +-- App.tsx                 # Root component with routing
+|       +-- components/             # Reusable UI primitives and domain components
+|       +-- contexts/               # AuthContext, ProjectContext
+|       +-- hooks/                  # Custom React hooks
+|       +-- lib/                    # API client, Supabase browser client
+|       +-- pages/                  # Page-level components
+|       +-- types/                  # Shared domain types
 |
 +-- supabase/
-    +-- migrations/
-        +-- 20260828000001_create_profiles.sql
-        +-- 20260828000002_create_projects_and_rbac.sql
-        +-- 20260828000003_create_issues_and_history.sql
-        +-- 20260828000004_create_comments_and_collaboration.sql
-        +-- 20260828000005_create_saved_views.sql
-        +-- 20260828000006_create_webhooks_and_integrations.sql
-        +-- 20260828000007_create_ci_failures.sql
+    +-- migrations/                 # 7 sequential PostgreSQL schema migrations
 ```
 
 ---
 
-## Setup and Installation
+## Setup & Installation
 
 ### Prerequisites
-
 - Node.js v18 or later
-- npm v9 or later (included with Node.js 18+)
+- npm v9 or later
 - A Supabase project (free tier is sufficient) or use the built-in demo mode
-- Optional: Docker and Docker Compose for containerized local development
+- Optional: Docker and Docker Compose
 
 ### 1. Clone and Install
-
 ```bash
 git clone https://github.com/ammy194/BugForge.git
 cd BugForge
 npm install
 ```
 
-### 2. Configure Environment Variables
-
+### 2. Environment Configuration
 Copy the example environment file and populate it with your credentials:
-
 ```bash
 cp .env.example .env
 ```
+*(See Environment Variables section below for full reference)*
 
-See [Environment Variables](#environment-variables) for the full reference.
+### 3. Database Setup (Supabase)
+1. Create a Supabase project.
+2. Apply the seven migration files in `supabase/migrations/` via the Supabase SQL editor or CLI.
+3. Copy the project URL, anon key, service role key, and JWT secret into your environment variables.
 
-### 3. Run Locally
-
+### 4. Running Locally
 Start both backend and frontend concurrently:
-
 ```bash
 npm run dev
 ```
-
 Or start them individually:
-
 ```bash
 npm run dev:backend     # Express API on http://localhost:5000
 npm run dev:frontend    # Vite dev server on http://localhost:5173
 ```
 
-### 4. Run with Docker Compose
-
+### 5. Running with Docker Compose
 ```bash
 docker-compose up --build
 ```
-
-This starts the backend on port 5000 and the frontend on port 5173.
 
 ---
 
@@ -784,21 +552,21 @@ This starts the backend on port 5000 and the frontend on port 5173.
 |---|---|---|
 | `PORT` | No | Server port (default: `5000`) |
 | `NODE_ENV` | No | Environment mode: `development`, `production`, or `test` |
-| `CLIENT_URL` | Yes | Frontend origin for CORS (e.g., `https://bug-forge-frontend.vercel.app`) |
+| `CLIENT_URL` | Yes | Frontend origin for CORS |
 | `FRONTEND_URL` | No | Additional frontend origin for CORS |
 | `SUPABASE_URL` | Yes | Supabase project URL |
 | `SUPABASE_ANON_KEY` | Yes | Supabase anonymous (public) API key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (server-side only, never exposed to browser) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (server-side only) |
 | `SUPABASE_JWT_SECRET` | Yes | Supabase JWT signing secret |
-| `GROK_API_KEY` | No | xAI API key for Grok AI features (omit for heuristic-only mode) |
+| `GROK_API_KEY` | No | xAI API key for Grok AI features |
 | `GROK_API_URL` | No | xAI API endpoint (default: `https://api.x.ai/v1`) |
-| `GITHUB_TOKEN` | No | GitHub personal access token for repository integration |
+| `GITHUB_TOKEN` | No | GitHub personal access token for integration |
 
 **Frontend variables** (set in `frontend/.env` or in Vercel for production):
 
 | Variable | Required | Description |
 |---|---|---|
-| `VITE_API_BASE_URL` | Yes | Backend API base URL (e.g., `http://localhost:5000/api/v1`) |
+| `VITE_API_BASE_URL` | Yes | Backend API base URL |
 | `VITE_API_URL` | Yes | Same as `VITE_API_BASE_URL` (alias) |
 | `VITE_SUPABASE_URL` | Yes | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Yes | Supabase anonymous (public) API key |
@@ -807,101 +575,66 @@ This starts the backend on port 5000 and the frontend on port 5173.
 
 ## Testing
 
-Run the full test suite:
+Run the full test suite from the repository root:
 
 ```bash
 npm test --workspace=backend
 ```
 
-**71 tests across 17 test suites** covering:
-
-| Test Suite | Coverage Area |
-|---|---|
-| `auth.test.ts` | JWT verification, demo personas, role guards |
-| `projects.test.ts` | CRUD, membership, components, versions |
-| `issues.test.ts` | Creation, listing, filtering, state transitions |
-| `workflow.test.ts` | FSM transition validation, role enforcement, resolution requirements |
-| `ai.test.ts` | Triage orchestration, heuristic fallback |
-| `aiTriage.test.ts` | Grok provider integration, prompt construction |
-| `qualityAndDuplicates.test.ts` | Bug Quality Score calculation, duplicate detection scoring |
-| `smartAssignment.test.ts` | Multi-factor assignee recommendation |
-| `releaseHealth.test.ts` | Readiness score formula, release notes generation |
-| `ciProvider.test.ts` | CI failure parsing, provider registry |
-| `integrations.test.ts` | CI ingestion, GitHub webhook processing, outbound webhooks |
-| `githubActivity.test.ts` | Repository metadata, PR status fetching |
-| `collaboration.test.ts` | Realtime presence, commenting, timeline |
-| `analytics.test.ts` | MTTD/MTTR calculation, component health metrics |
-| `metricsAndAudit.test.ts` | Audit log recording, telemetry aggregation |
-| `views.test.ts` | Saved view CRUD, filter persistence |
-| `health.test.ts` | Health check endpoint, dependency status |
+Features **71 tests across 17 test suites** covering auth, RBAC guards, AI orchestration, state transitions, bug quality formulas, webhooks, and core entity CRUD.
 
 ---
 
 ## Deployment
 
-### Backend on Render
+### Backend (Render)
+1. In Render, create a new **Web Service** from the repository.
+2. Root Directory: `backend`
+3. Build Command: `npm install && npm run build`
+4. Start Command: `npm start`
+5. Health Check Path: `/health`
 
-1. In Render, create a new **Web Service** from the `ammy194/BugForge` repository.
-2. Set **Root Directory**: `backend`
-3. Set **Build Command**: `npm install && npm run build`
-4. Set **Start Command**: `npm start`
-5. Set **Health Check Path**: `/health`
-6. Add all backend environment variables.
-
-### Frontend on Vercel
-
-1. In Vercel, import the `ammy194/BugForge` repository.
-2. Set **Framework Preset**: Vite
-3. Set **Root Directory**: `frontend`
-4. Set **Build Command**: `npm run build`
-5. Set **Output Directory**: `dist`
-6. Add frontend environment variables (`VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
-
-### Database on Supabase
-
-1. Create a Supabase project.
-2. Apply the seven migration files in `supabase/migrations/` via the Supabase SQL editor or CLI.
-3. Copy the project URL, anon key, service role key, and JWT secret into your environment variables.
+### Frontend (Vercel)
+1. In Vercel, import the repository.
+2. Framework Preset: Vite
+3. Root Directory: `frontend`
+4. Build Command: `npm run build`
+5. Output Directory: `dist`
 
 ---
 
 ## Demo Personas
 
-BugForge includes built-in personas for evaluation without Supabase authentication:
+BugForge includes built-in personas for evaluation without requiring Supabase authentication. These tokens bypass Supabase JWT verification and are intended for demonstration only.
 
 | Persona | Name | Role | Email | Token |
 |---|---|---|---|---|
-| Admin | Alex Martin | ADMIN | `admin@bugforge.dev` | `Bearer demo_admin` |
-| Project Manager | Sarah Connor | PROJECT_MANAGER | `pm@bugforge.dev` | `Bearer demo_pm` |
-| Lead Developer | Bob Chen | DEVELOPER | `bob.dev@bugforge.dev` | `Bearer demo_dev` |
-| QA Reporter | Elena Rostova | REPORTER | `qa.reporter@bugforge.dev` | `Bearer demo_reporter` |
-
-These tokens are recognized by the `requireAuth` middleware and bypass Supabase JWT verification. They are intended for demonstration and evaluation only and should be disabled in production.
+| **Admin** | Alex Martin | ADMIN | `admin@bugforge.dev` | `Bearer demo_admin` |
+| **Project Manager** | Sarah Connor | PROJECT_MANAGER | `pm@bugforge.dev` | `Bearer demo_pm` |
+| **Lead Developer** | Bob Chen | DEVELOPER | `bob.dev@bugforge.dev` | `Bearer demo_dev` |
+| **QA Reporter** | Elena Rostova | REPORTER | `qa.reporter@bugforge.dev` | `Bearer demo_reporter` |
 
 ---
 
 ## Limitations
 
-The following are known limitations of the current implementation:
-
-1. **In-memory data stores** -- The audit log, CI failure records, and some service data are stored in-memory on the backend for demonstration purposes. In a production deployment, these would be persisted to Supabase tables.
-2. **Single CI provider** -- CI failure ingestion currently supports GitHub Actions only. Additional providers (GitLab CI, Jenkins, CircleCI) would require implementing the `CIProvider` interface.
-3. **Token-based duplicate detection** -- Duplicate detection uses token overlap similarity rather than true vector embeddings. High-accuracy semantic matching would require a vector database or embedding API.
-4. **No email notifications** -- The notification service creates in-app records but does not send email or push notifications.
+1. **In-memory data stores** — The audit log, CI failure records, and some service data are stored in-memory on the backend for demonstration purposes. In a production deployment, these would be persisted to Supabase tables.
+2. **Single CI provider** — CI failure ingestion currently supports GitHub Actions only.
+3. **Token-based duplicate detection** — Duplicate detection uses token overlap similarity rather than true vector embeddings.
+4. **No external notifications** — The notification service creates in-app records but does not currently dispatch emails or Slack messages.
 
 ---
 
 ## Future Improvements
 
-1. Persistent storage for audit logs and CI failures (migrate from in-memory to Supabase tables)
-2. Additional CI provider integrations (GitLab CI, Jenkins, CircleCI) via the existing provider registry
-3. Vector embedding-based duplicate detection using a dedicated embedding model
-4. Email and Slack notification channels
-5. File attachment support on issues via Supabase Storage
-6. OAuth-based GitHub login (removing the need for manual token configuration)
+1. Persistent storage for audit logs and CI failures.
+2. Additional CI provider integrations (GitLab CI, Jenkins, CircleCI) via the existing provider registry.
+3. Vector embedding-based duplicate detection using a dedicated embedding model.
+4. Email and Slack notification channels.
+5. File attachment support on issues via Supabase Storage.
+6. OAuth-based GitHub login.
 
 ---
-
 
 ## License
 
