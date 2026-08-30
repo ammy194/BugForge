@@ -42,22 +42,34 @@ describe('Auth & User Profile Endpoints', () => {
     expect(res.body.data.global_role).toBe('DEVELOPER');
   });
 
-  it('POST /api/v1/auth/sync-profile should upsert a profile', async () => {
-    const newProfile = {
-      email: 'newuser@bugforge.dev',
-      full_name: 'New Test User',
-      global_role: 'DEVELOPER',
-    };
+  it('POST /api/v1/auth/sync-profile requires authentication', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/sync-profile')
+      .send({ full_name: 'New Test User' });
 
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('POST /api/v1/auth/sync-profile syncs the AUTHENTICATED caller only, ignoring any client-supplied identity/role', async () => {
     const res = await request(app)
       .post('/api/v1/auth/sync-profile')
       .set('Authorization', 'Bearer demo_dev')
-      .send(newProfile);
+      .send({
+        full_name: 'Renamed Bob',
+        // Attempted privilege escalation / identity spoofing -- must be ignored.
+        id: '11111111-1111-4111-a111-111111111111',
+        user_id: '11111111-1111-4111-a111-111111111111',
+        global_role: 'ADMIN',
+      });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.email).toBe(newProfile.email);
-    expect(res.body.data.full_name).toBe(newProfile.full_name);
+    // Identity stays the authenticated demo_dev persona, not the spoofed admin id.
+    expect(res.body.data.id).toBe('33333333-3333-4333-a333-333333333333');
+    expect(res.body.data.email).toBe('bob.dev@bugforge.dev');
+    // Role is never escalated from the request body.
+    expect(res.body.data.global_role).toBe('DEVELOPER');
   });
 
   it('GET /api/v1/users should list all users when authenticated', async () => {
