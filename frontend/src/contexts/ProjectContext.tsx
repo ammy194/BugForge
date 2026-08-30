@@ -66,30 +66,39 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     localStorage.setItem('bugforge_auto_simulate', String(isAutoSimulating));
     let timerId: number;
+    let isCancelled = false;
 
     if (isAutoSimulating && user) {
-      const delays = [5000, 10000, 15000]; // 5s, 10s, 15s
+      const delays = [60000]; // 1 minute
       let currentIndex = 0;
 
       const scheduleNext = () => {
+        if (isCancelled) return;
         timerId = window.setTimeout(async () => {
+          if (isCancelled) return;
           try {
             const res = await api.post<any>('/issues/simulate-random');
+            if (isCancelled) return;
             window.dispatchEvent(new CustomEvent('fetch_notifications'));
             setToastMessage(`Live Alert: New issue reported (${res.key})`);
             setTimeout(() => setToastMessage(null), 5000);
           } catch (e) {
             console.error('Auto-simulate failed', e);
           }
-          currentIndex = (currentIndex + 1) % delays.length;
-          scheduleNext();
+          if (!isCancelled) {
+            currentIndex = (currentIndex + 1) % delays.length;
+            scheduleNext();
+          }
         }, delays[currentIndex]);
       };
 
       scheduleNext();
     }
 
-    return () => clearTimeout(timerId);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timerId);
+    };
   }, [isAutoSimulating, user]);
 
   useEffect(() => {

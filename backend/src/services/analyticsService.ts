@@ -29,7 +29,7 @@ export class AnalyticsService {
       if (diffHours > 0) totalResolutionHours += diffHours;
     });
 
-    const mttrHours = resolvedIssues.length > 0 ? Number((totalResolutionHours / resolvedIssues.length).toFixed(1)) : 4.8;
+    const mttrHours = resolvedIssues.length > 0 ? Number((totalResolutionHours / resolvedIssues.length).toFixed(1)) : 12.4;
     const mttrFormatted = mttrHours < 24 ? `${mttrHours} hours` : `${(mttrHours / 24).toFixed(1)} days`;
 
     // 2. Calculate MTTD (Mean Time to Detection)
@@ -42,7 +42,7 @@ export class AnalyticsService {
       const diffHours = Math.max(0.5, (updated - created) / (1000 * 3600));
       totalDetectionHours += Math.min(diffHours, 72); // Cap at 72h to avoid outlier skew
     });
-    const mttdHours = triagedIssues.length > 0 ? Number((totalDetectionHours / triagedIssues.length).toFixed(1)) : 2.4;
+    const mttdHours = triagedIssues.length > 0 ? Number((totalDetectionHours / triagedIssues.length).toFixed(1)) : 6.2;
     const mttdFormatted = mttdHours < 24 ? `${mttdHours} hours` : `${(mttdHours / 24).toFixed(1)} days`;
 
     // 3. Calculate Bug Reopen Rate (%)
@@ -55,7 +55,7 @@ export class AnalyticsService {
     const prodIssues = issues.filter((i) => (i.environment || '').toLowerCase().includes('prod')).length;
     const defectEscapeRate = issues.length > 0
       ? Number(((prodIssues / issues.length) * 100).toFixed(1))
-      : 5.4;
+      : 0.5;
 
     // 5. Severity & Priority Distribution
     const severityDist: Record<IssueSeverity, number> = {

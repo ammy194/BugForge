@@ -89,12 +89,12 @@ interface AnalyticsData {
 }
 
 const DEFAULT_ANALYTICS: AnalyticsData = {
-  mttd_hours: 2.4,
-  mttd_formatted: '2.4 hours',
-  mttr_hours: 4.8,
-  mttr_formatted: '4.8 hours',
+  mttd_hours: 6.2,
+  mttd_formatted: '6.2 hours',
+  mttr_hours: 12.4,
+  mttr_formatted: '12.4 hours',
   reopen_rate_percentage: 3.2,
-  defect_escape_rate_percentage: 5.4,
+  defect_escape_rate_percentage: 0.5,
   total_issues: 45,
   open_issues: 18,
   resolved_issues: 27,
@@ -170,29 +170,35 @@ export const AnalyticsPage: React.FC = () => {
   }, [activeProject]);
 
   const handleExport = async (format: 'csv' | 'json') => {
-    if (!activeProject) return;
     setDownloading(format);
     try {
       if (format === 'csv') {
-        const token = localStorage.getItem('bugforge_auth_token') || 'demo_admin';
-        const res = await fetch(`${api.baseURL}/analytics/export?format=csv&project_id=${activeProject.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const blob = await res.blob();
+        const header = 'Metric,Value\n';
+        const rows = [
+          `MTTD,${data.mttd_hours} hours`,
+          `MTTR,${data.mttr_hours} hours`,
+          `Reopen Rate,${data.reopen_rate_percentage}%`,
+          `Defect Escape Rate,${data.defect_escape_rate_percentage}%`,
+          `Total Issues,${data.total_issues}`,
+          `Open Issues,${data.open_issues}`,
+          `Resolved Issues,${data.resolved_issues}`
+        ].join('\n');
+        
+        const csvContent = header + rows;
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${activeProject.key}-defects-export.csv`;
+        a.download = `${activeProject?.key || 'global'}-analytics-summary.csv`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
       } else {
-        const res = await api.get<any[]>(`/analytics/export?format=json&project_id=${activeProject.id}`);
-        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(res, null, 2));
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute('href', dataStr);
-        downloadAnchor.setAttribute('download', `${activeProject.key}-defects-export.json`);
+        downloadAnchor.setAttribute('download', `${activeProject?.key || 'global'}-analytics-summary.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
